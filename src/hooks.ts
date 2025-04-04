@@ -6,7 +6,7 @@ function useMessageChannel(channel:string) {
     const [data, setData] = useState<any>();
     useEffect(() => {
       const cb = (source: string, content: any) => {
-        console.log(content);
+        //console.log(content);
         if (content.channel !== channel) return;
         setData(content);
         // //console.log('Received message from source:', source);
@@ -41,3 +41,6 @@ function useMessageChannel(channel:string) {
 
 
   export { useMessageChannel, messageChannel };
+
+
+
