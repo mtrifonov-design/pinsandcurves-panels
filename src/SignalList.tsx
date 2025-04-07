@@ -74,7 +74,10 @@ function SignalList() {
 
     const [ready, setReady] = React.useState(false);
 
+    const guard = useRef(false);
     useEffect(() => {
+        if (guard.current) return;
+        guard.current = true;
         messageChannel("ProjectState", "subscribe");
     }, []);
 
