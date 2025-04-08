@@ -70,17 +70,32 @@ class CK_Adapter {
     public CK_INSTANCE_ID: string | undefined;
 
 
-
-
-    pushWorkload(workload : any) {
+    sendWorkload() {
         window.parent.postMessage({
-          type: "ck-message",
-          payload: {
-            PUSH_WORKLOAD: true,
-            pw: this.PASSWORD,
-            workload,
-          },
-        }, "*");
+            type: "ck-message",
+            payload: {
+              PUSH_WORKLOAD: true,
+              pw: this.PASSWORD,
+              workload: this.workload,
+            },
+          }, "*");
+          this.workload = {};
+    }
+
+    workload = {};
+    pushWorkload(workload : any) {
+        // merge workload with existing workload on a thread level
+        const threadKeys = Object.keys(workload);
+        for (const threadKey of threadKeys) {
+            if (this.workload[threadKey] === undefined) {
+                this.workload[threadKey] = [];
+            }
+            this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
+        }
+        // schedule sendWorkload
+        setTimeout(() => {
+            this.sendWorkload();
+        }, 0);
     }
 
 }
