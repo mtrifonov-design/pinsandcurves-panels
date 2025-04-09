@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { EditingAreaCanvas, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { useMessageChannel, messageChannel } from "./hooks";
+import { messageChannel, useChannel } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
@@ -8,21 +8,21 @@ import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov
 import { useRef, useSyncExternalStore } from "react";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
+let guard = false;
 function EditingArea() {
+
+    const [ready, setReady] = React.useState(false);
+
+    
     useEffect(() => {
+        if (guard) return;
+        console.log("running subscribe effect", guard);
+        guard = true;
         messageChannel("ProjectState", "subscribe");
+        controller.current.connectToHost(() => {
+            setReady(true);
+        });
     }, []);
-
-    const message = useMessageChannel("ProjectState");
-
-    if (!message) {
-        return <div>Loading...</div>;
-    }
-
-    return <EditingAreaContent />;
-}
-
-function EditingAreaContent() {
 
     const controller = useRef(
         Controller.Client(
@@ -32,21 +32,29 @@ function EditingAreaContent() {
         )
     );
 
-    useEffect(() => {
-        controller.current.connectToHost();
-    }, []);
+    useChannel("ProjectState", (unit: any) => {
+        const { payload } = unit;
+        const { channel, request, payload: messagePayload } = payload;
+        if (request === "projectNodeEvent") {
+            controller.current.receive(messagePayload);
+        }
+        return {};
+    })
 
-    const message = useMessageChannel("ProjectState");
-    if (!message) {
+    if (!ready) {
         return <div>Loading...</div>;
     }
-    if (message.request === "projectNodeEvent") {
-        controller.current.receive(message.payload);
-    }
 
-    return <EditingAreaContent2 controller={controller.current} />;
+    return <EditingAreaContent controller={controller.current} />;
+
+
 }
-function EditingAreaContent2({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {
+
+
+
+
+
+function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {
 
     const projectState = useSyncExternalStore(controller.subscribeToProjectUpdates.bind(controller), controller.getProject.bind(controller));
     const useProjectState = () => projectState;

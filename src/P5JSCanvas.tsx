@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, P5JSCanvas as P5 } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { useMessageChannel, messageChannel } from "./hooks";
+import { useChannel, messageChannel } from "./hooks";
 
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
@@ -9,69 +9,70 @@ import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov
 import { useRef, useSyncExternalStore } from "react";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
+let guard = false;
 function P5JSCanvas() {
+
+    const [ready, setReady] = React.useState(false);
+
+    
     useEffect(() => {
+        if (guard) return;
+        console.log("running subscribe effect", guard);
+        guard = true;
         messageChannel("ProjectState", "subscribe");
+        controller.current.connectToHost(() => {
+            setReady(true);
+        });
     }, []);
-
-    const message = useMessageChannel("ProjectState");
-
-    if (!message) {
-        return <div>Loading...</div>;
-    }
-
-    return <P5JSCanvasContent />;
-}
-
-function P5JSCanvasContent() {
 
     const controller = useRef(
         Controller.Client(
-            (e: any) => {
+            (e : any) => {
                 messageChannel("ProjectState", "projectNodeEvent", e);
             }
         )
     );
 
-    const [connected, setConnected] = useState(false);
+    //const [cb, setCb] = useState(() => () => { });
 
-    useEffect(() => {
-        controller.current.connectToHost(() => {
-            setConnected(true);
-        });
-    }, []);
-
-    const message = useMessageChannel("ProjectState");
-    useEffect(() => {
-        if (message && message.request === "projectNodeEvent") {
-            controller.current.receive(message.payload);
-        }
-    })
-
-    if (!connected) {
-        return <div>Loading...</div>;
-    }
-
-    return <P5JSCanvasContent2 controller={controller} />;
-}
-function P5JSCanvasContent2({ controller }: { controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController }) {
-
-    const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
-    const useProjectState = () => projectState;
-    const projectTools = controller.current.projectTools;
     const cbRef = useRef(() => { });
     const cb = cbRef.current;
     const setCb = (callback: () => void) => {
         cbRef.current = callback;
     }
 
-    const message = useMessageChannel("ProjectState");
-    if (message) {
-        if (message.request === "projectNodeEvent") {
-            cb(message.payload);
+    useChannel("ProjectState", (unit: any) => {
+        const { payload } = unit;
+        const { channel, request, payload: messagePayload } = payload;
+        if (request === "projectNodeEvent") {
+            console.log("message received", messagePayload);
+            cb(messagePayload);
+            controller.current.receive(messagePayload);
+
         }
+        return {};
+    })
+
+    if (!ready) {
+        return <div>Loading...</div>;
     }
+
+    return <P5JSCanvasContent controller={controller} setCb={setCb} />;
+
+
+}
+
+
+
+
+function P5JSCanvasContent({ controller, setCb }: { controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController }) {
+
+    const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
+    const useProjectState = () => projectState;
+    const projectTools = controller.current.projectTools;
+
     const attachMessageCallback = (callback: () => void) => {
+        console.log("callback set")
         setCb(callback);
     }
 

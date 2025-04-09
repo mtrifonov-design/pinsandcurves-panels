@@ -71,7 +71,6 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
 
 
 let guard = false;
-
 function SignalList() {
 
     const [ready, setReady] = React.useState(false);
