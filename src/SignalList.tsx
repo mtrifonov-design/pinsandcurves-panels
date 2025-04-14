@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { useMessageChannel, messageChannel, useChannel } from "./hooks";
+import { messageChannel, useChannel } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
@@ -8,48 +8,9 @@ import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov
 import { useRef, useSyncExternalStore } from "react";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
-// function SignalList() {
-//     useEffect(() => {
-//         messageChannel("ProjectState", "subscribe");
-//     }, []);
-
-//     const message = useMessageChannel("ProjectState");
-
-//     if (!message) {
-//         return <div>Loading...</div>;
-//     }
-
-//     return <SignalListContent />;
-// }
-
-// function SignalListContent() {
-
-//     const controller = useRef(
-//         Controller.Client(
-//             (e : any) => {
-//                 messageChannel("ProjectState", "projectNodeEvent", e);
-//             }
-//         )
-//     );
-
-//     useEffect(() => {
-//         controller.current.connectToHost();
-//     }, []);
-
-//     const message = useMessageChannel("ProjectState");
-//     if (!message) {
-//         return <div>Loading...</div>;
-//     }
-//     if (message.request === "projectNodeEvent") {
-//         controller.current.receive(message.payload);
-//     }
-
-//     return <SignalListContent2 controller={controller} />;
-// }
 function SignalListContent({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {
 
     const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
-    const useProjectState = () => projectState;
     const projectTools = controller.current.projectTools;
 
 
@@ -71,30 +32,30 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
 
 
 let guard = false;
+let subscriberId = "SignalList"
 function SignalList() {
 
     const [ready, setReady] = React.useState(false);
 
-    
-    useEffect(() => {
+    useChannel("INIT", (unit: any) => {
         if (guard) return;
-        console.log("running subscribe effect", guard);
         guard = true;
-        messageChannel("ProjectState", "subscribe");
+        messageChannel("ProjectState", "subscribe", undefined, subscriberId);
         controller.current.connectToHost(() => {
             setReady(true);
         });
-    }, []);
+    })
 
     const controller = useRef(
         Controller.Client(
             (e : any) => {
-                messageChannel("ProjectState", "projectNodeEvent", e);
+                messageChannel("ProjectState", "projectNodeEvent", e, subscriberId);
             }
         )
     );
 
     useChannel("ProjectState", (unit: any) => {
+        //console.log("SignalList channel", unit);
         const { payload } = unit;
         const { channel, request, payload: messagePayload } = payload;
         if (request === "projectNodeEvent") {

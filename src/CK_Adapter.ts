@@ -2,101 +2,113 @@
 
 class CK_Adapter {
 
-    private PASSWORD: string | undefined;
+  private PASSWORD: string | undefined;
 
-    private installCallback: Function | undefined;
-    constructor(installCallback: Function) {
-        this.installCallback = installCallback;
-        window.addEventListener('message', (event) => {
-            const m = event.data;
-            if (
-              m &&
-              m.type &&
-              m.type === "ck-message"
-            ) {
-              const payload = m.payload;
-              const { CK_INSTALL } = payload;
-              if (CK_INSTALL) {
-                const { pw, instanceId } = payload;
-                this.PASSWORD = pw;
-                this.CK_INSTANCE_ID = instanceId;
-                if (this.installCallback) this.installCallback();
-                window.parent.postMessage(m, "*");
-              }
-            }
-          })
-          window.addEventListener('message', (event) => {
-            const m = event.data;
-            if (
-              m &&
-              m.type &&
-              m.type === "ck-message"
-            ) {
-              const payload = m.payload;
-              const { CK_COMPUTE } = payload;
-              if (CK_COMPUTE) {
-                const { unit } = payload;
-                const result = this.computeUnit(unit);
-                window.parent.postMessage({
-                  type: "ck-message",
-                  payload: {
-                    CK_COMPUTE: true,
-                    pw: this.PASSWORD,
-                    response: result,
-                  },
-                }, "*");
-              }
-            }
-          })
-          globalThis.CK_ADAPTER = this;
-    }
+  private mode: "PUSH" | "COMPUTE" = "PUSH";
 
-    computeUnit(unit: any) {
-        if (unit.payload.channel === undefined) return {};
-        const channelId = unit.payload.channel;
-        const channelCallback = this.channelCallbacks[channelId];
-        if (channelCallback) {
-            const result = channelCallback(unit);
-            return result;
+  private installCallback: Function | undefined;
+  constructor(installCallback: Function) {
+    //console.log("CK_Adapter constructor");
+    this.installCallback = installCallback;
+    window.addEventListener('message', (event) => {
+      const m = event.data;
+      if (
+        m &&
+        m.type &&
+        m.type === "ck-message"
+      ) {
+        const payload = m.payload;
+        const { CK_INSTALL } = payload;
+        if (CK_INSTALL) {
+          const { pw, instanceId } = payload;
+          this.PASSWORD = pw;
+          this.CK_INSTANCE_ID = instanceId;
+          if (this.installCallback) this.installCallback();
+          window.parent.postMessage(m, "*");
         }
-        return {};
-    }
+      }
+    })
+    window.addEventListener('message', (event) => {
+      const m = event.data;
+      //console.log(JSON.stringify(m,null,2))
+      if (
+        m &&
+        m.type &&
+        m.type === "ck-message"
+      ) {
 
-    channelCallbacks : { [key: string]: Function } = {};
-    onChannel(channelId: string, callback: Function) {
-        this.channelCallbacks[channelId] = callback;
-    }
-
-    public CK_INSTANCE_ID: string | undefined;
-
-
-    sendWorkload() {
-        window.parent.postMessage({
-            type: "ck-message",
-            payload: {
-              PUSH_WORKLOAD: true,
-              pw: this.PASSWORD,
-              workload: this.workload,
-            },
-          }, "*");
-          this.workload = {};
-    }
-
-    workload = {};
-    pushWorkload(workload : any) {
-        // merge workload with existing workload on a thread level
-        const threadKeys = Object.keys(workload);
-        for (const threadKey of threadKeys) {
-            if (this.workload[threadKey] === undefined) {
-                this.workload[threadKey] = [];
-            }
-            this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
+        const payload = m.payload;
+        const { CK_COMPUTE } = payload;
+        if (CK_COMPUTE) {
+          const { unit } = payload;
+          this.mode = "COMPUTE";
+          this.computeUnit(unit);
+          this.release();
+          this.mode = "PUSH";
         }
-        // schedule sendWorkload
-        setTimeout(() => {
-            this.sendWorkload();
-        }, 0);
+      }
+    })
+    globalThis.CK_ADAPTER = this;
+  }
+
+  release() {
+    window.parent.postMessage({
+      type: "ck-message",
+      payload: {
+        PUSH_WORKLOAD: this.mode === "PUSH" ? true : undefined,
+        CK_COMPUTE: this.mode === "COMPUTE" ? true : undefined,
+        pw: this.PASSWORD,
+        response: this.mode === "COMPUTE" ? this.workload : undefined,
+        workload: this.mode === "PUSH" ? this.workload : undefined,
+      },
+    }, "*");
+    this.workload = {};
+  }
+
+  computeUnit(unit: any) {
+    //console.log("computeUnit", unit);
+
+    if (unit.payload.INIT === true) {
+      const callback = this.channelCallbacks["INIT"];
+      if (callback) {
+        callback(unit);
+        return;
+      }
     }
+
+    if (unit.payload.channel === undefined) return {};
+    const channelId = unit.payload.channel;
+    const channelCallback = this.channelCallbacks[channelId];
+    if (channelCallback) {
+      const result = channelCallback(unit);
+    }
+  }
+
+  channelCallbacks: { [key: string]: Function } = {};
+  onChannel(channelId: string, callback: Function) {
+    this.channelCallbacks[channelId] = callback;
+  }
+
+  public CK_INSTANCE_ID: string | undefined;
+
+  workload = {};
+  pushWorkload(workload: any) {
+    // merge workload with existing workload on a thread level
+    // console.log("MODE", this.mode, "PUSH_WORKLOAD", workload);
+    const threadKeys = Object.keys(workload);
+    for (const threadKey of threadKeys) {
+      if (this.workload[threadKey] === undefined) {
+        this.workload[threadKey] = [];
+      }
+      this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
+    }
+    // schedule sendWorkload
+    if (this.mode === "PUSH") {
+      setTimeout(() => {
+        this.release();
+      }, 0);
+    }
+  }
 
 }
 

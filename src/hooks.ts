@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const target = "JS::BACKGROUND::http://localhost:8000/ProjectState/index.js";
+const target = "JS::BACKGROUND::http://localhost:8000/ProjectState";
 
 function useMessageChannel(channel: string) {
   // const [data, setData] = useState<any>();
   // useEffect(() => {
   //   const cb = (source: string, content: any) => {
-  //     //console.log(content);
+  //     ////console.log(content);
   //     if (content.channel !== channel) return;
   //     setData(content);
-  //     // //console.log('Received message from source:', source);
-  //     // //console.log('Message content:', content);
+  //     // ////console.log('Received message from source:', source);
+  //     // ////console.log('Message content:', content);
   //   };
   //   globalThis.messageService.subscribe(cb);
 
@@ -39,7 +39,7 @@ function useChannel(channel: string, callback: Function) {
   }, []);
 }
 
-function messageChannel(channel: string, request: string, payload: any) {
+function messageChannel(channel: string, request: string, payload: any, subscriber_id: string) {
   // globalThis.sendMessage(target, {
   //   channel: channel,
   //   request: request,
@@ -53,12 +53,13 @@ function messageChannel(channel: string, request: string, payload: any) {
         receiver: {
           instance_id: "BACKGROUND",
           modality: "wasmjs",
-          resource_id: "http://localhost:8000/ProjectState/index.js",
+          resource_id: "http://localhost:8000/ProjectState",
         },
         payload: {
           channel,
           request,
           payload,
+          subscriber_id,
         },
       },
     ]

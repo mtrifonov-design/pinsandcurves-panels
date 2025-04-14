@@ -89,7 +89,7 @@ new CK_Adapter(() => {
 //     if (CK_COMPUTE) {
 //       const { unit } = payload;
 //       const result = computeService.compute(unit);
-//       console.log(result);
+//       //console.log(result);
 //       window.parent.postMessage({
 //         type: "ck-message",
 //         payload: {

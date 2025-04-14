@@ -9,25 +9,27 @@ import { useRef, useSyncExternalStore } from "react";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
 let guard = false;
+const subscriber_id = "EditingArea";
 function EditingArea() {
 
     const [ready, setReady] = React.useState(false);
 
-    
-    useEffect(() => {
+
+    useChannel("INIT", (unit: any) => {
         if (guard) return;
-        console.log("running subscribe effect", guard);
         guard = true;
-        messageChannel("ProjectState", "subscribe");
+        messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
         controller.current.connectToHost(() => {
             setReady(true);
         });
-    }, []);
+    })
+    
+
 
     const controller = useRef(
         Controller.Client(
             (e : any) => {
-                messageChannel("ProjectState", "projectNodeEvent", e);
+                messageChannel("ProjectState", "projectNodeEvent", e, subscriber_id);
             }
         )
     );
