@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { EditingAreaCanvas, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import React, { useEffect, useState } from "react";
+import { EditingAreaCanvas, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, TimelineBar, Toolbar } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 import { messageChannel, useChannel } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
@@ -62,24 +62,52 @@ function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectContr
     const useProjectState = () => projectState;
     const projectTools = controller.projectTools;
     const interpolateSignalValue = controller.interpolateSignalValueAtTime.bind(controller);
-
+    const [activeTool, setActiveTool] = useState("pointer");
 
     return (
         <div
         style={{
             width: '100vw',
             height: '100vh',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '50px 1fr',
+            gridTemplateAreas: `
+                "bar bar"
+                "editing editing"
+            `,
+            backgroundColor: "#2C333A"
         
         }}>
-            <EditingAreaCanvas
-                activeTool={"pointer"}
-                useProjectState={useProjectState}
-                projectTools={projectTools}
-                setActiveEditor={() => {}}
-                interpolateSignalValue={
-                    interpolateSignalValue
-                }
-            />
+            <div style={{gridArea: "bar",
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "center",
+            gap: "20px",
+            }}>
+                <TimelineBar
+                                project={useProjectState()}
+                                projectTools={projectTools}
+                />
+                <Toolbar
+                    setActiveTool={setActiveTool}
+                    activeTool={activeTool}
+                />
+            </div>
+            <div style={{
+                gridArea: "editing",
+            }}>
+                <EditingAreaCanvas
+                    activeTool={activeTool}
+                    useProjectState={useProjectState}
+                    projectTools={projectTools}
+                    setActiveEditor={() => {}}
+                    interpolateSignalValue={
+                        interpolateSignalValue
+                    }
+                />
+            </div>
+
         </div>
     );
     }   

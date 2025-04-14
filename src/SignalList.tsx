@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import React, { useEffect, useState } from "react";
+import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 import { messageChannel, useChannel } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
@@ -13,7 +13,10 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
     const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
     const projectTools = controller.current.projectTools;
 
+    const [mode, setMode] = useState("signalList");
 
+
+    if (mode === "signalList") {
     return (
         <div
         style={{
@@ -24,10 +27,27 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
         <OrganisationAreaSignalList 
         project = {projectState}
         projectTools = {projectTools}
-        openCreateSignalModal={() => {}}
+        openCreateSignalModal={() => {setMode("newsignaldialogue")}}
         />
         </div>
     );
+    } else if (mode === "newsignaldialogue") {
+        return (
+            <div
+            style={{
+                width: '100vw',
+                height: '100vh',
+            
+            }}>
+                <CreateSignalModal 
+                        useProject = {() => projectState}
+                        useProjectTools = {() => projectTools}
+                        closeModal={() => {setMode("signalList")}}
+                        
+                />
+            </div>
+        );
+    }
     }   
 
 
