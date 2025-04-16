@@ -1,5 +1,8 @@
 
 
+const metadata_registry : any = {
+}
+
 class CK_Adapter {
 
   private PASSWORD: string | undefined;
@@ -11,7 +14,7 @@ class CK_Adapter {
     //console.log("CK_Adapter constructor");
     this.installCallback = installCallback;
     window.addEventListener('message', (event) => {
-      const m = event.data;
+      let m = event.data;
       if (
         m &&
         m.type &&
@@ -20,9 +23,17 @@ class CK_Adapter {
         const payload = m.payload;
         const { CK_INSTALL } = payload;
         if (CK_INSTALL) {
-          const { pw, instanceId } = payload;
+          const { pw, instanceId, resourceId } = payload;
           this.PASSWORD = pw;
           this.CK_INSTANCE_ID = instanceId;
+          const metadata = metadata_registry[resourceId];
+          m = {
+            ...m,
+            payload: {
+              ...payload,
+              metadata: metadata,
+            }
+          }
           if (this.installCallback) this.installCallback();
           window.parent.postMessage(m, "*");
         }
@@ -74,6 +85,13 @@ class CK_Adapter {
         callback(unit);
         return;
       }
+    }
+
+    if (unit.payload.LOAD_SESSION) {
+      unit.payload.channel = "LOAD_SESSION";
+    }
+    if (unit.payload.SAVE_SESSION) {
+      unit.payload.channel = "SAVE_SESSION";
     }
 
     if (unit.payload.channel === undefined) return {};

@@ -46,6 +46,7 @@ function messageChannel(channel: string, request: string, payload: any, subscrib
   //   payload: payload,
   // })
 
+
   globalThis.CK_ADAPTER.pushWorkload({
     default: [
       {
@@ -60,11 +61,11 @@ function messageChannel(channel: string, request: string, payload: any, subscrib
           request,
           payload,
           subscriber_id,
+
         },
       },
     ]
   });
-
 
 }
 

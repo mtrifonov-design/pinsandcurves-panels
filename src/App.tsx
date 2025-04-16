@@ -5,6 +5,7 @@ import EditingArea from './EditingArea';
 import P5JSCanvas from './P5JSCanvas';
 import CodeEditor from './CodeEditor';
 import CK_Test from './CK_Test';
+import Copilot from './Copilot';
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -19,6 +20,7 @@ function App() {
         <Route path="/editing" element={<EditingArea />} />
         <Route path="/p5" element={<P5JSCanvas />} />
         <Route path="/code" element={<CodeEditor />} />
+        <Route path="/copilot" element={<Copilot />} />
       </Routes>
     </div>
   );
