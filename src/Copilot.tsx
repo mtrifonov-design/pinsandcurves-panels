@@ -29,7 +29,6 @@ function CopilotContent(p:
         <CopilotInterior 
         project = {projectState}
         projectTools = {projectTools}
-        openCreateSignalModal={() => {setMode("newsignaldialogue")}}
         persistentState={persistentState}
         setPersistentState={setPersistentState}
         />
@@ -39,7 +38,7 @@ function CopilotContent(p:
 
 
 let guard = false;
-let subscriberId = "SignalList"
+let subscriberId = "Copilot"
 function Copilot() {
 
     const [projectReady, setProjectReady] = React.useState(false);

@@ -14,8 +14,11 @@ const StructuredOutputFormat = {
               type: "string" 
             } 
           },
+          notesToSelf: { 
+            type: "string" 
+          },
         },
-        required: ["chatMessage", "timelineOperations"],
+        required: ["chatMessage", "timelineOperations", "notesToSelf"],
         additionalProperties: false,
       },
     }
