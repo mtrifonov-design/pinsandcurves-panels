@@ -22,6 +22,7 @@ const ChatComponent = (p: {
             messages: newMessages,
         }));
     }
+    const [thinkDeep, setThinkDeep] = useState(false);
     const [userMessage, setUserMessage] = useState("");
     const [awaitingReply, setAwaitingReply] = useState(false);
     const openai = p.openai;
@@ -38,7 +39,7 @@ const ChatComponent = (p: {
         setMessages(updatedMessages);
         setAwaitingReply(true);
         setUserMessage("");
-        const newMessages = await processMessage(updatedMessages, project, openai);
+        const newMessages = await processMessage(updatedMessages, project, openai,thinkDeep);
         setMessages(newMessages);
         setAwaitingReply(false);
         globalThis.CK_ADAPTER.pushWorkload({
@@ -96,7 +97,16 @@ const ChatComponent = (p: {
                     padding: "8px",
                 }}
             />
-
+            <div>
+                <label>
+                    <input
+                        type="checkbox"
+                        checked={thinkDeep}
+                        onChange={(e) => setThinkDeep(e.target.checked)}
+                    />
+                    Think Deeply
+                </label>
+            </div>
             <button
                 onClick={handleSendMessage}
                 style={{ width: "100%", padding: "8px" }}
