@@ -7,6 +7,7 @@ type Project = ProjectDataStructure.PinsAndCurvesProject;
 import { prompt as MentorPrompt, format as MentorFormat } from './AgentNetwork/MentorPrompt'
 import { prompt as CodeAssistantPrompt, format as CodeAssistantFormat } from './AgentNetwork/CodeAssistantPrompt'
 import { prompt as SignalAssistantPrompt, format as SignalAssistantFormat } from './AgentNetwork/SignalAssistantPrompt'
+import callAgent from "./callAgent";
 
 function formatProject(appState: Project) {
     // Format the content based on the application state
@@ -16,7 +17,7 @@ function formatProject(appState: Project) {
     const signalData = appState.signalData;
     const signals = Object.values(signalData).map((signal) => ({
         id: signal.id,
-        name: signal.name,
+        name: appState.orgData.signalNames[signal.id],
         type: signal.type,
         range: signal.range,
         defaultValue: signal.defaultValue,
@@ -27,10 +28,17 @@ function formatProject(appState: Project) {
             time: signal.pinTimes[pinId],
             functionString: signal.curves[pinId],
         })).sort((a, b) => a.time - b.time),
-    }));
+    })).filter((signal) => signal.id !== "HIDDEN_CODE");
+
+    const p5jsSketch = appState.signalData["HIDDEN_CODE"]?.defaultValue;
+
+    const project = {
+        signals: signals,
+        p5jsSketch: p5jsSketch,
+    }
 
     const content = `
-    <PROJECT_STATE>${JSON.stringify(signals, null, 2)}</PROJECT_STATE>
+    <PROJECT_STATE>${JSON.stringify(project, null, 2)}</PROJECT_STATE>
     `
     // console.log(content)
     return content;
@@ -40,8 +48,8 @@ function formatAssistantContent(chatMessage: string, timelineOperations: any, th
     // Format the content based on the application state
     const content = `
     <THRESHOLD_MET>${thresholdMet}</THRESHOLD_MET>
-    <BRIEF>${brief}</BRIEF>
-    <CHAT_MESSAGE>${chatMessage}</CHAT_MESSAGE>
+    <BRIEF>${thresholdMet ? brief : ""}</BRIEF>
+    <CHAT_MESSAGE>${thresholdMet ? "" : chatMessage}</CHAT_MESSAGE>
     `
     //<TIMELINE_OPERATIONS>${JSON.stringify(timelineOperations, null, 2)}</TIMELINE_OPERATIONS>
     return content;
@@ -68,57 +76,83 @@ async function processMessage(messages: any, project: Project, openai: OpenAI, t
         })
         // only keep the last 15 messages
         messagesForAssistant = messagesForAssistant.slice(-15);
-        const response = await openai.responses.create({
+        const mentorResponse = await callAgent({
             model: "gpt-4o-2024-08-06",
-            input: [
-                { "role": "system", "content": MentorPrompt },
-                ...messagesForAssistant,
-                { "role": "system", "content": formatProject(project) },
-            ],
-            text: MentorFormat,
-        });
-        console.log(response);
-        // 4. Parse the assistant's response (assuming it's valid JSON in .content)
-        const event = JSON.parse(response.output[0].content[0].text);
-        console.log(event.thresholdMet, event.brief);
+            prompt: MentorPrompt,
+            format: MentorFormat,
+        }, [...messagesForAssistant, {role:"user", content: formatProject(project)}], openai);
+
+        console.log("Mentor Response: ", mentorResponse);
+        // const response = await openai.responses.create({
+        //     model: "gpt-4o-2024-08-06",
+        //     input: [
+        //         { "role": "system", "content": MentorPrompt },
+        //         ...messagesForAssistant,
+        //         { "role": "system", "content": formatProject(project) },
+        //     ],
+        //     text: MentorFormat,
+        // });
+        // console.log(response);
+        // // 4. Parse the assistant's response (assuming it's valid JSON in .content)
+        // const event = JSON.parse(response.output[0].content[0].text);
+        let timelineOperations = [];
+        let chatMessage = mentorResponse.chatMessage;
         
-        if (event.thresholdMet) {
-            const response = await openai.responses.create({
-                model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
-                input: [
-                    { "role": "system", "content": CodeAssistantPrompt },
-                    ...messagesForAssistant,
-                    { "role": "system", "content": formatProject(project) },
-                    { "role": "system", "content": event.brief },
-                ],
-                text: CodeAssistantFormat,
-            });
-            console.log(response);
-            const newEvent = JSON.parse(response.output[thinkDeep ? 1 : 0].content[0].text);
-            event.signalAgentBrief = newEvent.signalAgentBrief;
-            event.p5jsSketch = newEvent.p5jsSketch;
-            event.chatMessage = newEvent.chatMessage;
-            console.log(event.p5jsSketch);
-            console.log(event.signalAgentBrief);
+        if (mentorResponse.thresholdMet) {
+            // const response = await openai.responses.create({
+            //     model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
+            //     input: [
+            //         { "role": "system", "content": CodeAssistantPrompt },
+            //         ...messagesForAssistant,
+            //         { "role": "system", "content": formatProject(project) },
+            //         { "role": "system", "content": event.brief },
+            //     ],
+            //     text: CodeAssistantFormat,
+            // });
+            // console.log(response);
+            // const newEvent = JSON.parse(response.output[thinkDeep ? 1 : 0].content[0].text);
+            // event.signalAgentBrief = newEvent.signalAgentBrief;
+            // event.p5jsSketch = newEvent.p5jsSketch;
+            // event.chatMessage = newEvent.chatMessage;
+            // console.log(event.p5jsSketch);
+            // console.log(event.signalAgentBrief);
 
+            const codeAssistantResponse = await callAgent({
+                model: "gpt-4o-2024-08-06",
+                prompt: CodeAssistantPrompt,
+                format: CodeAssistantFormat,
+            }, [{role: "user", content: mentorResponse.brief },{role:"user", content: formatProject(project)}], openai);
+            console.log("Code Assistant Response: ", codeAssistantResponse);
 
-            const signalAgentResponse = await openai.responses.create({
-                model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
-                input: [
-                    { "role": "system", "content": SignalAssistantPrompt },
-                    ...messagesForAssistant,
-                    { "role": "system", "content": formatProject(project) },
-                    { "role": "system", "content": event.signalAgentBrief },
-                ],
-                text: SignalAssistantFormat,
-            });
+            let signalAgentTimelineOperations = [];
+            if (codeAssistantResponse.signalChangesNeeded) {
 
-            const signalAgentEvent = JSON.parse(signalAgentResponse.output[thinkDeep ? 1 : 0].content[0].text);
-            event.timelineOperations = [`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${event.p5jsSketch}\`)`,...signalAgentEvent.timelineOperations];
-            console.log(event.timelineOperations);
+                const signalAgentResponse = await callAgent({
+                    model: "gpt-4o-2024-08-06",
+                    prompt: SignalAssistantPrompt,
+                    format: SignalAssistantFormat,
+                }, [{role: "user", content: codeAssistantResponse.signalAgentBrief },{role:"user", content: formatProject(project)}], openai);
+                console.log("Signal Agent Response: ", signalAgentResponse);
+                signalAgentTimelineOperations = signalAgentResponse.timelineOperations;
+            }
+
+            // const signalAgentResponse = await openai.responses.create({
+            //     model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
+            //     input: [
+            //         { "role": "system", "content": SignalAssistantPrompt },
+            //         ...messagesForAssistant,
+            //         { "role": "system", "content": formatProject(project) },
+            //         { "role": "system", "content": event.signalAgentBrief },
+            //     ],
+            //     text: SignalAssistantFormat,
+            // });
+            //const signalAgentEvent = JSON.parse(signalAgentResponse.output[thinkDeep ? 1 : 0].content[0].text);
+            timelineOperations = [`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${codeAssistantResponse.p5jsSketch}\`)`,...signalAgentTimelineOperations];
+            chatMessage = codeAssistantResponse.chatMessage;
 
         }
 
+        console.log("Timeline Operations: ", timelineOperations);
         globalThis.CK_ADAPTER.pushWorkload({
             default: [
                 {
@@ -130,7 +164,7 @@ async function processMessage(messages: any, project: Project, openai: OpenAI, t
                     },
                     payload: {
                         EVAL: true,
-                        timelineOperations: event.timelineOperations,
+                        timelineOperations: timelineOperations,
                     },
                 },
             ]
@@ -140,7 +174,11 @@ async function processMessage(messages: any, project: Project, openai: OpenAI, t
             ...messages,
             {
                 role: "assistant",
-                ...event,
+                ...{
+                    chatMessage: chatMessage,
+                    thresholdMet: mentorResponse.thresholdMet,
+                    brief: mentorResponse.brief,
+                }
             },
         ];
         return newMessages;
