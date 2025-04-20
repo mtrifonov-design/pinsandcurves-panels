@@ -77,7 +77,13 @@ class CK_Adapter {
   }
 
   computeUnit(unit: any) {
-    //console.log("computeUnit", unit);
+    // console.log("computeUnit", unit);
+    // console.log(this.unitCallback)
+    if (this.unitCallback) {
+      this.unitCallback(unit);
+      this.pushWorkload({});
+      return;
+    }
 
     if (unit.payload.INIT === true) {
       const callback = this.channelCallbacks["INIT"];
@@ -94,7 +100,6 @@ class CK_Adapter {
       unit.payload.channel = "SAVE_SESSION";
     }
 
-    if (unit.payload.channel === undefined) return {};
     const channelId = unit.payload.channel;
     const channelCallback = this.channelCallbacks[channelId];
     if (channelCallback) {
@@ -105,6 +110,11 @@ class CK_Adapter {
   channelCallbacks: { [key: string]: Function } = {};
   onChannel(channelId: string, callback: Function) {
     this.channelCallbacks[channelId] = callback;
+  }
+
+  unitCallback: Function | undefined;
+  onUnit(callback: Function) {
+    this.unitCallback = callback;
   }
 
   public CK_INSTANCE_ID: string | undefined;

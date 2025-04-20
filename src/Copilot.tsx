@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useChannel } from "./hooks";
+import { messageChannel, useChannel, useUnit } from "./hooks";
 import CopilotInterior from "./Copilot/Copilot";
 
 
@@ -45,55 +45,130 @@ function Copilot() {
     const [persistentDataReady, setPersistentDataReady] = React.useState(false);
     const ready = projectReady && persistentDataReady;
 
-    useChannel("PERSISTENT_DATA", (unit: any) => {
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload } = payload;
-        if (request === "responseData") {
-            setPersistentDataReady(true);
-            setPersistentState(messagePayload);
+    useUnit(unit => {
+        const { payload, sender, receiver } = unit;
+        const { channel, request, payload: messagePayload, INIT } = payload;
+
+        if (INIT) {
+            messageChannel("ProjectState", "subscribe", undefined, subscriberId);
+            controller.current.connectToHost(() => {
+                setProjectReady(true);
+            });
+            globalThis.CK_ADAPTER.pushWorkload({
+                default: [
+                  {
+                    type: "worker",
+                    receiver: {
+                      instance_id: "COPILOT_EVAL",
+                      modality: "wasmjs",
+                      resource_id: "http://localhost:8000/CopilotEval",
+                    },
+                    payload: {
+                        INIT: true,
+                    },
+                  },
+                ]
+              });
+              globalThis.CK_ADAPTER.pushWorkload({
+                default: [
+                  {
+                    type: "worker",
+                    receiver: {
+                      instance_id: "ASSET_SERVER",
+                      modality: "wasmjs",
+                      resource_id: "http://localhost:8000/AssetServer",
+                    },
+                    payload: {
+                        subscribe: true,
+                    },
+                  },
+                ]
+              });
+              globalThis.CK_ADAPTER.pushWorkload({
+                default: [
+                  {
+                    type: "worker",
+                    receiver: {
+                      instance_id: "COPILOT_DATA",
+                      modality: "wasmjs",
+                      resource_id: "http://localhost:8000/CopilotData",
+                    },
+                    payload: {
+                        channel: "PERSISTENT_DATA", 
+                        request: "requestData"
+                    },
+                  },
+                ]
+              });
+
         }
-        return {};
+
+        if (channel === "PERSISTENT_DATA") {
+            if (request === "responseData") {
+                setPersistentDataReady(true);
+                setPersistentState(messagePayload);
+            }
+        }
+
+        if (channel === "ProjectState") {
+            if (request === "projectNodeEvent") {
+                controller.current.receive(messagePayload);
+            }
+        }
+
+
     })
 
-    useChannel("INIT", (unit: any) => {
-        if (guard) return;
-        guard = true;
-        messageChannel("ProjectState", "subscribe", undefined, subscriberId);
-        controller.current.connectToHost(() => {
-            setProjectReady(true);
-        });
-        globalThis.CK_ADAPTER.pushWorkload({
-            default: [
-              {
-                type: "worker",
-                receiver: {
-                  instance_id: "COPILOT_EVAL",
-                  modality: "wasmjs",
-                  resource_id: "http://localhost:8000/CopilotEval",
-                },
-                payload: {
-                    INIT: true,
-                },
-              },
-            ]
-          });
-          globalThis.CK_ADAPTER.pushWorkload({
-            default: [
-              {
-                type: "worker",
-                receiver: {
-                  instance_id: "COPILOT_DATA",
-                  modality: "wasmjs",
-                  resource_id: "http://localhost:8000/CopilotData",
-                },
-                payload: {
-                    channel: "PERSISTENT_DATA", 
-                    request: "requestData"
-                },
-              },
-            ]
-          });
-    })
+
+    // useChannel("PERSISTENT_DATA", (unit: any) => {
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload } = payload;
+    //     if (request === "responseData") {
+    //         setPersistentDataReady(true);
+    //         setPersistentState(messagePayload);
+    //     }
+    //     return {};
+    // })
+
+    // useChannel("INIT", (unit: any) => {
+    //     if (guard) return;
+    //     guard = true;
+    //     messageChannel("ProjectState", "subscribe", undefined, subscriberId);
+    //     controller.current.connectToHost(() => {
+    //         setProjectReady(true);
+    //     });
+    //     globalThis.CK_ADAPTER.pushWorkload({
+    //         default: [
+    //           {
+    //             type: "worker",
+    //             receiver: {
+    //               instance_id: "COPILOT_EVAL",
+    //               modality: "wasmjs",
+    //               resource_id: "http://localhost:8000/CopilotEval",
+    //             },
+    //             payload: {
+    //                 INIT: true,
+    //             },
+    //           },
+    //         ]
+    //       });
+    //       globalThis.CK_ADAPTER.pushWorkload({
+    //         default: [
+    //           {
+    //             type: "worker",
+    //             receiver: {
+    //               instance_id: "COPILOT_DATA",
+    //               modality: "wasmjs",
+    //               resource_id: "http://localhost:8000/CopilotData",
+    //             },
+    //             payload: {
+    //                 channel: "PERSISTENT_DATA", 
+    //                 request: "requestData"
+    //             },
+    //           },
+    //         ]
+    //       });
+    // })
 
     const [persistentState, setPersistentState] = useState({});
 
@@ -106,15 +181,15 @@ function Copilot() {
         )
     );
 
-    useChannel("ProjectState", (unit: any) => {
-        //console.log("SignalList channel", unit);
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload } = payload;
-        if (request === "projectNodeEvent") {
-            controller.current.receive(messagePayload);
-        }
-        return {};
-    })
+    // useChannel("ProjectState", (unit: any) => {
+    //     //console.log("SignalList channel", unit);
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload } = payload;
+    //     if (request === "projectNodeEvent") {
+    //         controller.current.receive(messagePayload);
+    //     }
+    //     return {};
+    // })
 
     if (!ready) {
         return <div>Loading...</div>;

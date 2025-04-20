@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, P5JSCanvas as P5 } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { useChannel, messageChannel } from "./hooks";
+import P5 from "./P5JSCanvas/P5JSCanvas";
+import { useChannel, messageChannel, useUnit } from "./hooks";
 
-
-type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
 import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
@@ -15,16 +13,63 @@ const OUTER_SUBSCRIBER_ID = "P5JSCanvas_OUTER";
 function P5JSCanvas() {
 
     const [ready, setReady] = React.useState(false);
+    const [assets, setAssets] = useState([]);
 
-    useChannel("INIT", (unit: any) => {
-        if (guard) return;
-        guard = true;
-        messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
-        messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID)
-        controller.current.connectToHost(() => {
-            setReady(true);
-        });
+
+    useUnit((unit: any) => {
+        //console.log(unit)
+        const { payload } = unit;
+        const { INIT, channel, request, payload: messagePayload, subscriber_id } = payload;
+        if (INIT) {
+            messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
+            messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID);
+            controller.current.connectToHost(() => {
+                setReady(true);
+            });
+            globalThis.CK_ADAPTER.pushWorkload({default: [{
+                type: "worker",
+                receiver: {
+                    instance_id: "ASSET_SERVER",
+                    modality: "wasmjs",
+                    resource_id: "http://localhost:8000/AssetServer",
+                },
+                payload: {
+                    request: "subscribe",
+                    payload: undefined,
+                },
+            }]});
+            return;
+        }
+        
+        if (channel === "ProjectState" && request === "projectNodeEvent") {
+            if (subscriber_id === INNER_SUBSCRIBER_ID) {
+                cbRef.current(payload);
+            }
+            if (subscriber_id == OUTER_SUBSCRIBER_ID) {
+                controller.current.receive(messagePayload);
+            }
+        }
+        if (request === 'assetEvent') {
+            const newAssets = messagePayload.filter(asset => {
+                return !assets.some(existingAsset => existingAsset.asset_id === asset.asset_id);
+            });
+            setAssets(prev => [...prev, ...newAssets]);
+            return;
+        }
+
     })
+
+
+
+    // useChannel("INIT", (unit: any) => {
+    //     if (guard) return;
+    //     guard = true;
+    //     messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
+    //     messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID)
+    //     controller.current.connectToHost(() => {
+    //         setReady(true);
+    //     });
+    // })
 
     const controller = useRef(
         Controller.Client(
@@ -43,25 +88,25 @@ function P5JSCanvas() {
         cbRef.current = callback;
     }
 
-    useChannel("ProjectState", (unit: any) => {
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload, subscriber_id } = payload;
-        if (request === "projectNodeEvent") {
-            if (subscriber_id === INNER_SUBSCRIBER_ID) {
-                cbRef.current(messagePayload);
-            }
-            if (subscriber_id == OUTER_SUBSCRIBER_ID) {
-                controller.current.receive(messagePayload);
-            }
-        }
-        return {};
-    })
+    // useChannel("ProjectState", (unit: any) => {
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload, subscriber_id } = payload;
+    //     if (request === "projectNodeEvent") {
+    //         if (subscriber_id === INNER_SUBSCRIBER_ID) {
+    //             cbRef.current(payload);
+    //         }
+    //         if (subscriber_id == OUTER_SUBSCRIBER_ID) {
+    //             controller.current.receive(messagePayload);
+    //         }
+    //     }
+    //     return {};
+    // })
 
     if (!ready) {
         return <div>Loading...</div>;
     }
 
-    return <P5JSCanvasContent controller={controller} setCb={setCb} />;
+    return <P5JSCanvasContent controller={controller} setCb={setCb} assets={assets} />;
 
 
 }
@@ -69,7 +114,7 @@ function P5JSCanvas() {
 
 
 
-function P5JSCanvasContent({ controller, setCb }: { controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController }) {
+function P5JSCanvasContent({ controller, setCb, assets }: { controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController, setCb: (callback: () => void) => void, assets: any[] }) {
 
     const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
     const projectTools = controller.current.projectTools;
@@ -87,9 +132,10 @@ function P5JSCanvasContent({ controller, setCb }: { controller: PinsAndCurvesPro
 
             }}>
             <P5
+                assets={assets}
                 project={projectState}
                 projectTools={projectTools}
-                sendMessage={(m) => messageChannel("ProjectState", "projectNodeEvent", m, INNER_SUBSCRIBER_ID)}
+                sendMessage={(m) => globalThis.CK_ADAPTER.pushWorkload({default:m})}
                 attachMessageCallback={attachMessageCallback}
 
             />
