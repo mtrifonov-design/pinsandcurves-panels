@@ -55,7 +55,7 @@ function formatAssistantContent(chatMessage: string, timelineOperations: any, th
     return content;
 }
 
-async function processMessage(messages: any, project: Project, openai: OpenAI, thinkDeep: boolean = false) {
+async function processMessage(messages: any, project: Project, assets: any[], openai: OpenAI, thinkDeep: boolean = false) {
     try {
 
         // 3. Call the OpenAI API using the official library
@@ -80,7 +80,10 @@ async function processMessage(messages: any, project: Project, openai: OpenAI, t
             model: "gpt-4o-2024-08-06",
             prompt: MentorPrompt,
             format: MentorFormat,
-        }, [...messagesForAssistant, {role:"user", content: formatProject(project)}], openai);
+        }, [...messagesForAssistant, 
+            {role:"user", content: JSON.stringify(assets, null, 2)},
+            {role:"user", content: formatProject(project)},
+        ], openai);
 
         console.log("Mentor Response: ", mentorResponse);
         // const response = await openai.responses.create({
@@ -121,7 +124,11 @@ async function processMessage(messages: any, project: Project, openai: OpenAI, t
                 model: "gpt-4o-2024-08-06",
                 prompt: CodeAssistantPrompt,
                 format: CodeAssistantFormat,
-            }, [{role: "user", content: mentorResponse.brief },{role:"user", content: formatProject(project)}], openai);
+            }, [
+                {role: "user", content: mentorResponse.brief },
+                {role:"user", content: formatProject(project)},
+                {role:"user", content: JSON.stringify(assets, null, 2)},
+            ], openai);
             console.log("Code Assistant Response: ", codeAssistantResponse);
 
             let signalAgentTimelineOperations = [];

@@ -12,19 +12,21 @@ const INNER_SUBSCRIBER_ID = "P5JSCanvas_INNER";
 const OUTER_SUBSCRIBER_ID = "P5JSCanvas_OUTER";
 function P5JSCanvas() {
 
-    const [ready, setReady] = React.useState(false);
+    const [projectReady, setProjectReady] = React.useState(false);
+    const [assetsReady, setAssetsReady] = React.useState(false);
+    const ready = projectReady && assetsReady;
     const [assets, setAssets] = useState([]);
 
 
     useUnit((unit: any) => {
         //console.log(unit)
-        const { payload } = unit;
+        const { sender, payload } = unit;
         const { INIT, channel, request, payload: messagePayload, subscriber_id } = payload;
         if (INIT) {
             messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
             messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID);
             controller.current.connectToHost(() => {
-                setReady(true);
+                setProjectReady(true);
             });
             globalThis.CK_ADAPTER.pushWorkload({default: [{
                 type: "worker",
@@ -38,6 +40,11 @@ function P5JSCanvas() {
                     payload: undefined,
                 },
             }]});
+            return;
+        }
+        if (sender.instance_id === "ASSET_SERVER" && request === "subscribeConfirmation") {
+            setAssets(messagePayload);
+            setAssetsReady(true);
             return;
         }
         

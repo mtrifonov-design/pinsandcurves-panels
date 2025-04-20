@@ -13,9 +13,10 @@ const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController
 function CopilotContent(p: 
     {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController,
     persistentState: any,
+    assets: any[],
     setPersistentState: (state: any) => void,
     }) {
-        const { controller, persistentState, setPersistentState } = p;
+        const { controller, persistentState, setPersistentState,assets } = p;
     const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
     const projectTools = controller.current.projectTools;
 
@@ -31,19 +32,22 @@ function CopilotContent(p:
         projectTools = {projectTools}
         persistentState={persistentState}
         setPersistentState={setPersistentState}
+        assets={assets}
         />
         </div>
     );
     }   
 
 
-let guard = false;
+// let guard = false;
 let subscriberId = "Copilot"
 function Copilot() {
 
     const [projectReady, setProjectReady] = React.useState(false);
     const [persistentDataReady, setPersistentDataReady] = React.useState(false);
-    const ready = projectReady && persistentDataReady;
+    const [assets, setAssets] = React.useState<any[]>([]);
+    const [assetsReady, setAssetsReady] = React.useState(false);
+    const ready = projectReady && persistentDataReady && assetsReady;
 
     useUnit(unit => {
         const { payload, sender, receiver } = unit;
@@ -79,7 +83,7 @@ function Copilot() {
                       resource_id: "http://localhost:8000/AssetServer",
                     },
                     payload: {
-                        subscribe: true,
+                        request: "subscribe",
                     },
                   },
                 ]
@@ -104,6 +108,7 @@ function Copilot() {
         }
 
         if (channel === "PERSISTENT_DATA") {
+            console.log("Persistent data channel", unit);
             if (request === "responseData") {
                 setPersistentDataReady(true);
                 setPersistentState(messagePayload);
@@ -114,6 +119,20 @@ function Copilot() {
             if (request === "projectNodeEvent") {
                 controller.current.receive(messagePayload);
             }
+        }
+
+        if (sender.instance_id === "ASSET_SERVER" && request === "subscribeConfirmation") {
+            setAssets(messagePayload);
+            setAssetsReady(true);
+            return;
+        }
+
+        if (request === "assetEvent") {
+            const newAssets = messagePayload.filter(asset => {
+                return !assets.some(existingAsset => existingAsset.asset_id === asset.asset_id);
+            });
+            setAssets(prev => [...prev, ...newAssets]);
+            return;
         }
 
 
@@ -197,6 +216,7 @@ function Copilot() {
 
     return <CopilotContent controller={controller}
         persistentState={persistentState}
+        assets={assets}
         setPersistentState={(state) => {
             setPersistentState(state);
             

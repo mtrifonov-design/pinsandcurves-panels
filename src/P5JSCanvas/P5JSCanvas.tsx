@@ -215,7 +215,7 @@ const CodePreviewContent = forwardRef(function CodePreviewContent({ code, assets
                         window.addEventListener('message', (event) => {
                             if (event.origin !== window.location.origin) return;
                             if (!event.data.type) return;
-                            console.log(event.data)
+                            //console.log(event.data)
                             const { payload, type } = event.data;
                             if (type === 'P5_Asset_Message') {
                                 this.assets = payload;
@@ -225,27 +225,58 @@ const CodePreviewContent = forwardRef(function CodePreviewContent({ code, assets
                       }
 
                       callbacks = [];
+                      initialized = false;
                       init() {
+                        this.initialized = true;
                         this.callbacks.forEach((callback) => {
+                          
                           callback();
                         });
                       }
 
-                      async get(assetName) {
-                        await new Promise((resolve) => {
-                            const callback = () => {
-                                resolve();
-                            };
-                            this.callbacks.push(callback);
-                        });
+                      async getDataUrl(assetName) {
+                        if (!this.initialized) {
+                          await new Promise((resolve) => {
+                              const callback = () => {
+                                  resolve();
+                              };
+                              this.callbacks.push(callback);
+                          });
+                        }
                         const asset = this.assets.find((asset) => asset.asset_name === assetName);
                         return asset.dataUrl;
                       }
+
+                      requestedAssets = {};
+                      alreadyRequestedAssets = {};
+                      getImage(assetName) {
+                        if (this.requestedAssets[assetName]) {
+                          return this.requestedAssets[assetName];
+                        }
+                        const requestAsset = async () => {
+                          this.alreadyRequestedAssets[assetName] = true;
+                          const dataUrl = await this.getDataUrl(assetName);
+                          this.requestedAssets[assetName] = loadImage(dataUrl);
+                        }
+                        if (!this.alreadyRequestedAssets[assetName]) requestAsset();
+
+                        const width = this.assets.find((asset) => asset.asset_name === assetName).width;
+                        const height = this.assets.find((asset) => asset.asset_name === assetName).height;
+
+                        return createImage(width, height); 
+                      }
+
+                      
                       
                     }
 
                     globalThis.assets = new Assets();
 
+                    globalThis.setupCanvas = function(width,height) {
+                      const canvas = createCanvas(width,height);
+                      canvas.canvas.style.width = '100%';
+                      canvas.canvas.style.height = '100%';
+                    }
  
                   }
                     </script>

@@ -13,6 +13,7 @@ const ChatComponent = (p: {
     openai: OpenAI, project: Project,
     persistentState: any,
     setPersistentState: (state: any) => void,
+    assets: any[],
 }) => {
     // console.log(p);
     const messages = p.persistentState.messages || [];
@@ -27,6 +28,15 @@ const ChatComponent = (p: {
     const [awaitingReply, setAwaitingReply] = useState(false);
     const openai = p.openai;
     const project = p.project;
+    const assetsPreview = p.assets.map((asset) => {
+        return {
+            asset_name: asset.asset_name,
+            asset_type: asset.asset_type,
+            width: asset.width,
+            height: asset.height,
+        };
+    });
+
     // console.log(project);
     const handleSendMessage = async () => {
         if (!userMessage.trim()) return;
@@ -39,7 +49,7 @@ const ChatComponent = (p: {
         setMessages(updatedMessages);
         setAwaitingReply(true);
         setUserMessage("");
-        const newMessages = await processMessage(updatedMessages, project, openai,thinkDeep);
+        const newMessages = await processMessage(updatedMessages, project, assetsPreview, openai,thinkDeep);
         setMessages(newMessages);
         setAwaitingReply(false);
         globalThis.CK_ADAPTER.pushWorkload({

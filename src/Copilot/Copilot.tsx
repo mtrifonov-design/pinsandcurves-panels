@@ -9,6 +9,7 @@ const ChatWithApiKeyWrapper = (p: {
     project: Project,
     persistentState: any,
     setPersistentState: (state: any) => void,
+    assets: any[],
 }) => {
   const [apiKey, setApiKey] = useState(localStorage.getItem("openai_api_key") || "");
   const [isKeySet, setIsKeySet] = useState(localStorage.getItem("openai_api_key") !== null);
@@ -49,6 +50,7 @@ const ChatWithApiKeyWrapper = (p: {
   return <ChatComponent openai={openai} project={p.project} 
   persistentState={p.persistentState}
   setPersistentState={p.setPersistentState}
+  assets={p.assets}
   />;
 };
 
