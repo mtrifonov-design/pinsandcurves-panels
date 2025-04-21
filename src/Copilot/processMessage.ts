@@ -77,7 +77,7 @@ async function processMessage(messages: any, project: Project, assets: any[], op
         // only keep the last 15 messages
         messagesForAssistant = messagesForAssistant.slice(-15);
         const mentorResponse = await callAgent({
-            model: "gpt-4o-2024-08-06",
+            model: "gpt-4.1-nano-2025-04-14",
             prompt: MentorPrompt,
             format: MentorFormat,
         }, [...messagesForAssistant, 
@@ -86,42 +86,14 @@ async function processMessage(messages: any, project: Project, assets: any[], op
         ], openai);
 
         console.log("Mentor Response: ", mentorResponse);
-        // const response = await openai.responses.create({
-        //     model: "gpt-4o-2024-08-06",
-        //     input: [
-        //         { "role": "system", "content": MentorPrompt },
-        //         ...messagesForAssistant,
-        //         { "role": "system", "content": formatProject(project) },
-        //     ],
-        //     text: MentorFormat,
-        // });
-        // console.log(response);
-        // // 4. Parse the assistant's response (assuming it's valid JSON in .content)
-        // const event = JSON.parse(response.output[0].content[0].text);
+
         let timelineOperations = [];
         let chatMessage = mentorResponse.chatMessage;
         
         if (mentorResponse.thresholdMet) {
-            // const response = await openai.responses.create({
-            //     model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
-            //     input: [
-            //         { "role": "system", "content": CodeAssistantPrompt },
-            //         ...messagesForAssistant,
-            //         { "role": "system", "content": formatProject(project) },
-            //         { "role": "system", "content": event.brief },
-            //     ],
-            //     text: CodeAssistantFormat,
-            // });
-            // console.log(response);
-            // const newEvent = JSON.parse(response.output[thinkDeep ? 1 : 0].content[0].text);
-            // event.signalAgentBrief = newEvent.signalAgentBrief;
-            // event.p5jsSketch = newEvent.p5jsSketch;
-            // event.chatMessage = newEvent.chatMessage;
-            // console.log(event.p5jsSketch);
-            // console.log(event.signalAgentBrief);
 
             const codeAssistantResponse = await callAgent({
-                model: "gpt-4o-2024-08-06",
+                model: "gpt-4.1-nano-2025-04-14",
                 prompt: CodeAssistantPrompt,
                 format: CodeAssistantFormat,
             }, [
@@ -135,7 +107,7 @@ async function processMessage(messages: any, project: Project, assets: any[], op
             if (codeAssistantResponse.signalChangesNeeded) {
 
                 const signalAgentResponse = await callAgent({
-                    model: "gpt-4o-2024-08-06",
+                    model: "gpt-4.1-nano-2025-04-14",
                     prompt: SignalAssistantPrompt,
                     format: SignalAssistantFormat,
                 }, [{role: "user", content: codeAssistantResponse.signalAgentBrief },{role:"user", content: formatProject(project)}], openai);
@@ -143,17 +115,6 @@ async function processMessage(messages: any, project: Project, assets: any[], op
                 signalAgentTimelineOperations = signalAgentResponse.timelineOperations;
             }
 
-            // const signalAgentResponse = await openai.responses.create({
-            //     model: thinkDeep ? "o4-mini-2025-04-16" : "gpt-4o-2024-08-06", //"o4-mini-2025-04-16",
-            //     input: [
-            //         { "role": "system", "content": SignalAssistantPrompt },
-            //         ...messagesForAssistant,
-            //         { "role": "system", "content": formatProject(project) },
-            //         { "role": "system", "content": event.signalAgentBrief },
-            //     ],
-            //     text: SignalAssistantFormat,
-            // });
-            //const signalAgentEvent = JSON.parse(signalAgentResponse.output[thinkDeep ? 1 : 0].content[0].text);
             timelineOperations = [`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${codeAssistantResponse.p5jsSketch}\`)`,...signalAgentTimelineOperations];
             chatMessage = codeAssistantResponse.chatMessage;
 
