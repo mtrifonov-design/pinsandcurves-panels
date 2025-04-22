@@ -29,6 +29,8 @@ function EditingArea() {
     const controller = useRef(
         Controller.Client(
             (e : any) => {
+                //console.log("EDITING",e.lastAgreedProjectStateId, e.newProjectStateId);
+                // console.log("EDITING",e.newProjectStateId);
                 messageChannel("ProjectState", "projectNodeEvent", e, subscriber_id);
             }
         )
@@ -63,6 +65,18 @@ function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectContr
     const projectTools = controller.projectTools;
     const interpolateSignalValue = controller.interpolateSignalValueAtTime.bind(controller);
     const [activeTool, setActiveTool] = useState("pointer");
+    useEffect(() => {
+        // togggle active tool on keypress "a"
+        const handleKeyPress = (event: KeyboardEvent) => {
+            if (event.key === "a") {
+                setActiveTool((prevTool) => (prevTool === "pointer" ? "add_pin" : "pointer"));
+            }
+        };
+        window.addEventListener("keypress", handleKeyPress);
+        return () => {
+            window.removeEventListener("keypress", handleKeyPress);
+        };
+    }, []);
 
     return (
         <div
@@ -76,7 +90,8 @@ function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectContr
                 "bar bar"
                 "editing editing"
             `,
-            backgroundColor: "#2C333A"
+            backgroundColor: "#2C333A",
+            overflow: "hidden",
         
         }}>
             <div style={{gridArea: "bar",

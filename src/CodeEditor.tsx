@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { CanvasCodeEditor, OrganisationAreaSignalListDependencies, ProjectTools } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { useChannel, messageChannel } from "./hooks";
+import { useChannel, messageChannel, useUnit } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
@@ -10,19 +10,82 @@ const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController
 
 let guard = false;
 const subscriber_id = "CodeEditor";
+
+function generateId() {
+    return Math.random().toString(36).substr(2, 9);
+}
 function CodeEditor() {
 
     const [ready, setReady] = React.useState(false);
 
     
-    useChannel("INIT", (unit: any) => {
-        if (guard) return;
-        guard = true;
-        messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
-        controller.current.connectToHost(() => {
-            setReady(true);
-        });
-    })
+    // useUnit(unit => {
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload, INIT, TERMINATE } = payload;
+
+    //     if (INIT) {
+    //         messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+    //         controller.current.connectToHost(() => {
+    //             setReady(true);
+    //         });
+    //     }
+    //     if (TERMINATE) {
+    //         messageChannel("ProjectState", "unsubscribe", undefined, subscriber_id);
+    //     }
+
+
+    //     if (channel === "ProjectState") {
+    //         if (request === "projectNodeEvent") {
+    //             controller.current.receive(messagePayload);
+    //         }
+    //     }
+    //     return {};
+    // })
+
+     const savedBlockerId = useRef<string | undefined>(undefined);
+        useUnit(unit => {
+            const { payload } = unit;
+            const { channel, request, payload: messagePayload, INIT, TERMINATE, blocker_id } = payload;
+    
+            if (INIT) {
+                messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+                controller.current.connectToHost(() => {
+                    setReady(true);
+                });
+            }
+            if (TERMINATE) {
+                messageChannel("ProjectState", "unsubscribe", undefined, subscriber_id);
+                savedBlockerId.current = blocker_id;
+            }
+    
+            if (channel === "ProjectState") {
+                if (request === "projectNodeEvent") {
+                    controller.current.receive(messagePayload);
+                }
+    
+                if (request === "unsubscribeConfirmation") {
+                    globalThis.CK_ADAPTER.pushWorkload({
+                        default: [{
+                            type: "blocker",
+                            blocker_id: savedBlockerId.current,
+                            id: generateId(),
+                            blocker_count: 2,
+                        }]
+                    })
+                }
+            }
+            return {};
+        })
+
+
+    // useChannel("INIT", (unit: any) => {
+    //     if (guard) return;
+    //     guard = true;
+    //     messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+    //     controller.current.connectToHost(() => {
+    //         setReady(true);
+    //     });
+    // })
 
     const controller = useRef(
         Controller.Client(
@@ -32,14 +95,14 @@ function CodeEditor() {
         )
     );
 
-    useChannel("ProjectState", (unit: any) => {
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload } = payload;
-        if (request === "projectNodeEvent") {
-            controller.current.receive(messagePayload);
-        }
-        return {};
-    })
+    // useChannel("ProjectState", (unit: any) => {
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload } = payload;
+    //     if (request === "projectNodeEvent") {
+    //         controller.current.receive(messagePayload);
+    //     }
+    //     return {};
+    // })
 
     if (!ready) {
         return <div>Loading...</div>;
@@ -68,7 +131,7 @@ function CodeEditorContent({controller}: {controller: PinsAndCurvesProjectContro
         style={{
             width: '100vw',
             height: '100vh',
-        
+            overflow: 'hidden',
         }}>
         <CanvasCodeEditor 
             setFunctionString={setFunctionString}

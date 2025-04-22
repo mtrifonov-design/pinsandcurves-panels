@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useChannel } from "./hooks";
+import { messageChannel, useUnit } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
@@ -52,37 +52,57 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
 
 
 let guard = false;
-let subscriberId = "SignalList"
+let subscriber_id = "SignalList"
+
+function generateId() {
+    return Math.random().toString(36).substr(2, 9);
+}
 function SignalList() {
 
     const [ready, setReady] = React.useState(false);
 
-    useChannel("INIT", (unit: any) => {
-        if (guard) return;
-        guard = true;
-        messageChannel("ProjectState", "subscribe", undefined, subscriberId);
-        controller.current.connectToHost(() => {
-            setReady(true);
-        });
+    const savedBlockerId = useRef<string | undefined>(undefined);
+    useUnit(unit => {
+        const { payload } = unit;
+        const { channel, request, payload: messagePayload, INIT, TERMINATE, blocker_id } = payload;
+
+        if (INIT) {
+            messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+            controller.current.connectToHost(() => {
+                setReady(true);
+            });
+        }
+        if (TERMINATE) {
+            messageChannel("ProjectState", "unsubscribe", undefined, subscriber_id);
+            savedBlockerId.current = blocker_id;
+        }
+
+        if (channel === "ProjectState") {
+            if (request === "projectNodeEvent") {
+                controller.current.receive(messagePayload);
+            }
+
+            if (request === "unsubscribeConfirmation") {
+                globalThis.CK_ADAPTER.pushWorkload({
+                    default: [{
+                        type: "blocker",
+                        blocker_id: savedBlockerId.current,
+                        id: generateId(),
+                        blocker_count: 2,
+                    }]
+                })
+            }
+        }
+        return {};
     })
 
     const controller = useRef(
         Controller.Client(
             (e : any) => {
-                messageChannel("ProjectState", "projectNodeEvent", e, subscriberId);
+                messageChannel("ProjectState", "projectNodeEvent", e, subscriber_id);
             }
         )
     );
-
-    useChannel("ProjectState", (unit: any) => {
-        //console.log("SignalList channel", unit);
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload } = payload;
-        if (request === "projectNodeEvent") {
-            controller.current.receive(messagePayload);
-        }
-        return {};
-    })
 
     if (!ready) {
         return <div>Loading...</div>;

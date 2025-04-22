@@ -121,8 +121,6 @@ class CK_Adapter {
 
   workload = {};
   pushWorkload(workload: any) {
-    // merge workload with existing workload on a thread level
-    // console.log("MODE", this.mode, "PUSH_WORKLOAD", workload);
     const threadKeys = Object.keys(workload);
     for (const threadKey of threadKeys) {
       if (this.workload[threadKey] === undefined) {
@@ -130,11 +128,10 @@ class CK_Adapter {
       }
       this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
     }
+    // console.log(this.mode)
     // schedule sendWorkload
     if (this.mode === "PUSH") {
-      setTimeout(() => {
         this.release();
-      }, 0);
     }
   }
 

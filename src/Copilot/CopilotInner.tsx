@@ -23,7 +23,7 @@ const ChatComponent = (p: {
             messages: newMessages,
         }));
     }
-    const [thinkDeep, setThinkDeep] = useState(false);
+    const [assistantType, setAssistantType] = useState("signals");
     const [userMessage, setUserMessage] = useState("");
     const [awaitingReply, setAwaitingReply] = useState(false);
     const openai = p.openai;
@@ -44,12 +44,12 @@ const ChatComponent = (p: {
         // 1. Optimistically update local state with user's message
         const updatedMessages = [
             ...messages,
-            { role: "user", chatMessage: userMessage },
+            { role: "user", chatMessage: userMessage, assistantType },
         ];
         setMessages(updatedMessages);
         setAwaitingReply(true);
         setUserMessage("");
-        const newMessages = await processMessage(updatedMessages, project, assetsPreview, openai,thinkDeep);
+        const newMessages = await processMessage(updatedMessages, project, assetsPreview, openai, assistantType);
         setMessages(newMessages);
         setAwaitingReply(false);
         globalThis.CK_ADAPTER.pushWorkload({
@@ -74,7 +74,13 @@ const ChatComponent = (p: {
     };
 
     return (
-        <div style={{ padding: "10px", width: "400px", margin: "0 auto" }}>
+        <div style={{ 
+            padding: "10px", 
+            width: "100%", 
+            height: "100%",
+            display: "grid",
+            gridTemplateRows: "1fr 300px",
+            margin: "0 auto" }}>
             <div
                 style={{
                     border: "1px solid #ccc",
@@ -95,34 +101,58 @@ const ChatComponent = (p: {
                     </div>
                 )}
             </div>
+            <div style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 80px",
+            }}>
 
-            <textarea
-                value={userMessage}
-                onChange={(e) => setUserMessage(e.target.value)}
-                placeholder="Type your message here..."
-                style={{
-                    width: "100%",
-                    marginBottom: "10px",
-                    boxSizing: "border-box",
-                    padding: "8px",
-                }}
-            />
-            <div>
-                <label>
-                    <input
-                        type="checkbox"
-                        checked={thinkDeep}
-                        onChange={(e) => setThinkDeep(e.target.checked)}
+                <div>
+                    <div style={{
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        alignItems: "center",
+                        marginBottom: "10px",
+                        gap: "10px",
+                    }}>
+                        <div style={{
+                            padding: "5px",
+                            border: assistantType === "signals" ? "2px solid black" : "1px solid #ccc",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                        }}
+                        onClick={() => setAssistantType("signals")}
+                        >Signals</div>
+                        <div style={{
+                            padding: "5px",
+                            border: assistantType === "code" ? "2px solid black" : "1px solid #ccc",
+                            borderRadius: "5px",
+                            cursor: "pointer",
+                        }}
+                        onClick={() => setAssistantType("code")}
+                        >Code</div>
+                    </div>
+                    <textarea
+                        value={userMessage}
+                        onChange={(e) => setUserMessage(e.target.value)}
+                        placeholder="Type your message here..."
+                        style={{
+                            marginBottom: "10px",
+                            boxSizing: "border-box",
+                            padding: "8px",
+                            width: "100%",
+                            height: "100px",
+                            resize: "none",
+                        }}
                     />
-                    Think Deeply
-                </label>
+
+                </div>
+                <button
+                    onClick={handleSendMessage}
+                    style={{ width: "80px", padding: "8px" }}
+                >
+                    Send
+                </button>
             </div>
-            <button
-                onClick={handleSendMessage}
-                style={{ width: "100%", padding: "8px" }}
-            >
-                Send
-            </button>
         </div>
     );
 };

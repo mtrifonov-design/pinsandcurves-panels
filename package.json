@@ -10,8 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mtrifonov-design/pinsandcurves-external": "^0.0.219",
-    "@mtrifonov-design/pinsandcurves-specialuicomponents": "0.0.200",
+    "@mtrifonov-design/pinsandcurves-external": "^0.0.222",
+    "@mtrifonov-design/pinsandcurves-specialuicomponents": "0.0.203",
     "openai": "^4.94.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

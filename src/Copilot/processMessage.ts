@@ -4,17 +4,27 @@ import OpenAI from "openai";
 import { ProjectDataStructure } from "@mtrifonov-design/pinsandcurves-external";
 type Project = ProjectDataStructure.PinsAndCurvesProject;
 
-import { prompt as MentorPrompt, format as MentorFormat } from './AgentNetwork/MentorPrompt'
 import { prompt as CodeAssistantPrompt, format as CodeAssistantFormat } from './AgentNetwork/CodeAssistantPrompt'
 import { prompt as SignalAssistantPrompt, format as SignalAssistantFormat } from './AgentNetwork/SignalAssistantPrompt'
 import callAgent from "./callAgent";
 
-function formatProject(appState: Project) {
-    // Format the content based on the application state
-    // For example, you might want to include the current project name or other details
-    // in the system prompt.
+const NANO = "gpt-4.1-nano-2025-04-14";
+const MINI = "gpt-4.1-mini-2025-04-14";
+const BIG = "gpt-4.1-2025-04-14"
 
+const BASE_MODEL = MINI;
+
+function formatSketch(appState: Project) {
+    const p5jsSketch = appState.signalData["HIDDEN_CODE"]?.defaultValue;
+    const content = `
+    <P5JS_SKETCH>${p5jsSketch}</P5JS_SKETCH>
+    `
+    return content;
+}
+
+function formatSignals(appState: Project) {
     const signalData = appState.signalData;
+    const timelineData = appState.timelineData;
     const signals = Object.values(signalData).map((signal) => ({
         id: signal.id,
         name: appState.orgData.signalNames[signal.id],
@@ -30,38 +40,53 @@ function formatProject(appState: Project) {
         })).sort((a, b) => a.time - b.time),
     })).filter((signal) => signal.id !== "HIDDEN_CODE");
 
-    const p5jsSketch = appState.signalData["HIDDEN_CODE"]?.defaultValue;
+    const content = `
+    <SIGNALS>${JSON.stringify({timelineData,signals}, null, 2)}</SIGNALS>
+    `
+    return content;
+}
 
-    const project = {
-        signals: signals,
-        p5jsSketch: p5jsSketch,
+
+function formatSignalsShort(appState: Project) {
+    const signalData = appState.signalData;
+    const signals = Object.values(signalData).map((signal) => ({
+        id: signal.id,
+        name: appState.orgData.signalNames[signal.id],
+        type: signal.type,
+        range: signal.range,
+        defaultValue: signal.defaultValue,
+    })).filter((signal) => signal.id !== "HIDDEN_CODE");
+
+    const content = `
+    <SIGNALS>${JSON.stringify(signals, null, 2)}</SIGNALS>
+    `
+    return content;
+}
+
+function formatAssistantContent(msg: any, assistantType: string) {
+    if (assistantType === "signals") {
+        return `
+        <TIMELINE_OPERATIONS>${msg.timelineOperations}</TIMELINE_OPERATIONS>
+        <CHAT_MESSAGE>${msg.chatMessage}</CHAT_MESSAGE>
+        `;
+    }
+    if (assistantType === "code") {
+        return `
+        <P5JS_SKETCH>${msg.p5jsSketch}</P5JS_SKETCH>
+        <CHAT_MESSAGE>${msg.chatMessage}</CHAT_MESSAGE>
+        `;
     }
 
-    const content = `
-    <PROJECT_STATE>${JSON.stringify(project, null, 2)}</PROJECT_STATE>
-    `
-    // console.log(content)
-    return content;
 }
 
-function formatAssistantContent(chatMessage: string, timelineOperations: any, thresholdMet: string, brief: string) {
-    // Format the content based on the application state
-    const content = `
-    <THRESHOLD_MET>${thresholdMet}</THRESHOLD_MET>
-    <BRIEF>${thresholdMet ? brief : ""}</BRIEF>
-    <CHAT_MESSAGE>${thresholdMet ? "" : chatMessage}</CHAT_MESSAGE>
-    `
-    //<TIMELINE_OPERATIONS>${JSON.stringify(timelineOperations, null, 2)}</TIMELINE_OPERATIONS>
-    return content;
-}
 
-async function processMessage(messages: any, project: Project, assets: any[], openai: OpenAI, thinkDeep: boolean = false) {
+async function processMessage(messages: any, project: Project, assets: any[], openai: OpenAI, assistantType: string) {
     try {
 
-        // 3. Call the OpenAI API using the official library
+        // extract the last uninterrrupted stretch of messages tagged with assistantType : the current assistant type
+        messages = messages.filter((msg: any) => msg.role === "assistant" || msg.assistantType === assistantType);
         let messagesForAssistant = [];
-        messages.forEach((msg, index) => {
-            const lastMessage = index === messages.length - 1;
+        messages.forEach((msg: any, index: number) => {
             if (msg.role === "user") {
                 messagesForAssistant.push({
                     role: "user",
@@ -70,57 +95,61 @@ async function processMessage(messages: any, project: Project, assets: any[], op
             } else if (msg.role === "assistant") {
                 messagesForAssistant.push({
                     role: "assistant",
-                    content: formatAssistantContent(msg.chatMessage, msg.timelineOperations, msg.thresholdMet, msg.brief, ),
+                    content: formatAssistantContent(msg,assistantType),
                 });
             }
         })
         // only keep the last 15 messages
         messagesForAssistant = messagesForAssistant.slice(-15);
-        const mentorResponse = await callAgent({
-            model: "gpt-4.1-nano-2025-04-14",
-            prompt: MentorPrompt,
-            format: MentorFormat,
-        }, [...messagesForAssistant, 
-            {role:"user", content: JSON.stringify(assets, null, 2)},
-            {role:"user", content: formatProject(project)},
-        ], openai);
-
-        console.log("Mentor Response: ", mentorResponse);
-
         let timelineOperations = [];
-        let chatMessage = mentorResponse.chatMessage;
-        
-        if (mentorResponse.thresholdMet) {
+        let chatMessage = "";
+        let p5jsSketch = "";
 
-            const codeAssistantResponse = await callAgent({
-                model: "gpt-4.1-nano-2025-04-14",
+        if (assistantType === "code") {
+            messagesForAssistant.push({
+                role: "user",
+                content: JSON.stringify(assets, null, 2),
+            });
+            messagesForAssistant.push({
+                role: "user",
+                content: formatSignalsShort(project),
+            });
+            messagesForAssistant.push({
+                role: "user",
+                content: formatSketch(project),
+            });
+
+            const response = await callAgent({
+                model: BIG,
                 prompt: CodeAssistantPrompt,
                 format: CodeAssistantFormat,
-            }, [
-                {role: "user", content: mentorResponse.brief },
-                {role:"user", content: formatProject(project)},
-                {role:"user", content: JSON.stringify(assets, null, 2)},
-            ], openai);
-            console.log("Code Assistant Response: ", codeAssistantResponse);
+            }, messagesForAssistant, openai);
+            console.log("Code Assistant Response: ", response);
 
-            let signalAgentTimelineOperations = [];
-            if (codeAssistantResponse.signalChangesNeeded) {
-
-                const signalAgentResponse = await callAgent({
-                    model: "gpt-4.1-nano-2025-04-14",
-                    prompt: SignalAssistantPrompt,
-                    format: SignalAssistantFormat,
-                }, [{role: "user", content: codeAssistantResponse.signalAgentBrief },{role:"user", content: formatProject(project)}], openai);
-                console.log("Signal Agent Response: ", signalAgentResponse);
-                signalAgentTimelineOperations = signalAgentResponse.timelineOperations;
+            if (response.p5jsChangesNeeded) {
+                timelineOperations.push(`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${response.p5jsSketch}\`)`);
             }
 
-            timelineOperations = [`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${codeAssistantResponse.p5jsSketch}\`)`,...signalAgentTimelineOperations];
-            chatMessage = codeAssistantResponse.chatMessage;
-
+            chatMessage = response.chatMessage;
+            p5jsSketch = response.p5jsSketch;
         }
 
-        console.log("Timeline Operations: ", timelineOperations);
+        if (assistantType === "signals") {
+            messagesForAssistant.push({
+                role: "user",
+                content: formatSignals(project),
+            });
+            const response = await callAgent({
+                model: BASE_MODEL,
+                prompt: SignalAssistantPrompt,
+                format: SignalAssistantFormat,
+            }, messagesForAssistant, openai);
+            console.log("Signal Assistant Response: ", response);
+
+            if (response.timelineChangesNeeded) timelineOperations = response.timelineOperations;
+            chatMessage = response.chatMessage;
+        }
+
         globalThis.CK_ADAPTER.pushWorkload({
             default: [
                 {
@@ -144,8 +173,9 @@ async function processMessage(messages: any, project: Project, assets: any[], op
                 role: "assistant",
                 ...{
                     chatMessage: chatMessage,
-                    thresholdMet: mentorResponse.thresholdMet,
-                    brief: mentorResponse.brief,
+                    p5JsSketch: p5jsSketch,
+                    assistantType: assistantType,
+                    timelineOperations: timelineOperations,
                 }
             },
         ];

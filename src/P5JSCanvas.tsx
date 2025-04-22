@@ -53,6 +53,9 @@ function P5JSCanvas() {
                 cbRef.current(payload);
             }
             if (subscriber_id == OUTER_SUBSCRIBER_ID) {
+                // console.log("P5",messagePayload.lastAgreedProjectStateId, controller.current.projectNode.projectStateId, messagePayload.newProjectStateId);
+                //console.log("P5",messagePayload.newProjectStateId);
+                // console.log(messagePayload)
                 controller.current.receive(messagePayload);
             }
         }
@@ -136,7 +139,7 @@ function P5JSCanvasContent({ controller, setCb, assets }: { controller: PinsAndC
             style={{
                 width: '100vw',
                 height: '100vh',
-
+                overflow: 'hidden',
             }}>
             <P5
                 assets={assets}
