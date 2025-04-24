@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { BrowserRouter } from 'react-router';
+import { BrowserRouter, HashRouter } from 'react-router';
 import CK_Adapter from './CK_Adapter.ts';
 
 
@@ -11,9 +11,9 @@ new CK_Adapter((cb : Function) => {
       if (root) {
         createRoot(root).render(
           <StrictMode>
-            <BrowserRouter>
+            <HashRouter>
               <App renderedCallback={cb} />
-            </BrowserRouter>
+            </HashRouter>
           </StrictMode>,
         )
       }
