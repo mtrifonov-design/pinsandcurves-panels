@@ -1,28 +1,66 @@
 import React, { useEffect, useState } from "react";
 import { EditingAreaCanvas, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, TimelineBar, Toolbar } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useChannel } from "./hooks";
+import { messageChannel, useUnit } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
 import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
+import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
-let guard = false;
-const subscriber_id = "EditingArea";
+
+function generateId() {
+    return Math.random().toString(36).substr(2, 9);
+}
+const subscriber_id = "EditingArea"+generateId();
 function EditingArea() {
 
     const [ready, setReady] = React.useState(false);
 
+    const savedBlockerId = useRef<string | undefined>(undefined);
+    useUnit(unit => {
+        const { payload } = unit;
+        const { channel, request, payload: messagePayload, INIT, TERMINATE, blocker_id } = payload;
 
-    useChannel("INIT", (unit: any) => {
-        if (guard) return;
-        guard = true;
-        messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
-        controller.current.connectToHost(() => {
-            setReady(true);
-        });
+        if (INIT) {
+            messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+            controller.current.connectToHost(() => {
+                setReady(true);
+            });
+        }
+        if (TERMINATE) {
+            messageChannel("ProjectState", "unsubscribe", undefined, subscriber_id);
+            savedBlockerId.current = blocker_id;
+        }
+
+        if (channel === "ProjectState") {
+            if (request === "projectNodeEvent") {
+                controller.current.receive(messagePayload);
+            }
+
+            if (request === "unsubscribeConfirmation") {
+                globalThis.CK_ADAPTER.pushWorkload({
+                    default: [{
+                        type: "blocker",
+                        blocker_id: savedBlockerId.current,
+                        id: generateId(),
+                        blocker_count: 2,
+                    }]
+                })
+            }
+        }
+        return {};
     })
+
+    // useChannel("INIT", (unit: any) => {
+    //     if (guard) return;
+    //     guard = true;
+    //     messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
+    //     controller.current.connectToHost(() => {
+    //         setReady(true);
+    //     });
+    // })
     
 
 
@@ -36,17 +74,17 @@ function EditingArea() {
         )
     );
 
-    useChannel("ProjectState", (unit: any) => {
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload } = payload;
-        if (request === "projectNodeEvent") {
-            controller.current.receive(messagePayload);
-        }
-        return {};
-    })
+    // useChannel("ProjectState", (unit: any) => {
+    //     const { payload } = unit;
+    //     const { channel, request, payload: messagePayload } = payload;
+    //     if (request === "projectNodeEvent") {
+    //         controller.current.receive(messagePayload);
+    //     }
+    //     return {};
+    // })
 
     if (!ready) {
-        return <div>Loading...</div>;
+        return <FullscreenLoader/>;
     }
 
     return <EditingAreaContent controller={controller.current} />;
@@ -111,6 +149,7 @@ function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectContr
             </div>
             <div style={{
                 gridArea: "editing",
+                height: "calc(100vh - 50px)",
             }}>
                 <EditingAreaCanvas
                     activeTool={activeTool}

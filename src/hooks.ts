@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
+import CONFIG from './Config';
 
-const target = "JS::BACKGROUND::http://localhost:8000/ProjectState";
 
 function useMessageChannel(channel: string) {
 }
@@ -31,7 +31,7 @@ function messageChannel(channel: string, request: string, payload: any, subscrib
         receiver: {
           instance_id: "BACKGROUND",
           modality: "wasmjs",
-          resource_id: "http://localhost:8000/ProjectState",
+          resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}ProjectState`,
         },
         payload: {
           channel,

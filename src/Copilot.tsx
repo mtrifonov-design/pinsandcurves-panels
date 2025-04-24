@@ -1,12 +1,10 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
-import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useChannel, useUnit } from "./hooks";
+import React, { useState } from "react";
+import { OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import { messageChannel, useUnit } from "./hooks";
 import CopilotInterior from "./Copilot/Copilot";
+import CONFIG from "./Config";
 
-
-type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
-
-import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
+import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
@@ -65,7 +63,7 @@ function Copilot() {
                     receiver: {
                       instance_id: "COPILOT_EVAL",
                       modality: "wasmjs",
-                      resource_id: "http://localhost:8000/CopilotEval",
+                      resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}CopilotEval`,
                     },
                     payload: {
                         INIT: true,
@@ -80,7 +78,7 @@ function Copilot() {
                     receiver: {
                       instance_id: "ASSET_SERVER",
                       modality: "wasmjs",
-                      resource_id: "http://localhost:8000/AssetServer",
+                      resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServer`,
                     },
                     payload: {
                         request: "subscribe",
@@ -95,7 +93,7 @@ function Copilot() {
                     receiver: {
                       instance_id: "COPILOT_DATA",
                       modality: "wasmjs",
-                      resource_id: "http://localhost:8000/CopilotData",
+                      resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}CopilotData`,
                     },
                     payload: {
                         channel: "PERSISTENT_DATA", 
@@ -139,55 +137,6 @@ function Copilot() {
     })
 
 
-    // useChannel("PERSISTENT_DATA", (unit: any) => {
-    //     const { payload } = unit;
-    //     const { channel, request, payload: messagePayload } = payload;
-    //     if (request === "responseData") {
-    //         setPersistentDataReady(true);
-    //         setPersistentState(messagePayload);
-    //     }
-    //     return {};
-    // })
-
-    // useChannel("INIT", (unit: any) => {
-    //     if (guard) return;
-    //     guard = true;
-    //     messageChannel("ProjectState", "subscribe", undefined, subscriberId);
-    //     controller.current.connectToHost(() => {
-    //         setProjectReady(true);
-    //     });
-    //     globalThis.CK_ADAPTER.pushWorkload({
-    //         default: [
-    //           {
-    //             type: "worker",
-    //             receiver: {
-    //               instance_id: "COPILOT_EVAL",
-    //               modality: "wasmjs",
-    //               resource_id: "http://localhost:8000/CopilotEval",
-    //             },
-    //             payload: {
-    //                 INIT: true,
-    //             },
-    //           },
-    //         ]
-    //       });
-    //       globalThis.CK_ADAPTER.pushWorkload({
-    //         default: [
-    //           {
-    //             type: "worker",
-    //             receiver: {
-    //               instance_id: "COPILOT_DATA",
-    //               modality: "wasmjs",
-    //               resource_id: "http://localhost:8000/CopilotData",
-    //             },
-    //             payload: {
-    //                 channel: "PERSISTENT_DATA", 
-    //                 request: "requestData"
-    //             },
-    //           },
-    //         ]
-    //       });
-    // })
 
     const [persistentState, setPersistentState] = useState({});
 
@@ -199,16 +148,6 @@ function Copilot() {
             }
         )
     );
-
-    // useChannel("ProjectState", (unit: any) => {
-    //     //console.log("SignalList channel", unit);
-    //     const { payload } = unit;
-    //     const { channel, request, payload: messagePayload } = payload;
-    //     if (request === "projectNodeEvent") {
-    //         controller.current.receive(messagePayload);
-    //     }
-    //     return {};
-    // })
 
     if (!ready) {
         return <div>Loading...</div>;

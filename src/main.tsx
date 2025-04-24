@@ -6,13 +6,13 @@ import { BrowserRouter } from 'react-router';
 import CK_Adapter from './CK_Adapter.ts';
 
 
-new CK_Adapter(() => {
+new CK_Adapter((cb : Function) => {
       const root = document.getElementById('root');
       if (root) {
         createRoot(root).render(
           <StrictMode>
             <BrowserRouter>
-              <App />
+              <App renderedCallback={cb} />
             </BrowserRouter>
           </StrictMode>,
         )

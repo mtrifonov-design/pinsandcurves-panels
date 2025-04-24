@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import SignalList from './SignalList';
 import EditingArea from './EditingArea';
@@ -10,7 +10,14 @@ import AssetManager from './AssetManager/index';
 const Default = () => <h1>Default Page</h1>;
 
 
-function App() {
+function App(p: { renderedCallback: Function }) {
+
+  useEffect(() => {
+    const { renderedCallback } = p;
+    if (renderedCallback) {
+      renderedCallback();
+    }
+  }, []);
 
   return (
     <div>

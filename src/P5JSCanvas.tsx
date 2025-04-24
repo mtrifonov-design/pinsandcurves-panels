@@ -1,15 +1,49 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import P5 from "./P5JSCanvas/P5JSCanvas";
-import { useChannel, messageChannel, useUnit } from "./hooks";
+import { messageChannel, useUnit } from "./hooks";
+import CONFIG from "./Config";
 
-
-import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
+import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
+import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
-let guard = false;
-const INNER_SUBSCRIBER_ID = "P5JSCanvas_INNER";
-const OUTER_SUBSCRIBER_ID = "P5JSCanvas_OUTER";
+const defaultSketch = `function setup() {
+    createCanvas(400, 400);
+}
+function draw() {
+    background(220);
+    ellipse(200,200, 50, 50);
+}
+`
+
+
+
+function addP5SketchToAssets(assets: any[]) {
+
+    // convert default sketch to data url
+    // const blob = new Blob([defaultSketch], { type: 'text/javascript' });
+    // const dataUrl = URL.createObjectURL(blob);
+
+    const p5Sketch = {
+        asset_id: "P5JSSKETCH",
+        asset_name: "P5JS Sketch",
+        asset_type: "application/javascript",
+        dataUrl: defaultSketch
+    };
+
+    if (assets.some(asset => asset.asset_id === p5Sketch.asset_id)) {
+        return assets;
+    }
+    return [...assets, p5Sketch];
+}
+
+function generateId() {
+    return Math.random().toString(36).substring(2, 15);
+}
+
+const INNER_SUBSCRIBER_ID = "P5JSCanvas_INNER"+generateId();
+const OUTER_SUBSCRIBER_ID = "P5JSCanvas_OUTER"+generateId();
 function P5JSCanvas() {
 
     const [projectReady, setProjectReady] = React.useState(false);
@@ -17,11 +51,13 @@ function P5JSCanvas() {
     const ready = projectReady && assetsReady;
     const [assets, setAssets] = useState([]);
 
+    const savedBlockerId = useRef<string | null>(null);
+    const unsubscribeCount = useRef(0);
 
     useUnit((unit: any) => {
         //console.log(unit)
         const { sender, payload } = unit;
-        const { INIT, channel, request, payload: messagePayload, subscriber_id } = payload;
+        const { INIT, channel, request, payload: messagePayload, subscriber_id, TERMINATE, blocker_id } = payload;
         if (INIT) {
             messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
             messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID);
@@ -33,7 +69,7 @@ function P5JSCanvas() {
                 receiver: {
                     instance_id: "ASSET_SERVER",
                     modality: "wasmjs",
-                    resource_id: "http://localhost:8000/AssetServer",
+                    resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServer`,
                 },
                 payload: {
                     request: "subscribe",
@@ -42,44 +78,72 @@ function P5JSCanvas() {
             }]});
             return;
         }
+        
+        if (TERMINATE) {
+            messageChannel("ProjectState", "unsubscribe", undefined, OUTER_SUBSCRIBER_ID);
+            messageChannel("ProjectState", "unsubscribe", undefined, INNER_SUBSCRIBER_ID);
+            globalThis.CK_ADAPTER.pushWorkload({default: [{
+                type: "worker",
+                receiver: {
+                    instance_id: "ASSET_SERVER",
+                    modality: "wasmjs",
+                    resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServer`,
+                },
+                payload: {
+                    request: "unsubscribe",
+                    payload: undefined,
+                },
+            }]});
+            savedBlockerId.current = blocker_id;
+        }
+
         if (sender.instance_id === "ASSET_SERVER" && request === "subscribeConfirmation") {
-            setAssets(messagePayload);
+            const processedMessagePayload = addP5SketchToAssets(messagePayload);
+            setAssets(processedMessagePayload);
             setAssetsReady(true);
             return;
         }
-        
+
         if (channel === "ProjectState" && request === "projectNodeEvent") {
             if (subscriber_id === INNER_SUBSCRIBER_ID) {
                 cbRef.current(payload);
             }
             if (subscriber_id == OUTER_SUBSCRIBER_ID) {
-                // console.log("P5",messagePayload.lastAgreedProjectStateId, controller.current.projectNode.projectStateId, messagePayload.newProjectStateId);
-                //console.log("P5",messagePayload.newProjectStateId);
-                // console.log(messagePayload)
                 controller.current.receive(messagePayload);
             }
         }
+
+        if (sender.instance_id === "ASSET_SERVER" && request === "unsubscribeConfirmation") {
+            unsubscribeCount.current++;
+        }
+
+        if (channel === "ProjectState" && request === "unsubscribeConfirmation") {
+            unsubscribeCount.current++;
+        }
+
+        if (unsubscribeCount.current === 2) { 
+            globalThis.CK_ADAPTER.pushWorkload({
+                default: [{
+                    type: "blocker",
+                    blocker_id: savedBlockerId.current,
+                    id: generateId(),
+                    blocker_count: 2,
+                }]
+            })
+        }
+
         if (request === 'assetEvent') {
-            const newAssets = messagePayload.filter(asset => {
-                return !assets.some(existingAsset => existingAsset.asset_id === asset.asset_id);
+            // remove the assets that are about to be overwritten
+            let currentAssets = [...assets];
+            currentAssets = currentAssets.filter((asset: any) => {
+                messagePayload.map((a: any) => a.asset_id).includes(asset.asset_id);
             });
-            setAssets(prev => [...prev, ...newAssets]);
+            const newAssets = [...currentAssets, ...messagePayload];
+            setAssets(newAssets);
             return;
         }
 
     })
-
-
-
-    // useChannel("INIT", (unit: any) => {
-    //     if (guard) return;
-    //     guard = true;
-    //     messageChannel("ProjectState", "subscribe", undefined, OUTER_SUBSCRIBER_ID);
-    //     messageChannel("ProjectState", "subscribe", undefined, INNER_SUBSCRIBER_ID)
-    //     controller.current.connectToHost(() => {
-    //         setReady(true);
-    //     });
-    // })
 
     const controller = useRef(
         Controller.Client(
@@ -98,22 +162,8 @@ function P5JSCanvas() {
         cbRef.current = callback;
     }
 
-    // useChannel("ProjectState", (unit: any) => {
-    //     const { payload } = unit;
-    //     const { channel, request, payload: messagePayload, subscriber_id } = payload;
-    //     if (request === "projectNodeEvent") {
-    //         if (subscriber_id === INNER_SUBSCRIBER_ID) {
-    //             cbRef.current(payload);
-    //         }
-    //         if (subscriber_id == OUTER_SUBSCRIBER_ID) {
-    //             controller.current.receive(messagePayload);
-    //         }
-    //     }
-    //     return {};
-    // })
-
     if (!ready) {
-        return <div>Loading...</div>;
+        return <FullscreenLoader />;
     }
 
     return <P5JSCanvasContent controller={controller} setCb={setCb} assets={assets} />;
@@ -147,7 +197,7 @@ function P5JSCanvasContent({ controller, setCb, assets }: { controller: PinsAndC
                 projectTools={projectTools}
                 sendMessage={(m) => globalThis.CK_ADAPTER.pushWorkload({default:m})}
                 attachMessageCallback={attachMessageCallback}
-
+                subscriber_id={INNER_SUBSCRIBER_ID}
             />
         </div>
     );

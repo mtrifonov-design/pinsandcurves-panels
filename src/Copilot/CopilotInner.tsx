@@ -5,9 +5,7 @@ import { ProjectDataStructure } from "@mtrifonov-design/pinsandcurves-external";
 import processMessage from "./processMessage";
 
 type Project = ProjectDataStructure.PinsAndCurvesProject;
-
-
-
+import CONFIG from "../Config";
 
 const ChatComponent = (p: {
     openai: OpenAI, project: Project,
@@ -59,7 +57,7 @@ const ChatComponent = (p: {
                     receiver: {
                         instance_id: "COPILOT_DATA",
                         modality: "wasmjs",
-                        resource_id: "http://localhost:8000/CopilotData",
+                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}CopilotData`,
                     },
                     payload: {
                         channel: "PERSISTENT_DATA", 

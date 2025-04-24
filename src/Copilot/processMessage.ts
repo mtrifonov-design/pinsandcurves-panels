@@ -7,6 +7,7 @@ type Project = ProjectDataStructure.PinsAndCurvesProject;
 import { prompt as CodeAssistantPrompt, format as CodeAssistantFormat } from './AgentNetwork/CodeAssistantPrompt'
 import { prompt as SignalAssistantPrompt, format as SignalAssistantFormat } from './AgentNetwork/SignalAssistantPrompt'
 import callAgent from "./callAgent";
+import CONFIG from "../Config";
 
 const NANO = "gpt-4.1-nano-2025-04-14";
 const MINI = "gpt-4.1-mini-2025-04-14";
@@ -157,7 +158,7 @@ async function processMessage(messages: any, project: Project, assets: any[], op
                     receiver: {
                         instance_id: "COPILOT_EVAL",
                         modality: "wasmjs",
-                        resource_id: "http://localhost:8000/CopilotEval",
+                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}CopilotEval`,
                     },
                     payload: {
                         EVAL: true,

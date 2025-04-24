@@ -1,19 +1,29 @@
 import React, { useEffect, useState } from "react";
-import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, ProjectTools } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 import { messageChannel, useUnit } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
 import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
+import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
 function SignalListContent({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {
 
     const projectState = useSyncExternalStore(controller.current.subscribeToProjectUpdates.bind(controller.current), controller.current.getProject.bind(controller.current));
-    const projectTools = controller.current.projectTools;
+    const projectTools = controller.current.projectTools as ProjectTools;
 
     const [mode, setMode] = useState("signalList");
+
+    const generateSignalSuffix = () => {
+        const signalNames = Object.values(projectState.orgData.signalNames);
+        let suffix = 1;
+        while (signalNames.some(signalName => signalName === "Signal " + suffix)) {
+            suffix++;
+        }
+        return suffix;
+    }
 
 
     if (mode === "signalList") {
@@ -27,32 +37,36 @@ function SignalListContent({controller}: {controller: PinsAndCurvesProjectContro
         <OrganisationAreaSignalList 
         project = {projectState}
         projectTools = {projectTools}
-        openCreateSignalModal={() => {setMode("newsignaldialogue")}}
+        openCreateSignalModal={() => {
+            projectTools.createContinuousSignal(generateId(), "Signal "+generateSignalSuffix(), [0,1], 0, "return easyLinear();");
+
+        }}
         />
         </div>
     );
-    } else if (mode === "newsignaldialogue") {
-        return (
-            <div
-            style={{
-                width: '100vw',
-                height: '100vh',
+    } 
+    // else if (mode === "newsignaldialogue") {
+    //     return (
+    //         <div
+    //         style={{
+    //             width: '100vw',
+    //             height: '100vh',
             
-            }}>
-                <CreateSignalModal 
-                        useProject = {() => projectState}
-                        useProjectTools = {() => projectTools}
-                        closeModal={() => {setMode("signalList")}}
+    //         }}>
+    //             <CreateSignalModal 
+    //                     useProject = {() => projectState}
+    //                     useProjectTools = {() => projectTools}
+    //                     closeModal={() => {setMode("signalList")}}
                         
-                />
-            </div>
-        );
-    }
-    }   
+    //             />
+    //         </div>
+    //     );
+    // }
+}   
 
 
 let guard = false;
-let subscriber_id = "SignalList"
+let subscriber_id = "SignalList"+generateId();
 
 function generateId() {
     return Math.random().toString(36).substr(2, 9);
@@ -105,7 +119,7 @@ function SignalList() {
     );
 
     if (!ready) {
-        return <div>Loading...</div>;
+        return <FullscreenLoader />;
     }
 
     return <SignalListContent controller={controller} />;

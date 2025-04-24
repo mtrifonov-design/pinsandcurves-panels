@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import AssetManager from './AssetManager'
-import { messageChannel, useChannel, useUnit } from '../hooks';
-
+import { useUnit } from '../hooks';
+import CONFIG from '../Config';
 
 function AssetManagerWrapper() {
 
@@ -19,7 +19,7 @@ function AssetManagerWrapper() {
             receiver: {
               instance_id: "ASSET_SERVER",
               modality: "wasmjs",
-              resource_id: "http://localhost:8000/AssetServer",
+              resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServer`,
             },
             payload: {
               request: "subscribe",
@@ -55,7 +55,7 @@ function AssetManagerWrapper() {
                   receiver: {
                     instance_id: "ASSET_SERVER",
                     modality: "wasmjs",
-                    resource_id: "http://localhost:8000/AssetServer",
+                    resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServer`,
                   },
                   payload: {
                     request: "pushAssets",

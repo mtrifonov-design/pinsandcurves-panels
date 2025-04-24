@@ -1,24 +1,21 @@
 import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { PinsAndCurvesProjectController as ProjectController } from '@mtrifonov-design/pinsandcurves-external';
+import CONFIG from '../Config';
 
 type ProjectTools = ProjectController.ProjectTools;
 type Project = ProjectController.Project;
 const PostMessageAPI = ProjectController.PostMessageAPI;
 
-function generateId() {
-    return Math.random().toString(36).substring(2, 15);
-}
-
-
-const CodePreview: React.FC<{
+const P5JSCanvas: React.FC<{
     project: Project,
     projectTools: ProjectTools,
     sendMessage: (message: any) => void,
     attachMessageCallback: (callback: (message: any) => void) => void,
     assets: any[],
-}> = ({ project, projectTools, sendMessage, attachMessageCallback, assets }) => {
+    subscriber_id: string,
+}> = ({ project, projectTools, sendMessage, attachMessageCallback, assets, subscriber_id }) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const code: string = String(project.signalData['HIDDEN_CODE']?.defaultValue) || "test";
+    const code: string = assets.find((asset) => asset.asset_id === "P5JSSKETCH")?.dataUrl || "";
 
 
     useEffect(() => {
@@ -31,15 +28,14 @@ const CodePreview: React.FC<{
                     receiver: {
                         instance_id: "BACKGROUND",
                         modality: "wasmjs",
-                        resource_id: "http://localhost:8000/ProjectState"
+                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}ProjectState`
                     },
                     payload: {
                         channel: 'ProjectState',
                         request: 'projectNodeEvent',
                         payload: projectNodeEvent,
-                        subscriber_id: "P5JSCanvas_INNER",
+                        subscriber_id,
                     }
-
                 });
             })
             return () => {
@@ -311,4 +307,4 @@ const CodePreviewContent = forwardRef(function CodePreviewContent({ code, assets
     );
 })
 
-export default CodePreview;
+export default P5JSCanvas;

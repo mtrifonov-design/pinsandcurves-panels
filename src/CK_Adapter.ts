@@ -21,6 +21,7 @@ class CK_Adapter {
         m.type === "ck-message"
       ) {
         const payload = m.payload;
+        // console.log("CK_Adapter", JSON.stringify(payload, null, 2));
         const { CK_INSTALL } = payload;
         if (CK_INSTALL) {
           const { pw, instanceId, resourceId } = payload;
@@ -34,8 +35,12 @@ class CK_Adapter {
               metadata: metadata,
             }
           }
-          if (this.installCallback) this.installCallback();
-          window.parent.postMessage(m, "*");
+          
+          new Promise((resolve) => {
+            if (this.installCallback) this.installCallback(resolve);
+          }).then(() => {
+            window.parent.postMessage(m, "*");
+          });
         }
       }
     })
