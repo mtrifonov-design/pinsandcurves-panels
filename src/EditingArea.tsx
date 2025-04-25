@@ -4,7 +4,7 @@ import { messageChannel, useUnit } from "./hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
-import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
+import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
 import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
@@ -53,17 +53,6 @@ function EditingArea() {
         return {};
     })
 
-    // useChannel("INIT", (unit: any) => {
-    //     if (guard) return;
-    //     guard = true;
-    //     messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
-    //     controller.current.connectToHost(() => {
-    //         setReady(true);
-    //     });
-    // })
-    
-
-
     const controller = useRef(
         Controller.Client(
             (e : any) => {
@@ -73,15 +62,6 @@ function EditingArea() {
             }
         )
     );
-
-    // useChannel("ProjectState", (unit: any) => {
-    //     const { payload } = unit;
-    //     const { channel, request, payload: messagePayload } = payload;
-    //     if (request === "projectNodeEvent") {
-    //         controller.current.receive(messagePayload);
-    //     }
-    //     return {};
-    // })
 
     if (!ready) {
         return <FullscreenLoader/>;
