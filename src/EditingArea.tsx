@@ -56,8 +56,6 @@ function EditingArea() {
     const controller = useRef(
         Controller.Client(
             (e : any) => {
-                //console.log("EDITING",e.lastAgreedProjectStateId, e.newProjectStateId);
-                // console.log("EDITING",e.newProjectStateId);
                 messageChannel("ProjectState", "projectNodeEvent", e, subscriber_id);
             }
         )
