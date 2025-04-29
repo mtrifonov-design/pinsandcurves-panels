@@ -1,54 +1,35 @@
-# React + TypeScript + Vite
+# Pins and Curves Panels
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Try out a live demo here:
+https://run.pinsandcurves.app/?template=default
 
-Currently, two official plugins are available:
+# Feedback
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Please use the issues section to leave any and all feedback for the demo above.
 
-## Expanding the ESLint configuration
+# What is this repo?
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+This repo is part of the Pins and Curves project, read more at https://pinsandcurves.app
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+It contains several panel plugins that make up a timeline editor for p5js:
+- a timeline panel
+- a code editor panel
+- a signals panel
+- a preview panel
+- a (unreleased) copilot panel
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Currently, this should be thought of as a prototype: the code is messy. 
+This will be improved once the project finds its direction.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Importantly, it should be understood that this repo is not standalone.
+To make up the final experience seen in the demo above, it runs together with two other repos:
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+Main application that can spawn iframe panels and mediates communication between them:
+https://github.com/mtrifonov-design/Creative-Kernel
+
+Background services running in encapsulated WASM modules:
+https://github.com/mtrifonov-design/pinsandcurves-background-services
+
+
+
+
