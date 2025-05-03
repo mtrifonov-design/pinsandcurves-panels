@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import SignalList from './SignalList';
 import EditingArea from './EditingArea';
-import P5JSCanvas from './P5JSCanvas';
+import P5JSCanvas from './P5JSCanvasDEPR/P5JSCanvas';
 import CodeEditor from './Code Editor';
 import CK_Test from './CK_Test';
 import Copilot from './Copilot';

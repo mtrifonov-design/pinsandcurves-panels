@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { CreateSignalModal, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, ProjectTools } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useUnit } from "./hooks";
+import { messageChannel, useUnit } from "../hooks";
 
 type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
 
 import { ProjectDataStructure, PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
-import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
+import FullscreenLoader from "../FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
 function SignalListContent({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {

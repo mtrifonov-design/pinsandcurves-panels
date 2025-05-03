@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import P5 from "./P5JSCanvas/P5JSCanvas";
-import { messageChannel, useUnit } from "./hooks";
-import CONFIG from "./Config";
+import P5 from "./P5JSCanvasContent";
+import { messageChannel, useUnit } from "../hooks";
+import CONFIG from "../Config";
 
 import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
-import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
+import FullscreenLoader from "../FullscreenLoader/FullscreenLoader";
 const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
 
 const defaultSketch = `function setup() {
