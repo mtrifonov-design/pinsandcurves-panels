@@ -3,7 +3,7 @@ import { Routes, Route, Link } from 'react-router-dom';
 import SignalList from './SignalList';
 import EditingArea from './EditingArea';
 import P5JSCanvas from './P5JSCanvas';
-import CodeEditor from './CodeEditor';
+import CodeEditor from './Code Editor';
 import CK_Test from './CK_Test';
 import Copilot from './Copilot';
 import AssetManager from './AssetManager/index';

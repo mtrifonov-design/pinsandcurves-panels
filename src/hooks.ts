@@ -17,10 +17,11 @@ function useChannel(channel: string, callback: Function) {
 function useUnit(callback: Function) {
   const guard = useRef(false);
   useEffect(() => {
-    if (guard.current) return;
-    guard.current = true;
+    // if (guard.current) return;
+    // guard.current = true;
     globalThis.CK_ADAPTER.onUnit(callback);
-  }, []);
+  // }, []);
+  });
 }
 
 function messageChannel(channel: string, request: string, payload: any, subscriber_id: string) {

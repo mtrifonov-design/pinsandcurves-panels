@@ -44,14 +44,6 @@ const P5JSCanvas: React.FC<{
         }
     }, [iframeRef.current]);
 
-    // useEffect(() => {
-    //     if (iframeRef.current) {
-    //         iframeRef.current?.contentWindow?.postMessage({
-    //             type: 'P5_Asset_Message',
-    //             payload: assets,
-    //         }, window.location.origin);
-    //     }
-    // }, []);
 
     useEffect(() => {
         if (iframeRef.current) {
