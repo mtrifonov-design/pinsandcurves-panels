@@ -21,6 +21,7 @@ function Lobby(p: {
         const project = pb.getProject();
         const controller = TimelineController.TimelineController.fromProject(project);
         const serialised = controller.serialize();
+        console.log("Serialised", serialised);
         return serialised;
     }
 

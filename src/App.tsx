@@ -6,7 +6,7 @@ import P5JSCanvas from './P5JSCanvasDEPR/P5JSCanvas';
 import CodeEditor from './Code Editor';
 import CK_Test from './CK_Test';
 import Copilot from './Copilot';
-import AssetManager from './AssetManager/index';
+import AssetManager from './AssetManagerDEPR/index';
 const Default = () => <h1>Default Page</h1>;
 
 
