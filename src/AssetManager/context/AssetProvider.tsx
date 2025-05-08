@@ -45,7 +45,7 @@ import React, {
   
     /* forward every CK event to *all* registered managers */
     useUnit(unit => {
-        console.log("unit", unit);
+        //console.log("unit", unit);
       const { sender, payload } = unit;
       const { INIT, TERMINATE, blocker_id } = payload;
   

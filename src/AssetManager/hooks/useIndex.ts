@@ -42,7 +42,7 @@ export function useIndex() {
     const { initialized, assets } = useAssets([
         { assetId: "index", assetController: indexController.current }
     ])
-    console.log("initialized", initialized, assets)
+    //console.log("initialized", initialized, assets)
 
     if (!initialized) {
         return {

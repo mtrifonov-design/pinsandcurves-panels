@@ -55,7 +55,7 @@ function CodeEditor() {
         assetId,
         assetController: tController.current,
     }] : []);
-    // console.log("initializedAssets", initializedAssets, assetId ? [{
+    // //console.log("initializedAssets", initializedAssets, assetId ? [{
     //     assetId,
     //     assetController: tController.current,
     // }] : [],assets)
@@ -65,7 +65,7 @@ function CodeEditor() {
     }
     if (assetId !== undefined && assets[assetId] !== undefined) {
         const asset = assets[assetId];
-        console.log(asset.data) 
+        //console.log(asset.data) 
         return <div style={{
             width: '100vw',
             height: '100vh',
@@ -81,10 +81,17 @@ function CodeEditor() {
                     index,
                 }}
             />
-            <CanvasCodeEditor
-                setFunctionString={asset.update}
-                functionString={asset.data}
-            />
+
+            <div style={{
+                width: "100vw",
+                height: "calc(100vh - 50px)",
+                overflow: "hidden",
+            }}>
+                <CanvasCodeEditor
+                    setFunctionString={asset.update}
+                    functionString={asset.data}
+                />
+            </div>
         </div>
         
 

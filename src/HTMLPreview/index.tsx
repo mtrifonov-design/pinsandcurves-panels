@@ -95,11 +95,9 @@ function HTMLPreview() {
         display: "grid",
         gridTemplateRows: "50px 1fr",
     }}>
-        <TimelineProvider>  
-            <AssetResolver assets={collectedAssets}>
-                <HTMLPreviewContent />
-            </AssetResolver>
-        </TimelineProvider>
+        <AssetResolver assets={collectedAssets}>
+            <HTMLPreviewContent />
+        </AssetResolver>
     </div>
 }
 
