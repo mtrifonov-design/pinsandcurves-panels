@@ -6,7 +6,7 @@ type Listener = () => void;
 
 export class SubscriptionManager {
     /* ——————————————————— private ——————————————————— */
-    #fsms = new Map<string, SubscriptionFSM>();
+    fsms = new Map<string, SubscriptionFSM>();
     #listeners = new Set<Listener>();
     #snapshot: Snapshot = {};           // immutable object for React
     #initialized = false;  // true when we receive INIT event from server
@@ -15,26 +15,26 @@ export class SubscriptionManager {
     /* ——————————————————— public API ——————————————————— */
 
     /** Desired asset list (called by useAssets each render) */
+    #current_desired_ids : string[] | undefined = undefined;
     setDesired(desired: { assetId: string; assetController: unknown }[]) {
-        //console.log("setDesired", desired);
         if (!this.#initialized) {
             this.#unrealized_desired = desired;
             return;
         }; // ignore until INIT
 
         const desiredIds = new Set(desired.map(d => d.assetId));
-        //console.log("desiredIds", desiredIds);
+        this.#current_desired_ids = Array.from(desiredIds);
 
         /* 1️⃣ close FSMs that are no longer wanted */
-        this.#fsms.forEach((fsm, id) => {
+        this.fsms.forEach((fsm, id) => {
             if (!desiredIds.has(id)) fsm.unsubscribe();
         });
 
         /* 2️⃣ create FSMs for newly desired assets */
         desired.forEach(({ assetId, assetController }) => {
-            if (!this.#fsms.has(assetId)) {
+            if (!this.fsms.has(assetId)) {
                 const fsm = new SubscriptionFSM(assetController, this);
-                this.#fsms.set(assetId, fsm);
+                this.fsms.set(assetId, fsm);
                 fsm.subscribe(assetId);
             }
         });
@@ -53,29 +53,28 @@ export class SubscriptionManager {
         this.#initialized = true;
         this.updateSnapshot(true);
         this.setDesired(this.#unrealized_desired);
-        //console.log("SubscriptionManager: INIT", this.#fsms);
         this.#listeners.forEach(l => l());
     }
 
     async handleTerminate() {
         await new Promise(resolve => {
-            if (this.#fsms.size === 0) {
+            if (this.fsms.size === 0) {
                 resolve(true);
                 return;
             }
             const listener = () => {
-                const fsmsArray = Array.from(this.#fsms.values());
+                const fsmsArray = Array.from(this.fsms.values());
                 if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
                     this.#listeners.delete(listener);
-                    // this.#fsms.clear();
+                    // this.fsms.clear();
                     // this.#snapshot = { snapshotId: crypto.randomUUID() }; // force React to re-render
 
-                    console.log("SubscriptionManager: TERMINATE COMPLTED",)
+                    //////console.log("SubscriptionManager: TERMINATE COMPLTED",)
                     resolve(true);
                 }
             };
             this.#listeners.add(listener);
-            this.#fsms.forEach(fsm => fsm.unsubscribe());
+            this.fsms.forEach(fsm => fsm.unsubscribe());
         });
     }
 
@@ -91,7 +90,7 @@ export class SubscriptionManager {
 
         if (subscriptionConfirmation) {
             const { subscription_id, subscription_name, asset_id } = subscriptionConfirmation;
-            const fsm = Array.from(this.#fsms.values()).find(fsm => fsm.subName === subscription_name);
+            const fsm = Array.from(this.fsms.values()).find(fsm => fsm.subName === subscription_name);
             if (!fsm) {
                 return;
             }
@@ -100,7 +99,7 @@ export class SubscriptionManager {
             const universalSubId = [receiveUpdate, unsubscribeConfirmation, getAssetResponse, deleteNotification]
                 .filter((el: any) => el !== undefined)
                 .map((el: any) => el.subscription_id)[0];
-            const fsm = Array.from(this.#fsms.values()).find(fsm => fsm.subId === universalSubId);
+            const fsm = Array.from(this.fsms.values()).find(fsm => fsm.subId === universalSubId);
             if (!fsm) { return; }
 
             if (receiveUpdate) fsm.dispatch({ type: "RECEIVE_UPDATE", update: receiveUpdate.update });
@@ -110,16 +109,15 @@ export class SubscriptionManager {
             if (receiveMetadataUpdate) fsm.dispatch({ type: "RECEIVE_METADATA_UPDATE", metadata: receiveMetadataUpdate.metadata });
 
             // if (fsm.isDone()) {
-            //     this.#fsms.delete(fsm.assetId);
+            //     this.fsms.delete(fsm.assetId);
             //     this.updateSnapshot();
             // }
         }
     }
 
     updateSnapshot(force = false) {
-        console.log("updateSnapshot", force);
         const next: Snapshot = {};
-        for (const [id, fsm] of this.#fsms) next[id] = fsm.getSnapshot();
+        for (const [id, fsm] of this.fsms) next[id] = fsm.getSnapshot();
         const { snapshotId, ...rest } = this.#snapshot;
         if (shallowEqual(next, rest) && !force) return;  // nothing changed
         this.#snapshot = { ...next, snapshotId: crypto.randomUUID() }; // force React to re-render
@@ -131,22 +129,51 @@ export class SubscriptionManager {
             initialized: false,
         }
 
-        console.log("fsmValues", this.#fsms.values());
-
-        const uninitializedAssets = Array.from(this.#fsms.values()).filter(fsm => !fsm.initialised());
-        if (uninitializedAssets.length > 0) {
+        const currentDesiredIds = this.#current_desired_ids;
+        console.log("currentDesiredIds", currentDesiredIds)
+        if (currentDesiredIds === undefined) {
             return {
                 initialized: false,
             }
         }
 
         const result: Record<string, any> = {};
-        //console.log("getAssetPresentation", this.#fsms);
-        this.#fsms.forEach((fsm, id) => {
-            result[id] = fsm.assetController;
-        });
-        console.log("getAssetPresentation", result);
 
+        for (const id of currentDesiredIds) {
+            const fsm = this.fsms.get(id);
+            if (!fsm) {
+                return {
+                    initialized: false,
+                }
+            }
+            if (fsm.isDone()) {
+                throw new Error(`AssetManager: getAssetPresentation: assetId ${id} has been terminated`);
+            }
+            if (fsm.assetController === undefined) {
+                throw new Error(`AssetManager: getAssetPresentation: assetId ${id} has no controller`);
+            }
+            if (fsm.initialised() === false) {
+                return {
+                    initialized: false,
+                }
+            }
+            result[id] = fsm.assetController;
+        }
+
+
+        //console.log(currentDesiredIds)
+
+        // const uninitializedAssets = Array.from(this.fsms.values()).filter(fsm => !fsm.initialised());
+        // if (uninitializedAssets.length > 0) {
+        //     return {
+        //         initialized: false,
+        //     }
+        // }
+        // const result: Record<string, any> = {};
+        // this.fsms.forEach((fsm, id) => {
+        //     result[id] = fsm.assetController;
+        // });
+        //console.log("SubscriptionManager: getAssetPresentation", result);
         return {
             initialized: true,
             assets: result,

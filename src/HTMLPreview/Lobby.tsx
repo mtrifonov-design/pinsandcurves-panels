@@ -34,7 +34,7 @@ function Lobby(p: {
                     payload: {
                         createAsset: {
                             asset: {
-                                data: `console.log("Hello World")`,
+                                data: makeFile(),
                                 metadata: { type: "js", name: "test.js" },
                                 on_update: {
                                     type: "simple",
@@ -57,18 +57,8 @@ function Lobby(p: {
                     payload: {
                         createAsset: {
                             asset: {
-                                data: `
-                                    <html>
-                                        <head>
-                                            <title>Test</title>
-                                        </head>
-                                        <body>
-                                            <h1>Hello World</h1>
-                                            <script src="{{test.js}}"></script>
-                                        </body>
-                                    </html>
-                                `,
-                                metadata: { type: "html", name: "index.html" },
+                                data: makeFile(),
+                                metadata: { type: "html", name: "test.html" },
                                 on_update: {
                                     type: "simple",
                                 }

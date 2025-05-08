@@ -7,6 +7,7 @@ import CodeEditor from './Code Editor';
 import CK_Test from './CK_Test';
 import Copilot from './Copilot';
 import AssetManager from './AssetManagerDEPR/index';
+import HTMLPreview from './HTMLPreview'
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -30,6 +31,7 @@ function App(p: { renderedCallback: Function }) {
         <Route path="/code" element={<CodeEditor />} />
         <Route path="/copilot" element={<Copilot />} />
         <Route path="/assets" element={<AssetManager />} />
+        <Route path="/htmlpreview" element={<HTMLPreview />} />
       </Routes>
     </div>
   );

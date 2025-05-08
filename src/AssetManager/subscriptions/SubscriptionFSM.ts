@@ -62,6 +62,10 @@ export class SubscriptionFSM {
         return this.state === FSMState.ACTIVE;
     }
 
+    detachFromManager() {
+        this.manager.fsms.delete(this.assetId);
+    }
+
     notifyManager() {
         if (this.manager) {
             this.manager.updateSnapshot();
@@ -138,6 +142,8 @@ export class SubscriptionFSM {
                         break;
                     case "DELETE_NOTIFICATION":
                         this.state = FSMState.DONE;
+                        this.detachFromManager();
+                        this.assetController.destroy();
                         this.notifyManager();
                         break;
                     case "UNSUBSCRIBE":
@@ -160,11 +166,13 @@ export class SubscriptionFSM {
             case FSMState.CLOSING:
                 if (ev.type === "UNSUBSCRIBE_CONFIRMED") {
                     this.state = FSMState.DONE;
+                    this.detachFromManager();
                     this.assetController.destroy();
                     this.notifyManager();
                 }
                 if (ev.type === "DELETE_NOTIFICATION") {
                     this.state = FSMState.DONE;
+                    this.detachFromManager();
                     this.assetController.destroy();
                     this.notifyManager();
                 }
