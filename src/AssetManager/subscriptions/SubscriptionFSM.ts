@@ -30,6 +30,8 @@ export type FSMEvent =
     | { type: "ASSET_DATA"; data: unknown }
     | { type: "RECEIVE_UPDATE"; update: unknown }
     | { type: "UPDATE"; update: unknown }
+    | { type: "UPDATE_METADATA"; metadata: unknown }
+    | { type: "RECEIVE_METADATA_UPDATE"; metadata: unknown }
     | { type: "DELETE"; }
     | { type: "UNSUBSCRIBE" }
     | { type: "DELETE_NOTIFICATION" }
@@ -51,12 +53,13 @@ export class SubscriptionFSM {
             subscribe: this.subscribe.bind(this),
             delete: this.delete.bind(this),
             update: this.update.bind(this),
+            updateMetadata: this.updateMetadata.bind(this),
             unsubscribe: this.unsubscribe.bind(this),
         })
     }
 
     initialised() {
-        return this.state !== FSMState.IDLE && this.state !== FSMState.SUBSCRIBING;
+        return this.state === FSMState.ACTIVE;
     }
 
     notifyManager() {
@@ -119,6 +122,20 @@ export class SubscriptionFSM {
                         });
                         this.notifyManager();
                         break;
+                    case "UPDATE_METADATA":
+                        sendToAssetServer({
+                            updateAssetMetadata: {
+                                subscription_id: this.subId,
+                                asset_id: this.assetId,
+                                metadata: ev.metadata,
+                            }
+                        });
+                        this.notifyManager();
+                        break;
+                    case "RECEIVE_METADATA_UPDATE":
+                        this.assetController.receiveMetadataUpdate(ev.metadata);
+                        this.notifyManager();
+                        break;
                     case "DELETE_NOTIFICATION":
                         this.state = FSMState.DONE;
                         this.notifyManager();
@@ -137,15 +154,18 @@ export class SubscriptionFSM {
                         this.state = FSMState.DONE;
                         this.notifyManager();
                         break;
+
                 }
                 break;
             case FSMState.CLOSING:
                 if (ev.type === "UNSUBSCRIBE_CONFIRMED") {
                     this.state = FSMState.DONE;
+                    this.assetController.destroy();
                     this.notifyManager();
                 }
                 if (ev.type === "DELETE_NOTIFICATION") {
                     this.state = FSMState.DONE;
+                    this.assetController.destroy();
                     this.notifyManager();
                 }
                 break;
@@ -177,6 +197,9 @@ export class SubscriptionFSM {
     }
     update(update: any) { 
         this.dispatch({ type: "UPDATE", update: update });
+    }
+    updateMetadata(metadata: any) { 
+        this.dispatch({ type: "UPDATE_METADATA", metadata: metadata });
     }
     unsubscribe() { 
         this.dispatch({ type: "UNSUBSCRIBE" });

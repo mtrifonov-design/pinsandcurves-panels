@@ -12,19 +12,15 @@ pb.setSignalActiveStatus('s1', true);
 
 function Lobby(p: {
     index: any;
-    handleOpen: (assetId: string) => void;
+    setAssetId: (assetId: string) => void;
 }) {
-
     const files = Object.entries(p.index.data).filter(([id,file]: any) => file.type === "timeline");
-
     const makeFile = () => {
         const project = pb.getProject();
         const controller = TimelineController.TimelineController.fromProject(project);
         const serialised = controller.serialize();
         return serialised;
     }
-
-
   return (
     <div className="lobby">
       <h1>Welcome to the Code Editor Lobby</h1>
@@ -56,7 +52,6 @@ function Lobby(p: {
                 }],
             });
         }}>Create file</button>
-
       <div>
         {files.map(([id, file]: any) => {
             return (<div key={id}
@@ -67,7 +62,7 @@ function Lobby(p: {
                     margin: "5px",
                 }}
                 onClick={() => {
-                    p.handleOpen(id);
+                    p.setAssetId(id);
                 }}
             >{file.name}</div>)
         })}

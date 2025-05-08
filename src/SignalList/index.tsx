@@ -8,6 +8,7 @@ import { ProjectDataStructure, PinsAndCurvesProjectController, TimelineControlle
 import { useAssets } from "../AssetManager/hooks/useAssets";
 import { AssetProvider } from "../AssetManager/context/AssetProvider";
 import { useIndex } from "../AssetManager/hooks/useIndex";
+import ReturnBar from "./ReturnBar";
 const Controller = TimelineController.TimelineController;
 
 class TController {
@@ -16,15 +17,29 @@ class TController {
     constructor() {}
     load(data : any) {
         this.data = new Controller(data);
+        this.data.onPushUpdate(() => {
+            const update = this.data.transferOutgoingEvent();
+            this.update(update);
+        });
         this.initialised = true;
     }
     receiveUpdate(update: any) {
         this.data.receiveIncomingEvent(update);
     }
+    receiveMetadataUpdate(update: any) {}
     getSnapshot() {
-        return this.data.getProject();
+        if (this.data !== undefined) {
+            return this.data.getProject();
+        } else {
+            return undefined;
+        }
+    }
+    destroy() {
+        this.data = undefined;
+        this.initialised = false;
     }
     update : (u: any) => void;
+    updateMetadata : (m: any) => void;
     create : (c: any) => void;
     delete : (d: any) => void;
     subscribe : (s: any) => void;
@@ -35,51 +50,55 @@ class TController {
         this.delete = hooks.delete;
         this.subscribe = hooks.subscribe;
         this.unsubscribe = hooks.unsubscribe;
+        this.updateMetadata = hooks.updateMetadata;
     }
 }
 
 
 function CodeEditor() {
 
-    const { initialized, index } = useIndex();
-
-    const [assetId, setAssetId] = useState(undefined);
+    const { initialized: initializedIndex, index } = useIndex();
+    const [assetId, setAssetId] = useState<string | undefined>(undefined);
     const tController = useRef(new TController())
-
-    const asset = {
+    const { initialized: initializedAssets, assets } = useAssets(assetId ? [{
         assetId,
         assetController: tController.current,
-    }
-
-    const assetList = assetId ? [asset] : [];
-
-    const { initialized: initializedAssets, assets } = useAssets(assetList);
-
-    const assetValues = assets ? Object.values(assets) : [];
-
-
+    }] : []);
+    const initialized = initializedIndex && initializedAssets;
     if (!initialized) {
         return <FullscreenLoader />
     }
+    if (assetId !== undefined && assets[assetId] !== undefined) {
+        const asset = assets[assetId];
+        return <div style={{
+            width: '100vw',
+            height: '100vh',
+            overflow: 'hidden',
+            display: "grid",
+            gridTemplateRows: "50px 1fr",
+        }}>
+            <ReturnBar 
+                {...{
+                    asset,
+                    assetId,
+                    setAssetId,
+                    index,
+                }}
+            />
+            <SignalListContent
+                {...{
+                    asset,
+                }}
+            />
+        </div>
+        
 
-    const handleOpen = (assetId: string) => {
-        setAssetId(assetId);
     }
-
-    if (assetValues.length > 0) {
-        const asset = assetValues[0];
-        return <SignalListContent
-            {...{
-                file:asset,
-                index,
-                handleOpen,
-            }}
-        />
-    }
-
     return <Lobby
-        {...{index,handleOpen}}
+        {...{index,setAssetId}}
     />
+
+
 }
 
 

@@ -59,12 +59,18 @@ export class SubscriptionManager {
 
     async handleTerminate() {
         await new Promise(resolve => {
+            if (this.#fsms.size === 0) {
+                resolve(true);
+                return;
+            }
             const listener = () => {
                 const fsmsArray = Array.from(this.#fsms.values());
                 if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
                     this.#listeners.delete(listener);
-                    this.#fsms.clear();
-                    this.#snapshot = {};
+                    // this.#fsms.clear();
+                    // this.#snapshot = { snapshotId: crypto.randomUUID() }; // force React to re-render
+
+                    console.log("SubscriptionManager: TERMINATE COMPLTED",)
                     resolve(true);
                 }
             };
@@ -80,6 +86,7 @@ export class SubscriptionManager {
             unsubscribeConfirmation,
             getAssetResponse,
             deleteNotification,
+            receiveMetadataUpdate,
         } = payload;
 
         if (subscriptionConfirmation) {
@@ -100,15 +107,17 @@ export class SubscriptionManager {
             if (unsubscribeConfirmation) fsm.dispatch({ type: "UNSUBSCRIBE_CONFIRMED" });
             if (getAssetResponse) fsm.dispatch({ type: "ASSET_DATA", data: getAssetResponse.asset_data });
             if (deleteNotification) fsm.dispatch({ type: "DELETE_NOTIFICATION" });
+            if (receiveMetadataUpdate) fsm.dispatch({ type: "RECEIVE_METADATA_UPDATE", metadata: receiveMetadataUpdate.metadata });
 
-            if (fsm.isDone()) {
-                this.#fsms.delete(fsm.assetId);
-                this.updateSnapshot();
-            }
+            // if (fsm.isDone()) {
+            //     this.#fsms.delete(fsm.assetId);
+            //     this.updateSnapshot();
+            // }
         }
     }
 
     updateSnapshot(force = false) {
+        console.log("updateSnapshot", force);
         const next: Snapshot = {};
         for (const [id, fsm] of this.#fsms) next[id] = fsm.getSnapshot();
         const { snapshotId, ...rest } = this.#snapshot;
@@ -122,6 +131,8 @@ export class SubscriptionManager {
             initialized: false,
         }
 
+        console.log("fsmValues", this.#fsms.values());
+
         const uninitializedAssets = Array.from(this.#fsms.values()).filter(fsm => !fsm.initialised());
         if (uninitializedAssets.length > 0) {
             return {
@@ -129,12 +140,12 @@ export class SubscriptionManager {
             }
         }
 
-
         const result: Record<string, any> = {};
         //console.log("getAssetPresentation", this.#fsms);
         this.#fsms.forEach((fsm, id) => {
             result[id] = fsm.assetController;
         });
+        console.log("getAssetPresentation", result);
 
         return {
             initialized: true,

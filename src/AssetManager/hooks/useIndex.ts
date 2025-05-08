@@ -13,10 +13,16 @@ class IndexController {
     receiveUpdate(update: any) {
         this.data = update;
     }
+    destroy() {
+        this.data = undefined;
+        this.initialised = false;
+    }
+    receiveMetadataUpdate(update: any) {}
     getSnapshot() {
         return this.data;
     }
     update : (u: any) => void;
+    updateMetadata : (m: any) => void;
     create : (c: any) => void;
     delete : (d: any) => void;
     subscribe : (s: any) => void;
@@ -27,6 +33,7 @@ class IndexController {
         this.delete = hooks.delete;
         this.subscribe = hooks.subscribe;
         this.unsubscribe = hooks.unsubscribe;
+        this.updateMetadata = hooks.updateMetadata;
     }
 }
 
