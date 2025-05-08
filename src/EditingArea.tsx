@@ -1,85 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { EditingAreaCanvas, OrganisationAreaSignalList, OrganisationAreaSignalListDependencies, TimelineBar, Toolbar } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import { EditingAreaCanvas, TimelineBar, Toolbar } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 import { messageChannel, useUnit } from "./hooks";
-
-type OrganisationAreaSignalListProps = OrganisationAreaSignalListDependencies
-
-import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
+import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";
 import FullscreenLoader from "./FullscreenLoader/FullscreenLoader";
-const Controller = PinsAndCurvesProjectController.PinsAndCurvesProjectController;
+import { AssetProvider } from "./AssetManager/context/AssetProvider";
+import TimelineProvider, { useTimeline } from "./TimelineUtils/TimelineProvider";
+const Controller = TimelineController.TimelineController;
 
-
-function generateId() {
-    return Math.random().toString(36).substr(2, 9);
+function EditingAreaWrapper() {
+    return (
+        <AssetProvider>
+            <TimelineProvider>
+                <EditingArea />
+            </TimelineProvider>
+        </AssetProvider>
+    )
 }
-const subscriber_id = "EditingArea"+generateId();
+
 function EditingArea() {
 
-    const [ready, setReady] = React.useState(false);
-
-    const savedBlockerId = useRef<string | undefined>(undefined);
-    useUnit(unit => {
-        const { payload } = unit;
-        const { channel, request, payload: messagePayload, INIT, TERMINATE, blocker_id } = payload;
-
-        if (INIT) {
-            messageChannel("ProjectState", "subscribe", undefined, subscriber_id);
-            controller.current.connectToHost(() => {
-                setReady(true);
-            });
-        }
-        if (TERMINATE) {
-            messageChannel("ProjectState", "unsubscribe", undefined, subscriber_id);
-            savedBlockerId.current = blocker_id;
-        }
-
-        if (channel === "ProjectState") {
-            if (request === "projectNodeEvent") {
-                controller.current.receive(messagePayload);
-            }
-
-            if (request === "unsubscribeConfirmation") {
-                globalThis.CK_ADAPTER.pushWorkload({
-                    default: [{
-                        type: "blocker",
-                        blocker_id: savedBlockerId.current,
-                        id: generateId(),
-                        blocker_count: 2,
-                    }]
-                })
-            }
-        }
-        return {};
-    })
-
-    const controller = useRef(
-        Controller.Client(
-            (e : any) => {
-                messageChannel("ProjectState", "projectNodeEvent", e, subscriber_id);
-            }
-        )
-    );
-
-    if (!ready) {
+    const timeline = useTimeline();
+    if (!timeline) {
         return <FullscreenLoader/>;
     }
 
-    return <EditingAreaContent controller={controller.current} />;
-
-
+    return <EditingAreaContent timeline={timeline} />;
 }
 
 
 
 
 
-function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectController.PinsAndCurvesProjectController}) {
+function EditingAreaContent({timeline}: {timeline: Controller}) {
 
-    const projectState = useSyncExternalStore(controller.subscribeToProjectUpdates.bind(controller), controller.getProject.bind(controller));
+    const projectState = useSyncExternalStore(
+        timeline.onTimelineUpdate.bind(timeline),
+        timeline.getProject.bind(timeline),
+    );
     const useProjectState = () => projectState;
-    const projectTools = controller.projectTools;
-    const interpolateSignalValue = controller.interpolateSignalValueAtTime.bind(controller);
+    const projectTools = timeline.projectTools;
+    console.log("projectTools", projectTools);
+    const interpolateSignalValue = timeline.interpolateSignalValueAtTime.bind(timeline);
     const [activeTool, setActiveTool] = useState("pointer");
     useEffect(() => {
         // togggle active tool on keypress "a"
@@ -143,4 +105,4 @@ function EditingAreaContent({controller}: {controller: PinsAndCurvesProjectContr
         </div>
     );
     }   
-export default EditingArea;
+export default EditingAreaWrapper;
