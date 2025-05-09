@@ -1,8 +1,10 @@
 import React, {
     createContext,
     useLayoutEffect,
+    useContext,
     useRef,
     PropsWithChildren,
+    useState,
   } from "react";
   import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
   import { useUnit } from "../../hooks";
@@ -20,13 +22,14 @@ import React, {
   }
   
   export const AssetManagerContext = createContext<Registry | null>(null);
+  const INITContext = createContext<any>(null);
   
   export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     children,
   }) => {
     /* one Set for all managers ever mounted */
     const managersRef = useRef<Set<SubscriptionManager>>(new Set());
-  
+    const [initState,setInitState] = useState<any>(null);
     /* the object we expose through context (stable ref) */
     const registryRef = useRef<Registry>({
       initialized: false,
@@ -47,11 +50,12 @@ import React, {
     useUnit(unit => {
         //console.log("unit", unit);
       const { sender, payload } = unit;
-      const { INIT, TERMINATE, blocker_id } = payload;
+      const { INIT, TERMINATE, blocker_id, payload: p } = payload;
   
       if (INIT && !registryRef.current.initialized) {
         registryRef.current.initialized = true;
         managersRef.current.forEach(m => m.handleInit());
+        setInitState(p);
         return;
       }
   
@@ -81,8 +85,15 @@ import React, {
   
     return (
       <AssetManagerContext.Provider value={registryRef.current}>
+        <INITContext.Provider value={initState}>
         {children}
+        </INITContext.Provider>
       </AssetManagerContext.Provider>
     );
   };
+
+export function useInit() {
+    const init = useContext(INITContext);
+    return init;
+  }
   

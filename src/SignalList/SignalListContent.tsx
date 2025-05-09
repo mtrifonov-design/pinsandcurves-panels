@@ -1,13 +1,17 @@
 import React, { useSyncExternalStore } from "react";
 import CONFIG from "../Config";
 import { OrganisationAreaSignalList } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 
 
 function P5CanvasContent(p: {
-    asset: any;
+    timeline: TimelineController.TimelineController;
 }) {
-    const { asset } = p;
-    const project = useSyncExternalStore(asset.data.onPushUpdate.bind(asset.data), asset.data.getProject.bind(asset.data));
+    const { timeline } = p;
+    const project = useSyncExternalStore(
+        timeline.onTimelineUpdate.bind(timeline),
+        timeline.getProject.bind(timeline),
+    );
     const generateSignalSuffix = () => {
         const signalNames = Object.values(project.orgData.signalNames);
         let suffix = 1;
@@ -19,14 +23,14 @@ function P5CanvasContent(p: {
     return (
         <div style={{
             width: '100vw',
-            height: '100%',
+            height: '100vh',
             overflow: 'hidden',
         }}>
             <OrganisationAreaSignalList 
                 project = {project}
-                projectTools = {asset.data.projectTools}
+                projectTools = {timeline.projectTools}
                 openCreateSignalModal={() => {
-                    asset.data.projectTools.createContinuousSignal(crypto.randomUUID(), "Signal "+generateSignalSuffix(), [0,1], 0, "return easyLinear();");
+                    timeline.projectTools.createContinuousSignal(crypto.randomUUID(), "Signal "+generateSignalSuffix(), [0,1], 0, "return easyLinear();");
                 }}
             />
         </div>

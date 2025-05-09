@@ -35,7 +35,9 @@ function Lobby(p: {
                         createAsset: {
                             asset: {
                                 data: `console.log("Hello World")`,
-                                metadata: { type: "js", name: "test.js" },
+                                metadata: { type: "js", name: "test.js",
+                                    preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                 },
                                 on_update: {
                                     type: "simple",
                                 }
@@ -68,7 +70,9 @@ function Lobby(p: {
                                         </body>
                                     </html>
                                 `,
-                                metadata: { type: "html", name: "index.html" },
+                                metadata: { type: "html", name: "index.html",
+                                    preferredEditorAddress: CONFIG.SELF_HOST+"htmlpreview",
+                                 },
                                 on_update: {
                                     type: "simple",
                                 }

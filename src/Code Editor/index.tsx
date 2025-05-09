@@ -1,4 +1,4 @@
-import { useReducer, useRef, useState } from "react";
+import { useEffect, useReducer, useRef, useState } from "react";
 import FullscreenLoader from "../FullscreenLoader/FullscreenLoader";
 import { useUnit } from "../hooks";
 import CONFIG from "../Config";
@@ -7,6 +7,7 @@ import { useAssets } from "../AssetManager/hooks/useAssets";
 import { AssetProvider } from "../AssetManager/context/AssetProvider";
 import { useIndex } from "../AssetManager/hooks/useIndex";
 import ReturnBar from "./ReturnBar";
+import { useInit } from "../AssetManager/context/AssetProvider";
 import { CanvasCodeEditor } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 
 class TextController {
@@ -55,10 +56,25 @@ function CodeEditor() {
         assetId,
         assetController: tController.current,
     }] : []);
-    // //console.log("initializedAssets", initializedAssets, assetId ? [{
-    //     assetId,
-    //     assetController: tController.current,
-    // }] : [],assets)
+
+    // useUnit((unit) => {
+    //     const { payload } = unit;
+    //     const { INIT, payload : p } = payload;
+    //     if (INIT && p && p.assetId !== undefined) {
+    //         setAssetId(assetId);
+    //     }
+    // })
+
+
+    const payload = useInit();
+    useEffect(() => {
+        if (payload && payload.assetId !== undefined) {
+            setAssetId(payload.assetId);
+        }
+    }, [payload]);
+
+
+
     const initialized = initializedIndex && initializedAssets;
     if (!initialized) {
         return <FullscreenLoader />

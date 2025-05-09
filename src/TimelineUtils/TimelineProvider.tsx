@@ -1,7 +1,21 @@
-import React, { createContext, useRef, useState } from 'react';
+import React, { createContext, useRef, useEffect, useState } from 'react';
 import { useAssets } from '../AssetManager/hooks/useAssets';
 import { useIndex } from '../AssetManager/hooks/useIndex';
-import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
+import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pinsandcurves-external';
+import CONFIG from '../Config';
+const pb = new ProjectDataStructure.ProjectBuilder();
+pb.setTimelineData(900,30,0);
+pb.addContinuousSignal('s1', 'Signal 1', [0, 1]);
+pb.addPin('s1', 20, 0, 'return easyLinear()');
+pb.addPin('s1', 40, 1, 'return easyEaseOut()');
+pb.addPin('s1', 60, 0, 'return easyEaseIn()');
+pb.setSignalActiveStatus('s1', true);
+  const makeFile = () => {
+      const project = pb.getProject();
+      const controller = TimelineController.TimelineController.fromProject(project);
+      const serialised = controller.serialize();
+      return serialised;
+  }
 
 type Timeline = TimelineController.TimelineController;
 const Controller = TimelineController.TimelineController;
@@ -64,6 +78,40 @@ function TimelineProvider({
     .filter(([assetId, assetMetadata]) => assetMetadata.type === "timeline" && assetMetadata.name === "default.timeline")
     .map(([assetId, assetMetadata]) => ({ assetId, assetController: tController.current})) : [];
     const assetId = timelineAssets.length > 0 ? timelineAssets[0].assetId : undefined;
+
+    useEffect(() => {
+      if (indexInitialized && (assetId === undefined)) {
+        globalThis.CK_ADAPTER.pushWorkload({
+          default: [{
+              type: "worker",
+              receiver: {
+                  instance_id: "ASSET_SERVER",
+                  modality: "wasmjs",
+                  resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+              },
+              payload: {
+                  createAsset: {
+                      asset: {
+                          data: makeFile(),
+                          metadata: { 
+                            type: "timeline", 
+                            name: "default.timeline",
+                            preferredEditorAddress: CONFIG.SELF_HOST+"editing",
+                          },
+                          on_update: {
+                              type: "custom",
+                              processor: {
+                                  modality: "wasmjs",
+                                  resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}TimelineProcessor`,
+                              }
+                          }
+                      },
+                  },
+              },
+          }],
+      });
+      }
+    },[assetId,indexInitialized]);
 
 
     const { initialized: assetsInitialized, assets } = useAssets(timelineAssets);
