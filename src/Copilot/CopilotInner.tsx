@@ -13,7 +13,7 @@ const ChatComponent = (p: {
     setPersistentState: (state: any) => void,
     assets: any[],
 }) => {
-    // console.log(p);
+    // //console.log(p);
     const messages = p.persistentState.messages || [];
     const setMessages = (newMessages: any) => {
         p.setPersistentState((prevState: any) => ({
@@ -35,7 +35,7 @@ const ChatComponent = (p: {
         };
     });
 
-    // console.log(project);
+    // //console.log(project);
     const handleSendMessage = async () => {
         if (!userMessage.trim()) return;
 

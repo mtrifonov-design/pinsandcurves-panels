@@ -40,7 +40,7 @@ function EditingAreaContent({timeline}: {timeline: Controller}) {
     );
     const useProjectState = () => projectState;
     const projectTools = timeline.projectTools;
-    console.log("projectTools", projectTools);
+    //console.log("projectTools", projectTools);
     const interpolateSignalValue = timeline.interpolateSignalValueAtTime.bind(timeline);
     const [activeTool, setActiveTool] = useState("pointer");
     useEffect(() => {

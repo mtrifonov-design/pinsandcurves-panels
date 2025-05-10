@@ -69,7 +69,7 @@ export class SubscriptionManager {
                     // this.fsms.clear();
                     // this.#snapshot = { snapshotId: crypto.randomUUID() }; // force React to re-render
 
-                    ////////console.log("SubscriptionManager: TERMINATE COMPLTED",)
+                    //////////console.log("SubscriptionManager: TERMINATE COMPLTED",)
                     resolve(true);
                 }
             };
@@ -130,7 +130,7 @@ export class SubscriptionManager {
         }
 
         const currentDesiredIds = this.#current_desired_ids;
-        //console.log("currentDesiredIds", currentDesiredIds)
+        ////console.log("currentDesiredIds", currentDesiredIds)
         if (currentDesiredIds === undefined) {
             return {
                 initialized: false,
@@ -147,7 +147,10 @@ export class SubscriptionManager {
                 }
             }
             if (fsm.isDone()) {
-                throw new Error(`AssetManager: getAssetPresentation: assetId ${id} has been terminated`);
+                console.warn(`AssetManager: getAssetPresentation: assetId ${id} is done`);
+                return {
+                    initialized: false,
+                }
             }
             if (fsm.assetController === undefined) {
                 throw new Error(`AssetManager: getAssetPresentation: assetId ${id} has no controller`);
@@ -161,7 +164,7 @@ export class SubscriptionManager {
         }
 
 
-        ////console.log(currentDesiredIds)
+        //////console.log(currentDesiredIds)
 
         // const uninitializedAssets = Array.from(this.fsms.values()).filter(fsm => !fsm.initialised());
         // if (uninitializedAssets.length > 0) {
@@ -173,7 +176,7 @@ export class SubscriptionManager {
         // this.fsms.forEach((fsm, id) => {
         //     result[id] = fsm.assetController;
         // });
-        ////console.log("SubscriptionManager: getAssetPresentation", result);
+        //////console.log("SubscriptionManager: getAssetPresentation", result);
         return {
             initialized: true,
             assets: result,

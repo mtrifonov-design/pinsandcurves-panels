@@ -11,7 +11,7 @@ class CK_Adapter {
 
   private installCallback: Function | undefined;
   constructor(installCallback: Function) {
-    //console.log("CK_Adapter constructor");
+    ////console.log("CK_Adapter constructor");
     this.installCallback = installCallback;
     window.addEventListener('message', (event) => {
       let m = event.data;
@@ -21,7 +21,7 @@ class CK_Adapter {
         m.type === "ck-message"
       ) {
         const payload = m.payload;
-        // console.log("CK_Adapter", JSON.stringify(payload, null, 2));
+        // //console.log("CK_Adapter", JSON.stringify(payload, null, 2));
         const { CK_INSTALL } = payload;
         if (CK_INSTALL) {
           const { pw, instanceId, resourceId } = payload;
@@ -46,7 +46,7 @@ class CK_Adapter {
     })
     window.addEventListener('message', (event) => {
       const m = event.data;
-      //console.log(JSON.stringify(m,null,2))
+      ////console.log(JSON.stringify(m,null,2))
       if (
         m &&
         m.type &&
@@ -82,8 +82,8 @@ class CK_Adapter {
   }
 
   computeUnit(unit: any) {
-    // console.log("computeUnit", unit);
-    // console.log(this.unitCallback)
+    // //console.log("computeUnit", unit);
+    // //console.log(this.unitCallback)
     if (this.unitCallback) {
       this.unitCallback(unit);
       this.pushWorkload({});
@@ -133,7 +133,7 @@ class CK_Adapter {
       }
       this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
     }
-    // console.log(this.mode)
+    // //console.log(this.mode)
     // schedule sendWorkload
     if (this.mode === "PUSH") {
         this.release();

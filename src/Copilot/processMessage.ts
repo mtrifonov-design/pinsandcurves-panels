@@ -125,7 +125,7 @@ async function processMessage(messages: any, project: Project, assets: any[], op
                 prompt: CodeAssistantPrompt,
                 format: CodeAssistantFormat,
             }, messagesForAssistant, openai);
-            console.log("Code Assistant Response: ", response);
+            //console.log("Code Assistant Response: ", response);
 
             if (response.p5jsChangesNeeded) {
                 timelineOperations.push(`projectTools.updateSignalDefaultValue("HIDDEN_CODE", \`${response.p5jsSketch}\`)`);
@@ -145,7 +145,7 @@ async function processMessage(messages: any, project: Project, assets: any[], op
                 prompt: SignalAssistantPrompt,
                 format: SignalAssistantFormat,
             }, messagesForAssistant, openai);
-            console.log("Signal Assistant Response: ", response);
+            //console.log("Signal Assistant Response: ", response);
 
             if (response.timelineChangesNeeded) timelineOperations = response.timelineOperations;
             chatMessage = response.chatMessage;

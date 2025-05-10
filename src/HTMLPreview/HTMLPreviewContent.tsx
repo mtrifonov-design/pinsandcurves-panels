@@ -7,7 +7,7 @@ const HTMLPreviewContent: React.FC = () => {
   const assets = useResolvedAssets();           // { [name]: EnrichedAsset }
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useTimelineRelay();
+
 
   // Resolve the current URL for index.html (may be undefined on first render)
   const indexURL = assets['index.html']?.url;

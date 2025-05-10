@@ -12,7 +12,7 @@ function P5CanvasContent(p: {
     const { file, index, handleCloseFile, controller } = p;
     const project = useSyncExternalStore(controller.current.onPushUpdate.bind(controller.current), controller.current.getProject.bind(controller.current));
 
-    console.log("Project", project.orgData.signalNames)
+    //console.log("Project", project.orgData.signalNames)
 
     const updateFile = (newFile: any) => {
         globalThis.CK_ADAPTER.pushWorkload({

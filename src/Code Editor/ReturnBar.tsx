@@ -1,6 +1,7 @@
 
 import React, { useSyncExternalStore } from "react";
 import CONFIG from "../Config";
+import { Icon, SimpleCommittedTextInput } from "@mtrifonov-design/pinsandcurves-design";
 
 function ReturnBar(p: {
     asset: any;
@@ -28,10 +29,23 @@ function ReturnBar(p: {
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "10px",
-                backgroundColor: "#f0f0f0",
-                borderBottom: "1px solid #ccc",
+                backgroundColor: "var(--gray3)",
             }}>
-                <input
+                <SimpleCommittedTextInput
+                    initialValue={fileName}
+                    onCommit={updateFileName}
+                    bgColor={"var(--gray4)"}
+                    bgActive={"var(--gray2)"}
+ 
+                />
+                {/* <Icon
+                    iconName="close"
+                    onClick={() => {
+                        setAssetId(undefined);
+                    }}
+                
+                /> */}
+                {/* <input
                     type="text"
                     value={fileName}
                     onChange={(e) => {
@@ -45,8 +59,9 @@ function ReturnBar(p: {
                             updateFileName(fileName);
                         }
                     }}
-                    ></input>
-                <button onClick={() => {setAssetId(undefined)}}>Close</button>
+                    ></input> */}
+                {/* <button onClick={() => {setAssetId(undefined)}}>Close</button>
+             */}
             </div>
     );
 }

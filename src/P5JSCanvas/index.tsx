@@ -213,10 +213,10 @@ export default function CodeEditor() {
     /** remember whether we've already asked for the index once */
     const sentIndexSubscribe = useRef(false);
 
-    console.log("CodeEditor render", ctx);
+    //console.log("CodeEditor render", ctx);
     /* 5‑A — central event pump */
     useUnit(unit => {
-        console.log("CodeEditor unit", unit, ctx);
+        //console.log("CodeEditor unit", unit, ctx);
         const { payload } = unit;
 
         if (payload.receiveUpdate) {
@@ -265,10 +265,10 @@ export default function CodeEditor() {
         /* ---------- asset data ---------- */
         if (payload.getAssetResponse) {
             const { subscription_id, asset_data } = payload.getAssetResponse;
-            //   console.log("getAssetResponse");  
-            //   console.log(payload.getAssetResponse);
-            //   console.log(ctx.index);
-            //   console.log("-----");
+            //   //console.log("getAssetResponse");  
+            //   //console.log(payload.getAssetResponse);
+            //   //console.log(ctx.index);
+            //   //console.log("-----");
 
             if (subscription_id === ctx.index.id) {
                 dispatch({ type: "INDEX_DATA", id: subscription_id, data: asset_data });
@@ -319,7 +319,7 @@ export default function CodeEditor() {
     }
 
     function handleCloseFile() {
-        console.log(ctx);
+        //console.log(ctx);
         if (ctx.phase !== Phase.OPEN_EDITOR || !ctx.file?.id) return;
         if (ctx.file.assetId) sendUnsubscribe(ctx.file.assetId, ctx.file.id);             // assetId placeholder still fine
         dispatch({ type: "REQUEST_CLOSE_FILE" });

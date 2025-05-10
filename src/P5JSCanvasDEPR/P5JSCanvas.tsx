@@ -55,7 +55,7 @@ function P5JSCanvas() {
     const unsubscribeCount = useRef(0);
 
     useUnit((unit: any) => {
-        //console.log(unit)
+        ////console.log(unit)
         const { sender, payload } = unit;
         const { INIT, channel, request, payload: messagePayload, subscriber_id, TERMINATE, blocker_id } = payload;
         if (INIT) {
@@ -158,7 +158,7 @@ function P5JSCanvas() {
     const cbRef = useRef(() => { });
     const cb = cbRef.current;
     const setCb = (callback: () => void) => {
-        //console.log("callback is being set")
+        ////console.log("callback is being set")
         cbRef.current = callback;
     }
 
@@ -180,7 +180,7 @@ function P5JSCanvasContent({ controller, setCb, assets }: { controller: PinsAndC
     const projectTools = controller.current.projectTools;
 
     const attachMessageCallback = (callback: () => void) => {
-        //console.log("callback set")
+        ////console.log("callback set")
         setCb(callback);
     }
 

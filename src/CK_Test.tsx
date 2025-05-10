@@ -7,7 +7,7 @@ function CK_Test() {
         if (guard.current) return;
         guard.current = true;
         globalThis.CK_ADAPTER.onChannel("default", (unit) => {
-            //console.log("unit",unit);
+            ////console.log("unit",unit);
             return {};
         })
         globalThis.CK_ADAPTER.pushWorkload({

@@ -57,50 +57,54 @@ function CodeEditor() {
         assetController: tController.current,
     }] : []);
 
-    // useUnit((unit) => {
-    //     const { payload } = unit;
-    //     const { INIT, payload : p } = payload;
-    //     if (INIT && p && p.assetId !== undefined) {
-    //         setAssetId(assetId);
-    //     }
-    // })
-
+    const [vertexId, setVertexId] = useState<string | undefined>(undefined);
 
     const payload = useInit();
     useEffect(() => {
-        if (payload && payload.assetId !== undefined) {
-            setAssetId(payload.assetId);
+        //console.log("Payload", payload);
+        if (payload && payload.vertexId !== undefined) {
+            const { vertexId } = payload;
+            setVertexId(vertexId);
         }
-    }, [payload]);
+        if (payload && payload.assetMetadata !== undefined && initializedIndex) {
+            const { name, type } = payload.assetMetadata;
+
+            const assetId = Object.entries(index.data).find(([id, assetMetadata]) => {
+                return assetMetadata.name === name && assetMetadata.type === type;
+            })?.[0];
+            //console.log("Asset ID", assetId);
+            
+            setAssetId(assetId);
+        }
+    }, [payload, initializedIndex]);
 
 
-
-    const initialized = initializedIndex && initializedAssets;
+    const initialized = initializedIndex && initializedAssets && vertexId !== undefined;
     if (!initialized) {
         return <FullscreenLoader />
     }
     if (assetId !== undefined && assets[assetId] !== undefined) {
         const asset = assets[assetId];
-        //console.log(asset.data) 
+        ////console.log(asset.data) 
         return <div style={{
             width: '100vw',
             height: '100vh',
             overflow: 'hidden',
             display: "grid",
-            gridTemplateRows: "50px 1fr",
+            gridTemplateRows: "1fr",
         }}>
-            <ReturnBar 
+            {/* <ReturnBar 
                 {...{
                     asset,
                     assetId,
                     setAssetId,
                     index,
                 }}
-            />
+            /> */}
 
             <div style={{
                 width: "100vw",
-                height: "calc(100vh - 50px)",
+                height: "calc(100vh)",
                 overflow: "hidden",
             }}>
                 <CanvasCodeEditor
@@ -113,7 +117,7 @@ function CodeEditor() {
 
     }
     return <Lobby
-        {...{index,setAssetId}}
+        {...{index,setAssetId,vertexId}}
     />
 
 

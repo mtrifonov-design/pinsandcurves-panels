@@ -136,7 +136,7 @@ const CodePreviewContent = forwardRef(function CodePreviewContent({ code, assets
                     const focusRangeDuration = focusRange[1] - focusRange[0];
                     
                       if (currentFrame === anticipatedFrame) {
-                        console.log('Rendering frame', currentFrame);
+                        //console.log('Rendering frame', currentFrame);
                         if (currentFrame < focusRange[1]) {
                           // get p5js canvas
                           const canvas = document.querySelector('canvas');
@@ -203,7 +203,7 @@ const CodePreviewContent = forwardRef(function CodePreviewContent({ code, assets
                         window.addEventListener('message', (event) => {
                             if (event.origin !== window.location.origin) return;
                             if (!event.data.type) return;
-                            //console.log(event.data)
+                            ////console.log(event.data)
                             const { payload, type } = event.data;
                             if (type === 'P5_Asset_Message') {
                                 this.assets = payload;

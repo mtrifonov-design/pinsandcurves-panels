@@ -115,7 +115,7 @@ function TimelineProvider({
 
 
     const { initialized: assetsInitialized, assets } = useAssets(timelineAssets);
-    console.log(assets, assetId, assetsInitialized, timelineAssets);
+    //console.log(assets, assetId, assetsInitialized, timelineAssets);
     const initialized = 
     indexInitialized 
     && assetsInitialized

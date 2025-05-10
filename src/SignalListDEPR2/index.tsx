@@ -220,7 +220,7 @@ export default function CodeEditor() {
     const sentIndexSubscribe = useRef(false);
     const controller = useRef(undefined);
 
-    //console.log("CodeEditor render", ctx);
+    ////console.log("CodeEditor render", ctx);
     /* 5‑A — central event pump */
     useUnit(unit => {
         const { payload } = unit;
@@ -228,7 +228,7 @@ export default function CodeEditor() {
         if (payload.receiveUpdate) {
             const { subscription_id, update } = payload.receiveUpdate;
             if (ctx.file?.id === subscription_id) {
-                console.log("SignalList SUB_UPDATE",update);
+                //console.log("SignalList SUB_UPDATE",update);
                 controller.current?.receiveIncomingEvent(update);
             }
             dispatch({ type: "SUB_UPDATE", id: subscription_id, update, controller });
@@ -275,10 +275,10 @@ export default function CodeEditor() {
         /* ---------- asset data ---------- */
         if (payload.getAssetResponse) {
             const { subscription_id, asset_data } = payload.getAssetResponse;
-            //   console.log("getAssetResponse");  
-            //   console.log(payload.getAssetResponse);
-            //   console.log(ctx.index);
-            //   console.log("-----");
+            //   //console.log("getAssetResponse");  
+            //   //console.log(payload.getAssetResponse);
+            //   //console.log(ctx.index);
+            //   //console.log("-----");
 
             if (subscription_id === ctx.index.id) {
                 dispatch({ type: "INDEX_DATA", id: subscription_id, data: asset_data });
@@ -351,7 +351,7 @@ export default function CodeEditor() {
     }
 
     function handleCloseFile() {
-        console.log(ctx);
+        //console.log(ctx);
         if (ctx.phase !== Phase.OPEN_EDITOR || !ctx.file?.id) return;
         if (ctx.file.assetId) sendUnsubscribe(ctx.file.assetId, ctx.file.id);             // assetId placeholder still fine
         dispatch({ type: "REQUEST_CLOSE_FILE" });

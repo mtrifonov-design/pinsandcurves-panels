@@ -106,7 +106,7 @@ function Copilot() {
         }
 
         if (channel === "PERSISTENT_DATA") {
-            console.log("Persistent data channel", unit);
+            //console.log("Persistent data channel", unit);
             if (request === "responseData") {
                 setPersistentDataReady(true);
                 setPersistentState(messagePayload);

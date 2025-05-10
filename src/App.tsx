@@ -8,6 +8,7 @@ import CK_Test from './CK_Test';
 import Copilot from './Copilot';
 import AssetManager from './AssetManagerDEPR/index';
 import HTMLPreview from './HTMLPreview'
+import { StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -22,17 +23,19 @@ function App(p: { renderedCallback: Function }) {
 
   return (
     <div>
-      <Routes>
-        <Route path="/cktest" element={<CK_Test />} />
-        <Route path="/" element={<Default />} />
-        <Route path="/signals" element={<SignalList />} />
-        <Route path="/editing" element={<EditingArea />} />
-        <Route path="/p5" element={<P5JSCanvas />} />
-        <Route path="/code" element={<CodeEditor />} />
-        <Route path="/copilot" element={<Copilot />} />
-        <Route path="/assets" element={<AssetManager />} />
-        <Route path="/htmlpreview" element={<HTMLPreview />} />
-      </Routes>
+      <StyleProvider>
+        <Routes>
+          <Route path="/cktest" element={<CK_Test />} />
+          <Route path="/" element={<Default />} />
+          <Route path="/signals" element={<SignalList />} />
+          <Route path="/editing" element={<EditingArea />} />
+          <Route path="/p5" element={<P5JSCanvas />} />
+          <Route path="/code" element={<CodeEditor />} />
+          <Route path="/copilot" element={<Copilot />} />
+          <Route path="/assets" element={<AssetManager />} />
+          <Route path="/htmlpreview" element={<HTMLPreview />} />
+        </Routes>
+      </StyleProvider>
     </div>
   );
 }

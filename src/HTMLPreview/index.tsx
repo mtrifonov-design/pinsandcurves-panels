@@ -6,6 +6,8 @@ import { useIndex } from "../AssetManager/hooks/useIndex";
 import AssetResolver from "./AssetResolver";
 import HTMLPreviewContent from "./HTMLPreviewContent";
 import TimelineProvider from "../TimelineUtils/TimelineProvider";
+import useTimelineRelay from "./useTimelineRelay";
+
 
 class TextController {
     initialised = false
@@ -52,7 +54,7 @@ function HTMLPreview() {
     const requestedAssets = initializedIndex ? Object.entries(index.data)
         .filter(([assetId,assetMetadata]) => allowedTypes.includes(assetMetadata.type))
         .map(([assetId,assetMetadata]) => {
-            //console.log("Asset metadata", assetMetadata);
+            ////console.log("Asset metadata", assetMetadata);
             if (tControllers.current[assetId] === undefined) {
                 tControllers.current[assetId] = new TextController();
             }
@@ -61,10 +63,12 @@ function HTMLPreview() {
             assetController: tControllers.current[assetId],
         }})
         : []
-    //console.log("Requested assets", requestedAssets);
+    ////console.log("Requested assets", requestedAssets);
     const { initialized: initializedAssets, assets } = useAssets(
         requestedAssets,
     );
+
+    useTimelineRelay();
 
     const initialized = initializedIndex && initializedAssets;
     if (!initialized) {

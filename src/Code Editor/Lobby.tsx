@@ -1,6 +1,7 @@
 
+import { Button, Logo } from "@mtrifonov-design/pinsandcurves-design";
 import CONFIG from "../Config";
-import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pinsandcurves-external';
+import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 
 const pb = new ProjectDataStructure.ProjectBuilder();
 pb.setTimelineData(900,30,0);
@@ -13,90 +14,186 @@ pb.setSignalActiveStatus('s1', true);
 function Lobby(p: {
     index: any;
     setAssetId: (assetId: string) => void;
+    vertexId: string | undefined;
 }) {
     const files = Object.entries(p.index.data).filter(([id,file]: any) => file.type === "js" || file.type === "html");
-    const makeFile = () => {
-        return "test";
-    }
   return (
-    <div className="lobby">
-      <h1>Welcome to the Code Editor Lobby</h1>
-      <p>Select a file to edit or create a new one.</p>
-      <button onClick={() => {
-            globalThis.CK_ADAPTER.pushWorkload({
-                default: [{
-                    type: "worker",
-                    receiver: {
-                        instance_id: "ASSET_SERVER",
-                        modality: "wasmjs",
-                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-                    },
-                    payload: {
-                        createAsset: {
-                            asset: {
-                                data: `console.log("Hello World")`,
-                                metadata: { type: "js", name: "test.js",
-                                    preferredEditorAddress: CONFIG.SELF_HOST+"code",
-                                 },
-                                on_update: {
-                                    type: "simple",
-                                }
-                            },
-                        },
-                    },
-                }],
-            });
-        }}>Create js file</button>
-              <button onClick={() => {
-            globalThis.CK_ADAPTER.pushWorkload({
-                default: [{
-                    type: "worker",
-                    receiver: {
-                        instance_id: "ASSET_SERVER",
-                        modality: "wasmjs",
-                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-                    },
-                    payload: {
-                        createAsset: {
-                            asset: {
-                                data: `
-                                    <html>
-                                        <head>
-                                            <title>Test</title>
-                                        </head>
-                                        <body>
-                                            <h1>Hello World</h1>
-                                            <script src="{{test.js}}"></script>
-                                        </body>
-                                    </html>
-                                `,
-                                metadata: { type: "html", name: "index.html",
-                                    preferredEditorAddress: CONFIG.SELF_HOST+"htmlpreview",
-                                 },
-                                on_update: {
-                                    type: "simple",
-                                }
-                            },
-                        },
-                    },
-                }],
-            });
-        }}>Create html file</button>
-      <div>
-        {files.map(([id, file]: any) => {
-            return (<div key={id}
+    <div style={{
+        backgroundColor: "var(--gray1)",
+        width: "100vw",
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+    }}>
+
+        <div style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "38px",
+            marginTop: "30px",
+            color: "var(--gray3)",
+            gap: "10px",
+        }}>
+            <Logo color="var(--gray3)" 
                 style={{
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    color: "blue",
-                    margin: "5px",
+                    width: "37px",
+                    height: "37px",
                 }}
-                onClick={() => {
-                    p.setAssetId(id);
-                }}
-            >{file.name}</div>)
+            />
+        Code Editor
+
+      </div>
+
+      {/* <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginTop: "30px",
+        color: "var(--gray6)",
+      }}>
+        Open existing assets
+        <div>
+        {files.map(([id, file]: any) => {
+            return (
+            <Button 
+                key={id}
+                text={file.name}
+                onClick={() => p.setAssetId(id)}
+            />)
         })}
       </div>
+      </div> */}
+      
+      <div style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        marginTop: "30px",
+        color: "var(--gray6)",
+      }}>
+        Create new asset
+        <div style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            marginLeft: "10px",
+        }}>
+            <Button 
+                text="javascript"
+                iconName="javascript"
+                onClick={() => {
+                    globalThis.CK_ADAPTER.pushWorkload({
+                        default: [{
+                            type: "worker",
+                            receiver: {
+                                instance_id: "ASSET_SERVER",
+                                modality: "wasmjs",
+                                resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+                            },
+                            payload: {
+                                createAsset: {
+                                    asset: {
+                                        data: `//console.log("Hello World")`,
+                                        metadata: { type: "js", name: "test.js",
+                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                         },
+                                        on_update: {
+                                            type: "simple",
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            type: "worker",
+                            receiver: {
+                                instance_id: "ui",
+                                modality: "ui",
+                                resource_id: `ui`,
+                            },
+                            payload: {
+                                setVertexPayload: {
+                                    vertexId: p.vertexId,
+                                    payload: {
+                                        assetMetadata: { type: "js", name: "test.js",
+                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                         },
+                                    }
+                                }
+                            },
+                        }
+                    ],
+                    });
+                }}
+            />
+            <Button 
+                text="html"
+                iconName="html"
+                onClick={() => {
+                    globalThis.CK_ADAPTER.pushWorkload({
+                        default: [{
+                            type: "worker",
+                            receiver: {
+                                instance_id: "ASSET_SERVER",
+                                modality: "wasmjs",
+                                resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+                            },
+                            payload: {
+                                createAsset: {
+                                    asset: {
+                                        data: `
+                                            <html>
+                                                <head>
+                                                    <title>Test</title>
+                                                </head>
+                                                <body>
+                                                    <h1>Hello World</h1>
+                                                    <script src="{{test.js}}"></script>
+                                                </body>
+                                            </html>
+                                        `,
+                                        metadata: { type: "html", name: "index.html",
+                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                         },
+                                        on_update: {
+                                            type: "simple",
+                                        }
+                                    },
+                                },
+                            },
+                        },
+                        {
+                            type: "worker",
+                            receiver: {
+                                instance_id: "ui",
+                                modality: "ui",
+                                resource_id: `ui`,
+                            },
+                            payload: {
+                                setVertexPayload: {
+                                    vertexId: p.vertexId,
+                                    payload: {
+                                        assetMetadata: { type: "html", name: "index.html",
+                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                         },
+                                    }
+                                }
+                            },
+                        }
+                    ],
+                    });
+                }}
+            />
+        </div>
+      </div>
+
+
+
     </div>
   );
 }

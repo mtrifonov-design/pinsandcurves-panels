@@ -104,6 +104,7 @@ export class SubscriptionFSM {
                     this.assetId = ev.assetId;
                 }
                 if (ev.type === "ASSET_DATA") {
+                    //console.log("ASSET_DATA", ev.data,this.assetId);
                     this.assetController.load(ev.data);
                     this.state = FSMState.ACTIVE;
                     this.notifyManager();
@@ -166,7 +167,7 @@ export class SubscriptionFSM {
             case FSMState.CLOSING:
                 if (ev.type === "UNSUBSCRIBE_CONFIRMED") {
                     this.state = FSMState.DONE;
-                    this.detachFromManager();
+                    //this.detachFromManager();
                     this.assetController.destroy();
                     this.notifyManager();
                 }

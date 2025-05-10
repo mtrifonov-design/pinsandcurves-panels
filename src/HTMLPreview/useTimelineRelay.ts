@@ -72,7 +72,7 @@ const {initialized: indexInitialized, index} = useIndex();
     const assetId = timelineAssets.length > 0 ? timelineAssets[0].assetId : undefined;
 
     const { initialized: assetsInitialized, assets } = useAssets(timelineAssets);
-    //console.log(assets, assetId, assetsInitialized, timelineAssets);
+    
     const initialized = 
     indexInitialized 
     && assetsInitialized
@@ -83,7 +83,7 @@ const {initialized: indexInitialized, index} = useIndex();
     globalThis.timeline = timeline;
     useEffect(() => {
         const listener = (message: MessageEvent) => {
-            //console.log("Message received", message);
+            ////console.log("Message received", message);
             const { data } = message;
             if (!data) return;
             const { type } = data;
