@@ -9,6 +9,8 @@ import Copilot from './Copilot';
 import AssetManager from './AssetManagerDEPR/index';
 import HTMLPreview from './HTMLPreview'
 import { StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
+import CyberSpaghetti from './CyberSpaghetti/CyberSpaghetti';
+import CyberSpaghettiControlConsole from './CyberSpaghetti/ControlConsole';
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -34,6 +36,8 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/copilot" element={<Copilot />} />
           <Route path="/assets" element={<AssetManager />} />
           <Route path="/htmlpreview" element={<HTMLPreview />} />
+          <Route path="/cyberspaghetti" element={<CyberSpaghetti />} />
+          <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />
         </Routes>
       </StyleProvider>
     </div>

@@ -124,7 +124,10 @@ function TimelineProvider({
 
 
 
+
     const timeline = initialized ? assets[assetId].data : undefined;
+
+    //console.log(timeline);
 
   return (
     <TimelineContext.Provider value={timeline}>
