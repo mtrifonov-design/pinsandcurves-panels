@@ -67,20 +67,26 @@ const TimelineContext = createContext<Timeline | null>(null);
 
 function TimelineProvider({
   children,
+  defaultProject,
+  defaultName,
+  shouldCreate = false,
 }: {
   children: React.ReactNode;
+  defaultProject?: () => any;
+  defaultName?: string;
+  shouldCreate?: boolean;
 }) {
 
     const {initialized: indexInitialized, index} = useIndex();
 
     const tController = useRef(new TController())
     const timelineAssets = indexInitialized ? Object.entries(index.data)
-    .filter(([assetId, assetMetadata]) => assetMetadata.type === "timeline" && assetMetadata.name === "default.timeline")
+    .filter(([assetId, assetMetadata]) => assetMetadata.type === "timeline")
     .map(([assetId, assetMetadata]) => ({ assetId, assetController: tController.current})) : [];
     const assetId = timelineAssets.length > 0 ? timelineAssets[0].assetId : undefined;
 
     useEffect(() => {
-      if (indexInitialized && (assetId === undefined)) {
+      if (indexInitialized && (assetId === undefined) && shouldCreate) {
         globalThis.CK_ADAPTER.pushWorkload({
           default: [{
               type: "worker",
@@ -92,10 +98,10 @@ function TimelineProvider({
               payload: {
                   createAsset: {
                       asset: {
-                          data: makeFile(),
+                          data: defaultProject !== undefined ? defaultProject() : makeFile(),
                           metadata: { 
                             type: "timeline", 
-                            name: "default.timeline",
+                            name: defaultName ? defaultName : "default.timeline",
                             preferredEditorAddress: CONFIG.SELF_HOST+"editing",
                           },
                           on_update: {

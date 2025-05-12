@@ -8,6 +8,8 @@ type ControlsData = {
     averageThickness: number;
     thicknessVariance: number;
     lifespan: number;
+    waveAmplitude: number;
+    waveFrequency: number;
 }
 
 class Controls {
@@ -54,14 +56,16 @@ class Controls {
     }
 
     static defaultControls = {
-        centerX: 0,
-        centerY: 0,
+        centerX: 1920 /( 2),
+        centerY: 1080 /( 2),
         backgroundColor: [0, 0, 0],
         maxRays: 500,
         rayColors: [[255, 255, 255]],
         averageThickness: 2,
         thicknessVariance: 1,
-        lifespan: 60
+        lifespan: 60,
+        waveAmplitude: 0,
+        waveFrequency: 0
     }
 }
 

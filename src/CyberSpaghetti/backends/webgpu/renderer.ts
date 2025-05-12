@@ -4,7 +4,9 @@ import { RaySystem } from '../../core/RaySystem.js';
 export class WebGPURenderer {
     constructor(canvas, raySystem){
         this.canvas = canvas;
-        this.ctx    = canvas.getContext('webgpu');
+        this.ctx    = canvas.getContext('webgpu',{
+            preserveDrawingBuffer:true, 
+        });
         this.raySys = raySystem;
         this.device = null;
     }
@@ -24,13 +26,13 @@ export class WebGPURenderer {
         // one storage buffer big enough for worst-case rays
         const max = RaySystem.HARD_MAX;
         this.rayBuf = this.device.createBuffer({
-            size: max * 12 * 4,
+            size: max * 14 * 4,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         });
 
         // tiny uniform for resolution + center
         this.uniformBuf = this.device.createBuffer({
-            size: 16,
+            size: 24,
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
@@ -98,6 +100,12 @@ export class WebGPURenderer {
         });
     }
 
+    async onFrameReady(cb : Function){
+        if (!this.device) return;
+        await this.device.queue.onSubmittedWorkDone();
+        cb();
+    }
+
     /*------------------------------------------------------------*/
     draw(){
         const {device,raySys} = this;
@@ -106,15 +114,22 @@ export class WebGPURenderer {
         // upload latest ray data
         const INSTANCES = raySys.count; // raySys.count;
         if (raySys.count){
-            const slice = raySys.buffer.subarray(0, INSTANCES * 12);
+            const slice = raySys.buffer.subarray(0, INSTANCES * 14);
             this.device.queue.writeBuffer(this.rayBuf, 0, slice);
         };
 
         // upload uniforms
-        const res = new Float32Array([this.canvas.width,this.canvas.height, 0.5,0.5]);
+        const res = new Float32Array([
+            this.canvas.width,
+            this.canvas.height, 
+            this.raySys.CENTER_X,
+            this.raySys.CENTER_Y,
+            this.raySys.WAVE_AMPLITUDE,
+            this.raySys.WAVE_FREQUENCY,
+        ]);
         device.queue.writeBuffer(this.uniformBuf, 0, res);
 
-        // record pass
+        // record 
         const encoder = device.createCommandEncoder();
         const view    = this.ctx.getCurrentTexture().createView();
         const [r,g,b] = raySys.BACKGROUND_COLOR;

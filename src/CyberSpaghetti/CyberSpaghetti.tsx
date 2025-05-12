@@ -4,9 +4,39 @@ import { WebGPURenderer } from './backends/webgpu/renderer.js';
 import { Canvas2DRenderer } from './backends/canvas2d/renderer.js';
 import TimelineProvider, { useTimeline } from '../TimelineUtils/TimelineProvider.js';
 import { AssetProvider } from '../AssetManager/context/AssetProvider.js';
-import { StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
+import { Button, StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
 import ControlsProvider, { useControls } from './ControlConsole/ControlProvider.js';
 import FullscreenLoader from '../FullscreenLoader/FullscreenLoader.js';
+import FrameSaver from './FrameSaver.js';
+import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pinsandcurves-external';
+
+const pb = new ProjectDataStructure.ProjectBuilder();
+pb.setTimelineData(900,30,45);
+pb.addContinuousSignal('s1', 'Birth Rate', [0, 1]);
+pb.addPin('s1', 10, 0, 'return easyLinear()');
+pb.addPin('s1', 20, 1, 'return easyEaseOut()');
+pb.addPin('s1', 40, 1, 'return easyLinear()');
+pb.addPin('s1', 50, 0, 'return easyEaseIn()');
+pb.addContinuousSignal('cx', 'Center X', [0, 1]);
+pb.addPin('cx', 0, 0, 'return easyLinear()');
+pb.addPin('cx', 50, 1, 'return easyLinear()');
+pb.addPin('cx', 900, 1, 'return easyLinear()');
+pb.addContinuousSignal('cy', 'Center Y', [0, 1]);
+pb.addPin('cy', 0, 0, 'return easyLinear()');
+pb.addPin('cy', 50, 1, 'return easyLinear()');
+pb.addPin('cy', 900, 1, 'return easyLinear()');
+pb.setSignalActiveStatus('s1', true);
+pb.setSignalActiveStatus('cx', false);
+pb.setSignalActiveStatus('cy', false);
+  const defaultProject = () => {
+      const project = pb.getProject();
+      const controller = TimelineController.TimelineController.fromProject(project);
+    //   controller.projectTools.updateFocusRange([0,150]);
+    //   controller.projectTools.pushUpdate();
+      const serialised = controller.serialize();
+      return serialised;
+  }
+const defaultName = "spaghetti.timeline"
 
 
 function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, controls }) {
@@ -18,7 +48,7 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
 
     const controlsSnapshot = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const timelineProject = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
-    raySystem.update(timelineProject,controlsSnapshot); 
+    raySystem.update(timelineProject,controlsSnapshot,timeline); 
 
     useEffect(() => {
         //resize canvas to window size
@@ -63,6 +93,13 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
 
     },[])
 
+    const frameSaverRef = useRef(new FrameSaver({
+        timeline,
+        width,
+        height,
+    }));
+    const frameSaver = frameSaverRef.current;
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -70,6 +107,7 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
         canvas.width = width;
         canvas.height = height;
 
+        frameSaver.addCanvas(canvas);
         
 
         let renderer;
@@ -85,8 +123,12 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
             //renderer = new Canvas2DRenderer(canvas, raySystem);
 
             const loop = () => {
-                           // seconds
+                // seconds
                 renderer.draw();
+                const { rendering } = frameSaver.getStatus();
+                if (rendering && renderer.onFrameReady) {
+                    renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
+                }
                 requestAnimationFrame(loop);
             };
             requestAnimationFrame(loop);
@@ -105,7 +147,7 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
         style={{
         width: "100vw",
         height: "100vh",
-        backgroundColor: "var(--gray3)",
+        backgroundColor: "var(--gray1)",
         position: "relative",
     }}>
         <canvas ref={canvasRef} style={{ 
@@ -114,10 +156,44 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
             left: "50%",
             transform: "translate(-50%, -50%)",
          }} />
+         <FrameSaverScreen frameSaver={frameSaver} />
+
     </div> 
-    
+}
 
+function FrameSaverScreen({ frameSaver }) {
+    const {rendering, totalFrames, renderedFrames} = useSyncExternalStore(
+        frameSaver.subscribe.bind(frameSaver),
+        frameSaver.getStatus.bind(frameSaver),
+    )
 
+    return <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "60px",
+        display: "flex",
+        justifyContent: "flex-start",
+        alignItems: "center",
+        padding: 10,
+    }}>
+        <Button
+            onClick={() => {
+                frameSaver.begin();
+            }}
+            text={"save as frames"}
+            iconName="animated_images" 
+         />
+        {rendering && <div style={{
+
+            color: "var(--gray6)",
+            marginLeft: 20,
+        }}>
+            {
+            `Rendering... ${renderedFrames} / ${totalFrames}` }
+        </div>}
+    </div>
 }
 
 function CyberSpaghettiExterior() {
@@ -139,7 +215,11 @@ export default function CyberSpaghetti() {
 
 
     return <AssetProvider>
-        <TimelineProvider>
+        <TimelineProvider
+            defaultProject={defaultProject}
+            defaultName={defaultName}
+            shouldCreate ={true}
+        >
             <ControlsProvider>
                 <CyberSpaghettiExterior />
             </ControlsProvider>

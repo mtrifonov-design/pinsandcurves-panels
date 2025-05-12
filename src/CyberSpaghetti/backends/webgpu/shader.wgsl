@@ -8,11 +8,14 @@ struct Ray {
     cA_r     : f32, cA_g     : f32,
     cA_b     : f32, cB_r     : f32,
     cB_g     : f32, cB_b     : f32,
+    center        : vec2<f32>
 };
 
 struct Globals {
     resolution : vec2<f32>,
     center     : vec2<f32>,
+    waveAmplitude: f32,
+    waveFrequency: f32,
 };
 @group(0) @binding(0) var<uniform>        uni  : Globals;
 @group(0) @binding(1) var<storage, read>  rays : array<Ray>;
@@ -39,6 +42,7 @@ struct VsOut {
     @location(1) @interpolate(flat) p0 : vec4<f32>,   // angle, var, start, end
     @location(2) @interpolate(flat) p1 : vec4<f32>,   // soft, rad, cA.r, cA.g
     @location(3) @interpolate(flat) p2 : vec4<f32>,   // cA.b, cB.r, cB.g, cB.b
+    @location(4) @interpolate(flat) center : vec2<f32>,
 };
 
 @vertex
@@ -63,6 +67,7 @@ fn vs_main(
     out.p0 = vec4<f32>(ray.angle, ray.variance, ray.start, ray.end);
     out.p1 = vec4<f32>(ray.softness, ray.radColor, ray.cA_r, ray.cA_g);
     out.p2 = vec4<f32>(ray.cA_b, ray.cB_r, ray.cB_g, ray.cB_b);
+    out.center = uni.center;
     return out;
 }
 
@@ -72,22 +77,32 @@ fn fs_main(
     @location(0) v_pos : vec2<f32>,
     @location(1) @interpolate(flat) p0 : vec4<f32>,
     @location(2) @interpolate(flat) p1 : vec4<f32>,
-    @location(3) @interpolate(flat) p2 : vec4<f32>
+    @location(3) @interpolate(flat) p2 : vec4<f32>,
+    @location(4) @interpolate(flat) center : vec2<f32>,
 ) -> @location(0) vec4<f32> {
-    let angle     = p0.x;  let variance = p0.y;
-    let startDist = p0.z;  let endDist  = p0.w;
-    let softness  = p1.x;  let radColor = p1.y;
+    let angle     = p0.x;  
+    let variance = p0.y;
+    let startDist = p0.z;  
+    let endDist  = p0.w;
+    let softness  = p1.x;  
+    let radColor = p1.y;
 
     let colA = vec3<f32>(p1.z, p1.w, p2.x);
     let colB = vec3<f32>(p2.y, p2.z, p2.w);
 
-    var uv = v_pos - uni.center;
+    var uv = v_pos - center;
     uv.x  *= uni.resolution.x / uni.resolution.y;
 
     let r     = length(uv);
     let theta = atan2(uv.y, uv.x);
 
-    let wA = angularGaussian(theta, angle,   variance);
+    let freq   = uni.waveFrequency;          // waves per unit radius
+    let arc    = uni.waveAmplitude;          // arc-length of each wobble in “scene units”
+    let phase  = 0.0;
+    let dθ     = (arc / max(r, 1e-4)) *            // 1/r keeps arc-length fixed
+                sin(freq * r + phase);            // linear-in-r → constant spacing
+    let wA = angularGaussian(theta, angle + dθ, variance);
+
     let wR = radialMask     (r,     startDist, endDist, softness);
     let wG = radialGradient (r,     radColor);
 

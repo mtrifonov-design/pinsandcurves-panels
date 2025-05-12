@@ -21,18 +21,44 @@ export class RaySystem {
     RAY_VARIANCE = 0.03; // 3% variance
     RAY_VARIANCE_VARIANCE = 0.03; // 3% variance
     BACKGROUND_COLOR = [0, 0, 0];
+    BIRTH_RATE = 0.5;
+    CENTER_X = 0.5;
+    CENTER_Y = 0.5;
+    WAVE_AMPLITUDE = 0;
+    WAVE_FREQUENCY = 0;
 
     constructor() {
-        this.buffer = new Float32Array(RaySystem.HARD_MAX * 12); // one vec3 per clr✕2 + misc
+        this.buffer = new Float32Array(RaySystem.HARD_MAX * 14); // one vec3 per clr✕2 + misc
         this.count  = 0;
         this.time   = 0;
         this.burstPhase  = this.#initPhase(this.BURST_MAX , this.BURST_LIFE, 1);
         this.stripePhase = this.#initPhase(this.STRIPE_MAX, this.STRIPE_LIFE, 2);
     }
 
+    wasBorn(birthFrame: number, threshold: number) {
+        //console.log(this.time);
+        if (!this.project) return false;
+        //console.log(this.project);
+        if (!Object.values(this.project.orgData.signalNames).includes("Birth Rate")) return false;
+        const signalId = Object.entries(this.project.orgData.signalNames).find(([key, value]) => value === "Birth Rate")[0];
+        //console.log(signalId);
+        const [birthRate] = this.timeline.interpolateSignalValueAtTime(signalId, birthFrame);
+        if (birthRate > threshold) return true;
+        return false;
+    }
+
+    getCenter(birthFrame: number) {
+        if (!this.project) return false;
+        if (!Object.values(this.project.orgData.signalNames).includes("Center X")) return false;
+        const cxsid = Object.entries(this.project.orgData.signalNames).find(([key, value]) => value === "Center X")[0];
+        const [cx] = this.timeline.interpolateSignalValueAtTime(cxsid, birthFrame);
+        const cysid = Object.entries(this.project.orgData.signalNames).find(([key, value]) => value === "Center Y")[0];
+        const [cy] = this.timeline.interpolateSignalValueAtTime(cysid, birthFrame);
+        return [cx, cy];
+    }
 
     updateConstants() {
-        //console.log(this.controls);
+        ////console.log(this.controls);
         this.STRIPE_LIFE  = this.controls.lifespan;
         this.BURST_LIFE   = this.controls.lifespan;
         this.BURST_MAX    = Math.floor(this.controls.maxRays * 0.5);
@@ -42,6 +68,8 @@ export class RaySystem {
         this.RAY_VARIANCE = this.controls.averageThickness * 0.01;
         this.RAY_VARIANCE_VARIANCE = this.controls.thicknessVariance * 0.01;
         this.BACKGROUND_COLOR = this.controls.backgroundColor.map(c => c / 255);
+        this.WAVE_AMPLITUDE = this.controls.waveAmplitude / 360;
+        this.WAVE_FREQUENCY = this.controls.waveFrequency;
 
         const rayColors = [...this.controls.rayColors];
 
@@ -55,15 +83,25 @@ export class RaySystem {
 
         this.RAY_COLORS = convertedRaycolors;
 
+        if (!this.project) return false;
+        if (!Object.values(this.project.orgData.signalNames).includes("Birth Rate")) return false;
+        const cxsid = Object.entries(this.project.orgData.signalNames).find(([key, value]) => value === "Center X")[0];
+        const [cx] = this.timeline.interpolateSignalValueAtTime(cxsid, this.time);
+        const cysid = Object.entries(this.project.orgData.signalNames).find(([key, value]) => value === "Center Y")[0];
+        const [cy] = this.timeline.interpolateSignalValueAtTime(cysid, this.time);
+        this.CENTER_X = this.controls.centerX / 1920;
+        this.CENTER_Y = this.controls.centerY / 1080;
     }
 
     /*--------------------------------------------------------------*/
     project: Project;
     controls: ControlsData;
-    update(project: Project, controls: ControlsData) {
+    timeline: any;
+    update(project: Project, controls: ControlsData, timeline: any) {
         this.time = project.timelineData.playheadPosition;
         this.project = project;
         this.controls = controls;
+        this.timeline = timeline;
         this.updateConstants();
         const { BURST_MAX, STRIPE_MAX, BURST_LIFE, STRIPE_LIFE } = this;
         let ptr = 0;
@@ -72,6 +110,11 @@ export class RaySystem {
         for (let i = 0; i < BURST_MAX; ++i) {
             const rel = this.time - this.burstPhase[i];
             if (rel < 0) continue;
+            const cycle = Math.floor(rel / BURST_LIFE);
+            //console.log(cycle)
+            const birthFrame = this.burstPhase[i] + cycle * BURST_LIFE;
+            const wasBorn = this.wasBorn(birthFrame, i / BURST_MAX);
+            if (!wasBorn) continue;
             const t   = (rel % BURST_LIFE) / BURST_LIFE;
             const p   = this.#burstParams(i);
             const dist= easeInExpo(t) * 2.5;
@@ -81,13 +124,20 @@ export class RaySystem {
                 start:dist, end:dist+len,
                 softness:p.softness, colorRad:p.colorRad,
                 fade:1,
-                colors:this.RAY_COLORS[i % this.RAY_COLORS.length]
+                colors:this.RAY_COLORS[i % this.RAY_COLORS.length],
+                center: this.getCenter(birthFrame)
             });
         }
         // ---------- Stripe rays -----------------------------------
         for (let i = 0; i < STRIPE_MAX; ++i) {
-            const rel = this.time - this.stripePhase[i];
+            const rel = this.time - this.burstPhase[i];
             if (rel < 0) continue;
+            const cycle = Math.floor(rel / BURST_LIFE);
+            //console.log(cycle)
+            const birthFrame = this.burstPhase[i] + cycle * BURST_LIFE;
+            const wasBorn = this.wasBorn(birthFrame, i / BURST_MAX);
+            //console.log(wasBorn);
+            if (!wasBorn) continue;
             const t  = (rel % STRIPE_LIFE) / STRIPE_LIFE;
             const p  = this.#stripeParams(i);
             const end= Math.min(easeInExpo(t*1.75),1) * 2.5;
@@ -96,7 +146,9 @@ export class RaySystem {
                 start:0, end,
                 softness:p.softness, colorRad:1,
                 fade:1-easeInSine(t),
-                colors:this.RAY_COLORS[i % this.RAY_COLORS.length]
+                colors:this.RAY_COLORS[i % this.RAY_COLORS.length],
+                center: this.getCenter(birthFrame)
+
             });
         }
         this.count = ptr;               // # live rays this frame
@@ -115,7 +167,7 @@ export class RaySystem {
         // }
         p.angle = p.angle - 2 * Math.PI
 
-        const base = index * 12;
+        const base = index * 14;
         const out  = this.buffer;
         out[base  ] = p.angle;   out[base+1] = p.variance;
         out[base+2] = p.start;   out[base+3] = p.end;
@@ -126,6 +178,8 @@ export class RaySystem {
         out[base+9] = p.colors[0]*p.fade;
         out[base+10]= p.colors[1]*p.fade;
         out[base+11]= p.colors[2]*p.fade;
+        out[base+12]= p.center ? p.center[0] : this.CENTER_X;
+        out[base+13]= p.center ? p.center[1] : this.CENTER_Y;
     }
 
     /*--------------------------------------------------------------*/

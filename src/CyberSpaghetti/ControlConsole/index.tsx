@@ -6,20 +6,6 @@ import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import hexToRgb, {rgbToHex} from '../core/hexToRgb';
 
 /**
- * All the tunables the renderer will need.
- */
-const DEFAULT_SETTINGS = {
-  centerX: 0,
-  centerY: 0,
-  backgroundColor: '#000000',
-  maxRays: 500,
-  rayColors: ['#ffffff'],
-  averageThickness: 2,      // degrees
-  thicknessVariance: 1,     // degrees
-  lifespan: 60              // frames
-};
-
-/**
  * Control panel for the “hyperspeed dwarf” ray-field effect.
  *
  * @param {object}   props
@@ -82,6 +68,7 @@ export function CyberSpaghettiControlsInterior({
         <label>
           X&nbsp;
           <NumberInput
+                initialValue={state.centerX}
                 min={0}
                 max={1920}
                 step={5}
@@ -91,6 +78,7 @@ export function CyberSpaghettiControlsInterior({
         <label>
           Y&nbsp;
           <NumberInput
+                initialValue={state.centerY}
                 min={0}
                 max={1080}
                 step={5}
@@ -131,6 +119,7 @@ export function CyberSpaghettiControlsInterior({
       }}>
         max rays&nbsp;
         <NumberInput
+                initialValue={state.maxRays}
                 min={0}
                 max={1000}
                 step={1}
@@ -187,6 +176,7 @@ export function CyberSpaghettiControlsInterior({
       }}>
         ray average thickness (°)&nbsp;
         <NumberInput
+                initialValue={state.averageThickness}
                 min={0}
                 max={5}
                 step={0.1}
@@ -202,10 +192,43 @@ export function CyberSpaghettiControlsInterior({
       }}>
         ray thickness variance (°)&nbsp;
         <NumberInput
+                initialValue={state.thicknessVariance}
                 min={0}
                 max={5}
                 step={0.1}
                 onChange={c => update({ thicknessVariance: c })}
+            />
+      </label>
+
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        ray wavyness amplitude (°)&nbsp;
+        <NumberInput
+                initialValue={state.waveAmplitude}
+                min={0}
+                max={90}
+                step={1}
+                onChange={c => update({ waveAmplitude: c })}
+            />
+      </label>
+
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        ray wavyness frequency &nbsp;
+        <NumberInput
+                initialValue={state.waveFrequency}
+                min={0}
+                max={150}
+                step={1}
+                onChange={c => update({ waveFrequency: c })}
             />
       </label>
 
@@ -219,6 +242,7 @@ export function CyberSpaghettiControlsInterior({
       }}>
         ray lifespan (frames)&nbsp;
         <NumberInput
+                initialValue={state.lifespan}
                 min={0}
                 max={300}
                 step={1}
