@@ -31,10 +31,10 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/" element={<Default />} />
           <Route path="/signals" element={<SignalList />} />
           <Route path="/editing" element={<EditingArea />} />
-          <Route path="/p5" element={<P5JSCanvas />} />
+          {/* <Route path="/p5" element={<P5JSCanvas />} /> */}
           <Route path="/code" element={<CodeEditor />} />
           <Route path="/copilot" element={<Copilot />} />
-          <Route path="/assets" element={<AssetManager />} />
+          {/* <Route path="/assets" element={<AssetManager />} /> */}
           <Route path="/htmlpreview" element={<HTMLPreview />} />
           <Route path="/cyberspaghetti" element={<CyberSpaghetti />} />
           <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />

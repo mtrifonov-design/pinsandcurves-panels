@@ -14,6 +14,17 @@ function sendToAssetServer(payload: any) {
     });
 }
 
+function sendToSelf(payload: any) {
+    console.log("sendToSelf", payload);
+    CK_ADAPTER.pushWorkload({
+        default: [{
+            type: "worker",
+            receiver: null,
+            payload,
+        }],
+    });
+}
+
 /** Finite‑state machine for ONE asset subscription */
 export enum FSMState {
     IDLE = "IDLE",            // not yet subscribed
@@ -168,7 +179,9 @@ export class SubscriptionFSM {
                 if (ev.type === "UNSUBSCRIBE_CONFIRMED") {
                     this.state = FSMState.DONE;
                     //this.detachFromManager();
+                    console.log("UNSUBSCRIBE_CONFIRMED", this.assetId, this.cb_fsm);
                     this.assetController.destroy();
+                    if (this.cb_fsm) this.cb_fsm(this);
                     this.notifyManager();
                 }
                 if (ev.type === "DELETE_NOTIFICATION") {
@@ -210,7 +223,11 @@ export class SubscriptionFSM {
     updateMetadata(metadata: any) { 
         this.dispatch({ type: "UPDATE_METADATA", metadata: metadata });
     }
-    unsubscribe() { 
+
+    cb_fsm : ((self:any) => void) | undefined = undefined;
+    unsubscribe(cb_fsm?: (self:any) => void) { 
+        console.log("unsubscribe", this.assetId, cb_fsm);
+        if (cb_fsm) this.cb_fsm = cb_fsm;
         this.dispatch({ type: "UNSUBSCRIBE" });
     }
 }

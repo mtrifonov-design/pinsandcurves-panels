@@ -56,7 +56,22 @@ export class SubscriptionManager {
         this.#listeners.forEach(l => l());
     }
 
-    async handleTerminate() {
+    async handleTerminate(cb : (self:any) => void) {
+        const fsms = Array.from(this.fsms.values());
+        const cb_fsm = (self : any) => {
+            const idx = fsms.indexOf(self);
+            console.log(idx);
+            if (idx !== -1) fsms.splice(idx, 1);
+            console.log(fsms);
+            if (fsms.length === 0) {
+                cb(this);
+            }
+        }
+        if (this.fsms.size === 0) {
+            cb(this);
+            return;
+        }
+
         await new Promise(resolve => {
             if (this.fsms.size === 0) {
                 resolve(true);
@@ -66,15 +81,11 @@ export class SubscriptionManager {
                 const fsmsArray = Array.from(this.fsms.values());
                 if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
                     this.#listeners.delete(listener);
-                    // this.fsms.clear();
-                    // this.#snapshot = { snapshotId: crypto.randomUUID() }; // force React to re-render
-
-                    //////////console.log("SubscriptionManager: TERMINATE COMPLTED",)
                     resolve(true);
                 }
             };
             this.#listeners.add(listener);
-            this.fsms.forEach(fsm => fsm.unsubscribe());
+            this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
         });
     }
 

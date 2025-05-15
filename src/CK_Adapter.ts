@@ -68,25 +68,29 @@ class CK_Adapter {
   }
 
   release() {
+    console.log("CK_Adapter release", this.workload);
     window.parent.postMessage({
       type: "ck-message",
       payload: {
-        PUSH_WORKLOAD: this.mode === "PUSH" ? true : undefined,
-        CK_COMPUTE: this.mode === "COMPUTE" ? true : undefined,
+        PUSH_WORKLOAD: !this.computing ? true : undefined,
+        CK_COMPUTE: this.computing ? true : undefined,
         pw: this.PASSWORD,
-        response: this.mode === "COMPUTE" ? this.workload : undefined,
-        workload: this.mode === "PUSH" ? this.workload : undefined,
+        response: this.computing ? this.workload : undefined,
+        workload: !this.computing ? this.workload : undefined,
       },
     }, "*");
+    this.computing = false;
+    this.requestedManualRelease = false;
     this.workload = {};
   }
 
+  computing = false;
   computeUnit(unit: any) {
     // //console.log("computeUnit", unit);
     // //console.log(this.unitCallback)
+    this.computing = true;
     if (this.unitCallback) {
       this.unitCallback(unit);
-      this.pushWorkload({});
       return;
     }
 
@@ -98,18 +102,20 @@ class CK_Adapter {
       }
     }
 
-    if (unit.payload.LOAD_SESSION) {
-      unit.payload.channel = "LOAD_SESSION";
-    }
-    if (unit.payload.SAVE_SESSION) {
-      unit.payload.channel = "SAVE_SESSION";
-    }
+    this.release();
 
-    const channelId = unit.payload.channel;
-    const channelCallback = this.channelCallbacks[channelId];
-    if (channelCallback) {
-      const result = channelCallback(unit);
-    }
+    // if (unit.payload.LOAD_SESSION) {
+    //   unit.payload.channel = "LOAD_SESSION";
+    // }
+    // if (unit.payload.SAVE_SESSION) {
+    //   unit.payload.channel = "SAVE_SESSION";
+    // }
+
+    // const channelId = unit.payload.channel;
+    // const channelCallback = this.channelCallbacks[channelId];
+    // if (channelCallback) {
+    //   const result = channelCallback(unit);
+    // }
   }
 
   channelCallbacks: { [key: string]: Function } = {};
@@ -124,8 +130,13 @@ class CK_Adapter {
 
   public CK_INSTANCE_ID: string | undefined;
 
+  requestedManualRelease = false;
+  requestManualRelease() {
+    this.requestedManualRelease = true;
+  }
+
   workload = {};
-  pushWorkload(workload: any) {
+  pushWorkload(workload: any, release?: boolean) {
     const threadKeys = Object.keys(workload);
     for (const threadKey of threadKeys) {
       if (this.workload[threadKey] === undefined) {
@@ -135,8 +146,15 @@ class CK_Adapter {
     }
     // //console.log(this.mode)
     // schedule sendWorkload
-    if (this.mode === "PUSH") {
-        this.release();
+    // if (this.mode === "PUSH") {
+    //     this.release();
+    // }
+
+    if (this.computing && this.requestedManualRelease && release) {
+      this.release();
+    } 
+    if (!this.computing) {
+      this.release();
     }
   }
 
