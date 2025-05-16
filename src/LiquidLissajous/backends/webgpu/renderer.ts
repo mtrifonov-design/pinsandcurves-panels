@@ -10,6 +10,7 @@ export class WebGPURenderer {
         });
         this.particleSys = particleSystem;
         this.device = null;
+        this.showPoints = true;
     }
 
     async init() {
@@ -41,6 +42,11 @@ export class WebGPURenderer {
             size: 4, // u32
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
+        // new: uniform buffer for showPoints flag
+        this.showPointsBuf = this.device.createBuffer({
+            size: 4, // u32
+            usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
+        });
 
         const bindGroupLayout = this.device.createBindGroupLayout({
             entries: [
@@ -58,6 +64,11 @@ export class WebGPURenderer {
                 binding: 2,
                 visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
                 buffer: { type: 'uniform' }
+              },
+              {
+                binding: 3,
+                visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT,
+                buffer: { type: 'uniform' }
               }
             ]
           });
@@ -67,6 +78,7 @@ export class WebGPURenderer {
               {binding:0, resource:{buffer:this.uniformBuf}},
               {binding:1, resource:{buffer:this.particleBuf}},
               {binding:2, resource:{buffer:this.countBuf}},
+              {binding:3, resource:{buffer:this.showPointsBuf}},
             ]
         });
 
@@ -163,6 +175,9 @@ export class WebGPURenderer {
         // upload count as u32
         const countArr = new Uint32Array([particleSys.PARTICLE_COUNT]);
         device.queue.writeBuffer(this.countBuf, 0, countArr);
+        // upload showPoints as u32 (default to 0 if not set)
+        const showPointsArr = new Uint32Array([this.showPoints ? 1 : 0]);
+        device.queue.writeBuffer(this.showPointsBuf, 0, showPointsArr);
 
         // record 
         const encoder = device.createCommandEncoder();

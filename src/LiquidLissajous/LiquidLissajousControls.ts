@@ -1,7 +1,9 @@
 
 type ControlsData = {
     particleCount: number;
+    mixingIntensity: number;
     particleColors: [number, number, number][];
+    loopLifecycle: number,
 }
 
 class Controls {
@@ -54,6 +56,8 @@ class Controls {
             [0,255, 0],
             [0, 0, 255],
         ],
+        loopLifecycle: 300,
+        mixingIntensity: 0.3,
     }
 }
 

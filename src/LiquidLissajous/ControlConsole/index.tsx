@@ -29,10 +29,10 @@ export function CyberSpaghettiControlsInterior({
     update({ particleColors: colors });
   };
 
-  const addColor    = () => update({ rayColors: [...state.particleColors, [255,255,255]] });
+  const addColor    = () => update({ particleColors: [...state.particleColors, [255,255,255]] });
   const removeColor = idx => {
     if (state.particleColors.length === 1) return;      // must keep ≥1 colour
-    update({ rayColors: state.particleColors.filter((_, i) => i !== idx) });
+    update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
 
@@ -60,13 +60,13 @@ export function CyberSpaghettiControlsInterior({
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        color particle count&nbsp;
+        color mixing intensity &nbsp;
         <NumberInput
-                initialValue={state.particleCount}
+                initialValue={state.mixingIntensity}
                 min={0}
-                max={50}
-                step={1}
-                onChange={c => update({ particleCount: c })}
+                max={1}
+                step={0.01}
+                onChange={c => update({ mixingIntensity: c })}
             />
 
       </label>
@@ -109,6 +109,23 @@ export function CyberSpaghettiControlsInterior({
         ))}
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
+
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        loop length (in frames) &nbsp;
+        <NumberInput
+                initialValue={state.loopLifecycle}
+                min={30}
+                max={900}
+                step={1}
+                onChange={c => update({ loopLifecycle: c })}
+            />
+
+      </label>
 
     </div>
   );

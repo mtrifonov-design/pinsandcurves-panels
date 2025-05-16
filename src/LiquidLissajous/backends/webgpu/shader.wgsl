@@ -16,6 +16,7 @@ struct Globals {
 @group(0) @binding(0) var<uniform>        uni  : Globals;
 @group(0) @binding(2) var<uniform>        counts : u32;
 @group(0) @binding(1) var<storage, read>  particles : array<f32>;
+@group(0) @binding(3) var<uniform>        showPoints : u32;
 
 const PI : f32 = 3.141592653589793;
 
@@ -83,11 +84,29 @@ fn fs_main(
     @location(0) v_uv : vec2<f32>,
 ) -> @location(0) vec4<f32> {
     let fragCoord = v_uv * uni.resolution;
-    let softness = 600.0; // controls the blend falloff
+    let count = counts;
+    var d_min = 1e9;
+
+    // First pass: find minimum squared distance
+    for (var i = 0u; i < count; i = i + 1u) {
+        let base = i * 5u;
+        let px = particles[base + 0u];
+        let py = particles[base + 1u];
+        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
+        if (dist2 < d_min) {
+            d_min = dist2;
+        }
+    }
+
+    // Set dynamic alpha (inverse to d_min), clamped to avoid explosion
+    let epsilon = 1e-4;
+    let min_dist2 = max(d_min, epsilon);
+    let alpha = 1.3 / min_dist2; // You can tune this coefficient (1.0) if needed
+
     var oklAccum = vec3<f32>(0.0);
     var total = 0.0;
-    let count = counts;
 
+    // Second pass: compute softmax weights
     for (var i = 0u; i < count; i = i + 1u) {
         let base = i * 5u;
         let px = particles[base + 0u];
@@ -96,11 +115,8 @@ fn fs_main(
         let pg = particles[base + 3u];
         let pb = particles[base + 4u];
 
-        let dist = length(fragCoord - vec2<f32>(px, py));
-        // Gaussian falloff for smoother edges
-        let sigma = softness * 0.4;
-        let w = exp(-0.5 * (dist * dist) / (sigma * sigma));
-
+        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
+        let w = exp(-alpha * dist2);
         oklAccum += srgbToOKLab(vec3<f32>(pr, pg, pb)) * w;
         total += w;
     }
@@ -110,5 +126,30 @@ fn fs_main(
         color = oklabToSRGB(oklAccum / total);
     }
 
+    // Overlay control points if enabled
+    if (showPoints == 1u) {
+        let pointRadius = 10.0;
+        var show = false;
+        for (var i = 0u; i < count; i = i + 1u) {
+            let base = i * 5u;
+            let px = particles[base + 0u];
+            let py = particles[base + 1u];
+            let dist = length(fragCoord - vec2<f32>(px, py));
+            if (dist < pointRadius) {
+                show = true;
+                break;
+            }
+        }
+        if (show) {
+            return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+        }
+    }
+
     return vec4<f32>(color, 1.0);
+}
+
+// Helper for squared distance (cheaper than length)
+fn distanceSquared(a: vec2<f32>, b: vec2<f32>) -> f32 {
+    let d = a - b;
+    return dot(d, d);
 }
