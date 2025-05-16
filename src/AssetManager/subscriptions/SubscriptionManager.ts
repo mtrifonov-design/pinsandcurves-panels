@@ -1,3 +1,4 @@
+import { CK_Workload } from "../../CK_Adapter/types";
 import { SubscriptionFSM, FSMState } from "./SubscriptionFSM";
 
 type Snapshot = Record<string, ReturnType<SubscriptionFSM["getSnapshot"]>>;
@@ -12,10 +13,17 @@ export class SubscriptionManager {
     #initialized = false;  // true when we receive INIT event from server
     #unrealized_desired: { assetId: string; assetController: unknown }[]; // unrealized desired assets
 
-    /* ——————————————————— public API ——————————————————— */
+    FreeWorkload: () => CK_Workload;
+    constructor({
+        FreeWorkload,
+    }: {
+        FreeWorkload: () => CK_Workload;
+    }) {
+        this.FreeWorkload = FreeWorkload;
+    }
 
     /** Desired asset list (called by useAssets each render) */
-    #current_desired_ids : string[] | undefined = undefined;
+    #current_desired_ids: string[] | undefined = undefined;
     setDesired(desired: { assetId: string; assetController: unknown }[]) {
         if (!this.#initialized) {
             this.#unrealized_desired = desired;
@@ -33,7 +41,7 @@ export class SubscriptionManager {
         /* 2️⃣ create FSMs for newly desired assets */
         desired.forEach(({ assetId, assetController }) => {
             if (!this.fsms.has(assetId)) {
-                const fsm = new SubscriptionFSM(assetController, this);
+                const fsm = new SubscriptionFSM(assetController, this.FreeWorkload, this);
                 this.fsms.set(assetId, fsm);
                 fsm.subscribe(assetId);
             }
@@ -56,9 +64,9 @@ export class SubscriptionManager {
         this.#listeners.forEach(l => l());
     }
 
-    async handleTerminate(cb : (self:any) => void) {
+    handleTerminate(cb: (self: any) => void, workload: CK_Workload) {
         const fsms = Array.from(this.fsms.values());
-        const cb_fsm = (self : any) => {
+        const cb_fsm = (self: any) => {
             const idx = fsms.indexOf(self);
             console.log(idx);
             if (idx !== -1) fsms.splice(idx, 1);
@@ -72,24 +80,34 @@ export class SubscriptionManager {
             return;
         }
 
-        await new Promise(resolve => {
-            if (this.fsms.size === 0) {
-                resolve(true);
-                return;
+        const listener = () => {
+            const fsmsArray = Array.from(this.fsms.values());
+            if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
+                this.#listeners.delete(listener);
             }
-            const listener = () => {
-                const fsmsArray = Array.from(this.fsms.values());
-                if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
-                    this.#listeners.delete(listener);
-                    resolve(true);
-                }
-            };
-            this.#listeners.add(listener);
-            this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
-        });
+        };
+        this.#listeners.add(listener);
+        this.fsms.forEach(fsm => fsm.setCurrentWorkload(workload));
+        this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
+
+        // await new Promise(resolve => {
+        //     if (this.fsms.size === 0) {
+        //         resolve(true);
+        //         return;
+        //     }
+        //     const listener = () => {
+        //         const fsmsArray = Array.from(this.fsms.values());
+        //         if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
+        //             this.#listeners.delete(listener);
+        //             resolve(true);
+        //         }
+        //     };
+        //     this.#listeners.add(listener);
+        //     this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
+        // });
     }
 
-    handleEvent(sender: any, payload: any) {
+    handleEvent(sender: any, payload: any, workload: CK_Workload) {
         const {
             receiveUpdate,
             subscriptionConfirmation,
@@ -105,6 +123,7 @@ export class SubscriptionManager {
             if (!fsm) {
                 return;
             }
+            fsm.setCurrentWorkload(workload);
             fsm.dispatch({ type: "SUBSCRIBE_CONFIRMED", subId: subscription_id, assetId: asset_id });
         } else {
             const universalSubId = [receiveUpdate, unsubscribeConfirmation, getAssetResponse, deleteNotification]
@@ -112,7 +131,7 @@ export class SubscriptionManager {
                 .map((el: any) => el.subscription_id)[0];
             const fsm = Array.from(this.fsms.values()).find(fsm => fsm.subId === universalSubId);
             if (!fsm) { return; }
-
+            fsm.setCurrentWorkload(workload);
             if (receiveUpdate) fsm.dispatch({ type: "RECEIVE_UPDATE", update: receiveUpdate.update });
             if (unsubscribeConfirmation) fsm.dispatch({ type: "UNSUBSCRIBE_CONFIRMED" });
             if (getAssetResponse) fsm.dispatch({ type: "ASSET_DATA", data: getAssetResponse.asset_data });
@@ -174,20 +193,6 @@ export class SubscriptionManager {
             result[id] = fsm.assetController;
         }
 
-
-        //////console.log(currentDesiredIds)
-
-        // const uninitializedAssets = Array.from(this.fsms.values()).filter(fsm => !fsm.initialised());
-        // if (uninitializedAssets.length > 0) {
-        //     return {
-        //         initialized: false,
-        //     }
-        // }
-        // const result: Record<string, any> = {};
-        // this.fsms.forEach((fsm, id) => {
-        //     result[id] = fsm.assetController;
-        // });
-        //////console.log("SubscriptionManager: getAssetPresentation", result);
         return {
             initialized: true,
             assets: result,

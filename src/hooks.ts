@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import CONFIG from './Config';
-
+import { useCK } from './CK_Adapter/CK_Provider';
+import { OnUnit } from './CK_Adapter/types';
 
 function useMessageChannel(channel: string) {
 }
@@ -14,13 +15,10 @@ function useChannel(channel: string, callback: Function) {
   }, []);
 }
 
-function useUnit(callback: Function) {
-  const guard = useRef(false);
+function useUnit(callback: OnUnit) {
+  const { onUnit, FreeWorkload} = useCK();
   useEffect(() => {
-    // if (guard.current) return;
-    // guard.current = true;
-    globalThis.CK_ADAPTER.onUnit(callback);
-  // }, []);
+    onUnit(callback);
   });
 }
 

@@ -7,6 +7,7 @@ import {
   } from "react";
   import { AssetManagerContext } from "../context/AssetProvider";
   import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
+import { useCK } from "../../CK_Adapter/CK_Provider";
   
   /** Hook signature stays the same, you pass any number of desired assets */
   export function useAssets(
@@ -15,10 +16,12 @@ import {
     const registry = useContext(AssetManagerContext);
     if (!registry)
       throw new Error("useAssets must be used inside an <AssetProvider>.");
+
+    const { FreeWorkload} = useCK();
   
     /* each hook call owns ONE manager instance */
     const managerRef = useRef<SubscriptionManager>();
-    if (!managerRef.current) managerRef.current = new SubscriptionManager();
+    if (!managerRef.current) managerRef.current = new SubscriptionManager({FreeWorkload});
   
     /* register / unregister exactly once */
     useEffect(() => {

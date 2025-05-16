@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useUnit } from "./hooks";
-import CopilotInterior from "./Copilot/Copilot";
-import CONFIG from "./Config";
+import { messageChannel, useUnit } from "../hooks";
+import CopilotInterior from "../Copilot/Copilot";
+import CONFIG from "../Config";
 
 import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
 import { useRef, useSyncExternalStore } from "react";

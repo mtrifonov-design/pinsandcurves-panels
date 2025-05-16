@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
 import { useUnit } from "../../hooks";
-
+import { useCK } from "../../CK_Adapter/CK_Provider";
 /* ——————————————————————————————————————————————————————— */
 /* Registry: keeps track of *all* managers created by hooks */
 /* ——————————————————————————————————————————————————————— */
@@ -46,8 +46,13 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   /* blocker bookkeeping for TERMINATE */
   const blockerIdRef = useRef<string | null>(null);
 
+  const { FreeWorkload } = useCK();
+
+  const currentWorkloadRef = useRef(null);
+
   /* forward every CK event to *all* registered managers */
-  useUnit(unit => {
+  useUnit((unit, workload) => {
+    currentWorkloadRef.current = workload;
     ////console.log("unit", unit);
     const { sender, payload } = unit;
     const { INIT, TERMINATE, blocker_id, payload: p } = payload;
@@ -56,6 +61,7 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       registryRef.current.initialized = true;
       managersRef.current.forEach(m => m.handleInit());
       setInitState(p);
+      workload.dispatch();
       return;
     }
 
@@ -65,57 +71,27 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       const managers = Array.from(managersRef.current);
       const releaseManagers = [...managers];
       if (managers.length === 0) {
-        globalThis.CK_ADAPTER.pushWorkload({
-          default: [
-            {
-              type: "blocker",
-              blocker_id: blockerIdRef.current,
-              id: crypto.randomUUID(),
-              blocker_count: 2,
-            },
-          ],
-        });
+        workload.thread("default").blocker(blockerIdRef.current as string,2);
+        workload.dispatch();
         return;
       }
       managers.map(m => m.handleTerminate((self: any) => {
         const idx = releaseManagers.indexOf(self);
-        console.log("idx",idx);
         if (idx !== -1) releaseManagers.splice(idx, 1);
-        console.log("releaseManagers", releaseManagers);
         if (releaseManagers.length === 0) {
-          globalThis.CK_ADAPTER.pushWorkload({
-            default: [
-              {
-                type: "blocker",
-                blocker_id: blockerIdRef.current,
-                id: crypto.randomUUID(),
-                blocker_count: 2,
-              },
-            ],
-          });
+          const workload = currentWorkloadRef.current;
+          workload.thread("default").blocker(blockerIdRef.current as string,2);
+          workload.dispatch();
         }
-      }))
+      }, workload));
+      console.log(workload)
+      workload.dispatch();
       return;
     }
 
-    // if (RELEASE_TERMINATE) {
-    //   const readyToUnload = Array.from(managersRef.current).every(m => m.fsms.size === 0);
-    //   if (readyToUnload) {
-    //     globalThis.CK_ADAPTER.pushWorkload({
-    //       default: [
-    //         {
-    //           type: "blocker",
-    //           blocker_id: blockerIdRef.current,
-    //           id: crypto.randomUUID(),
-    //           blocker_count: 2,
-    //         },
-    //       ],
-    //     });
-    //   }
-    // }
-
     /* regular payload: broadcast to every manager */
-    managersRef.current.forEach(m => m.handleEvent(sender, payload));
+    managersRef.current.forEach(m => m.handleEvent(sender, payload, workload));
+    workload.dispatch();
   });
 
   return (

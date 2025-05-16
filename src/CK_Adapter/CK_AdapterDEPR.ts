@@ -7,8 +7,6 @@ class CK_Adapter {
 
   private PASSWORD: string | undefined;
 
-  private mode: "PUSH" | "COMPUTE" = "PUSH";
-
   private installCallback: Function | undefined;
   constructor(installCallback: Function) {
     ////console.log("CK_Adapter constructor");
@@ -103,24 +101,6 @@ class CK_Adapter {
     }
 
     this.release();
-
-    // if (unit.payload.LOAD_SESSION) {
-    //   unit.payload.channel = "LOAD_SESSION";
-    // }
-    // if (unit.payload.SAVE_SESSION) {
-    //   unit.payload.channel = "SAVE_SESSION";
-    // }
-
-    // const channelId = unit.payload.channel;
-    // const channelCallback = this.channelCallbacks[channelId];
-    // if (channelCallback) {
-    //   const result = channelCallback(unit);
-    // }
-  }
-
-  channelCallbacks: { [key: string]: Function } = {};
-  onChannel(channelId: string, callback: Function) {
-    this.channelCallbacks[channelId] = callback;
   }
 
   unitCallback: Function | undefined;
@@ -144,11 +124,6 @@ class CK_Adapter {
       }
       this.workload[threadKey] = this.workload[threadKey].concat(workload[threadKey]);
     }
-    // //console.log(this.mode)
-    // schedule sendWorkload
-    // if (this.mode === "PUSH") {
-    //     this.release();
-    // }
 
     if (this.computing && this.requestedManualRelease && release) {
       this.release();

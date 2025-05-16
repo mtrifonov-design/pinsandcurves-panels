@@ -1,29 +1,8 @@
+import { CK_Workload } from "../../CK_Adapter/types";
 import CONFIG from "../../Config";
 
-function sendToAssetServer(payload: any) {
-    CK_ADAPTER.pushWorkload({
-        default: [{
-            type: "worker",
-            receiver: {
-                instance_id: "ASSET_SERVER",
-                modality: "wasmjs",
-                resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-            },
-            payload,
-        }],
-    });
-}
 
-function sendToSelf(payload: any) {
-    console.log("sendToSelf", payload);
-    CK_ADAPTER.pushWorkload({
-        default: [{
-            type: "worker",
-            receiver: null,
-            payload,
-        }],
-    });
-}
+
 
 /** Finite‑state machine for ONE asset subscription */
 export enum FSMState {
@@ -48,6 +27,21 @@ export type FSMEvent =
     | { type: "DELETE_NOTIFICATION" }
     | { type: "UNSUBSCRIBE_CONFIRMED" };
 
+
+// function sendToAssetServer(payload: any) {
+//     CK_ADAPTER.pushWorkload({
+//         default: [{
+//             type: "worker",
+//             receiver: {
+//                 instance_id: "ASSET_SERVER",
+//                 modality: "wasmjs",
+//                 resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+//             },
+//             payload,
+//         }],
+//     });
+// }
+
 export class SubscriptionFSM {
     assetId?: string;
     private state: FSMState = FSMState.IDLE;
@@ -55,8 +49,28 @@ export class SubscriptionFSM {
     subName?: string;
     assetController: unknown;
     manager?: unknown;
+    currentWorkload: CK_Workload | undefined = undefined;
+    setCurrentWorkload(workload: CK_Workload) {
+        this.currentWorkload = workload;
+    }
 
-    constructor(controller: unknown, manager?: unknown) {
+    sendToAssetServer(payload: any, free: boolean = false) {
+        const workload = free ? this.FreeWorkload() : this.currentWorkload;
+        if (!workload) {
+            throw new Error("No current workload set");
+        }
+        const instance = {
+            instance_id: "ASSET_SERVER",
+            modality: "wasmjs",
+            resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+        }
+        if (payload !== undefined) workload.thread("default").worker(instance,payload);
+        if (free) workload.dispatch();
+    }
+
+    FreeWorkload: () => CK_Workload;
+    constructor(controller: unknown, FreeWorkload: () => CK_Workload, manager?: unknown) {
+        this.FreeWorkload = FreeWorkload;   
         this.manager = manager;
         this.assetController = controller;
         this.assetController.setHooks({
@@ -90,21 +104,21 @@ export class SubscriptionFSM {
                 if (ev.type === "SUBSCRIBE_TO_EXISTING") {
                     this.subName = ev.subName;
                     this.assetId = ev.assetId;
-                    sendToAssetServer({
+                    this.sendToAssetServer({
                         subscribeToExistingAsset: {
                             asset_id: this.assetId,
                             subscription_name: this.subName,
                         }
-                    })
+                    },true)
                     this.state = FSMState.SUBSCRIBING;
 
                 }
                 if (ev.type === "CREATE") {
                     this.subName = ev.subName;
                     this.assetController.load(ev.asset);
-                    sendToAssetServer({
+                    this.sendToAssetServer({
                         createAsset: ev.asset,
-                    });
+                    },true);
                     this.state = FSMState.SUBSCRIBING;
                 }
                 break;
@@ -113,12 +127,14 @@ export class SubscriptionFSM {
                 if (ev.type === "SUBSCRIBE_CONFIRMED") {
                     this.subId = ev.subId;
                     this.assetId = ev.assetId;
+                    this.sendToAssetServer();
                 }
                 if (ev.type === "ASSET_DATA") {
                     //console.log("ASSET_DATA", ev.data,this.assetId);
                     this.assetController.load(ev.data);
                     this.state = FSMState.ACTIVE;
                     this.notifyManager();
+                    this.sendToAssetServer();
                 }
                 break;
 
@@ -127,40 +143,43 @@ export class SubscriptionFSM {
                     case "RECEIVE_UPDATE":
                         this.assetController.receiveUpdate(ev.update);
                         this.notifyManager();
+                        this.sendToAssetServer();
                         break;
                     case "UPDATE":
-                        sendToAssetServer({
+                        this.sendToAssetServer({
                             updateAsset: {
                                 subscription_id: this.subId,
                                 asset_id: this.assetId,
                                 update: ev.update,
                             }
-                        });
+                        },true);
                         this.notifyManager();
                         break;
                     case "UPDATE_METADATA":
-                        sendToAssetServer({
+                        this.sendToAssetServer({
                             updateAssetMetadata: {
                                 subscription_id: this.subId,
                                 asset_id: this.assetId,
                                 metadata: ev.metadata,
                             }
-                        });
+                        },true);
                         this.notifyManager();
                         break;
                     case "RECEIVE_METADATA_UPDATE":
                         this.assetController.receiveMetadataUpdate(ev.metadata);
                         this.notifyManager();
+                        this.sendToAssetServer();
                         break;
                     case "DELETE_NOTIFICATION":
                         this.state = FSMState.DONE;
                         this.detachFromManager();
                         this.assetController.destroy();
                         this.notifyManager();
+                        this.sendToAssetServer();
                         break;
                     case "UNSUBSCRIBE":
                         this.state = FSMState.CLOSING;
-                        sendToAssetServer({
+                        this.sendToAssetServer({
                             unsubscribeFromAsset: {
                                 subscription_id: this.subId,
                                 asset_id: this.assetId,
