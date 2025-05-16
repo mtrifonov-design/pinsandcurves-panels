@@ -11,6 +11,8 @@ import HTMLPreview from './HTMLPreview'
 import { StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
 import CyberSpaghetti from './CyberSpaghetti/CyberSpaghetti';
 import CyberSpaghettiControlConsole from './CyberSpaghetti/ControlConsole';
+import LiquidLissajous from './LiquidLissajous/LiquidLissajous';
+import LiquidLissajousControlConsole from './LiquidLissajous/ControlConsole';
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -37,6 +39,8 @@ function App(p: { renderedCallback: Function }) {
           {/* <Route path="/htmlpreview" element={<HTMLPreview />} /> */}
           <Route path="/cyberspaghetti" element={<CyberSpaghetti />} />
           <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />
+          <Route path="/liquidlissajous" element={<LiquidLissajous />} />
+          <Route path="/liquidlissajous-controlconsole" element={<LiquidLissajousControlConsole />} />
         </Routes>
       </StyleProvider>
     </div>
