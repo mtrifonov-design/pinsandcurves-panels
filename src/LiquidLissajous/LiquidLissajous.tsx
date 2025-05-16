@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useSyncExternalStore } from 'react';
-import { RaySystem } from './core/RaySystem.js';
+import { ParticleSystem } from './core/ParticleSystem.js';
 import { WebGPURenderer } from './backends/webgpu/renderer.js';
-import { Canvas2DRenderer } from './backends/canvas2d/renderer.js';
 import TimelineProvider, { useTimeline } from '../TimelineUtils/TimelineProvider.js';
 import { AssetProvider } from '../AssetManager/context/AssetProvider.js';
 import { Button, StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
@@ -39,16 +38,18 @@ pb.setSignalActiveStatus('cy', false);
 const defaultName = "spaghetti.timeline"
 
 
-function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, controls }) {
+function LiquidLissajousInterior({ width = 1920, height = 1080, timeline, controls }: any) {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const particleSystemRef = useRef<any>(new ParticleSystem());
+    const particleSystem = particleSystemRef.current;
+    const rendererRef = useRef<any>(null);
 
-    const canvasRef = useRef(null);
-    const containerRef = useRef(null);
-    const raySystemRef = useRef(new RaySystem());
-    const raySystem = raySystemRef.current;
+    const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
+    const timelineProject: any = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
 
-    const controlsSnapshot = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
-    const timelineProject = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
-    raySystem.update(timelineProject,controlsSnapshot,timeline); 
+    // Update particle system each frame
+    particleSystem.update(controlsSnapshot, timeline);
 
     useEffect(() => {
         //resize canvas to window size
@@ -93,13 +94,6 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
 
     },[])
 
-    const frameSaverRef = useRef(new FrameSaver({
-        timeline,
-        width,
-        height,
-    }));
-    const frameSaver = frameSaverRef.current;
-
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -107,36 +101,20 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
         canvas.width = width;
         canvas.height = height;
 
-        frameSaver.addCanvas(canvas);
-        
-
-        let renderer;
-
-        (async () => {
-              if (navigator.gpu) {
-                renderer = new WebGPURenderer(canvas, raySystem);
-                await renderer.init();                  // async pipeline build
-              } else {
-                console.warn('WebGPU not available – using Canvas2D fallback');
-                renderer = new Canvas2DRenderer(canvas, raySystem);
-              }
-            //renderer = new Canvas2DRenderer(canvas, raySystem);
-
-            const loop = () => {
-                // seconds
-                renderer.draw();
-                const { rendering } = frameSaver.getStatus();
-                if (rendering && renderer.onFrameReady) {
-                    renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
-                }
+        if (!rendererRef.current) {
+            rendererRef.current = new WebGPURenderer(canvas, particleSystem);
+            rendererRef.current.init().then(() => {
+                const loop = () => {
+                    rendererRef.current!.draw();
+                    requestAnimationFrame(loop);
+                };
                 requestAnimationFrame(loop);
-            };
-            requestAnimationFrame(loop);
-        })();
+            });
+        }
 
         // clean-up on unmount
         return () => { };
-    }, [width, height,timeline,controls]);
+    }, [width, height, timeline, controls, particleSystem]);
 
     if (!timeline) {
         return <div>No timeline found</div>
@@ -156,47 +134,10 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
             left: "50%",
             transform: "translate(-50%, -50%)",
          }} />
-         <FrameSaverScreen frameSaver={frameSaver} />
-
     </div> 
 }
 
-function FrameSaverScreen({ frameSaver }) {
-    const {rendering, totalFrames, renderedFrames} = useSyncExternalStore(
-        frameSaver.subscribe.bind(frameSaver),
-        frameSaver.getStatus.bind(frameSaver),
-    )
-
-    return <div style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "60px",
-        display: "flex",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        padding: 10,
-    }}>
-        <Button
-            onClick={() => {
-                frameSaver.begin();
-            }}
-            text={"save as frames"}
-            iconName="animated_images" 
-         />
-        {rendering && <div style={{
-
-            color: "var(--gray6)",
-            marginLeft: 20,
-        }}>
-            {
-            `Rendering... ${renderedFrames} / ${totalFrames}` }
-        </div>}
-    </div>
-}
-
-function CyberSpaghettiExterior() {
+function LiquidLissajousExterior() {
     const timeline = useTimeline();
     const controls = useControls();
 
@@ -205,26 +146,20 @@ function CyberSpaghettiExterior() {
         return <FullscreenLoader />
     }
 
-    return <CyberSpaghettiInterior controls={controls} timeline={timeline} />
-
-
+    return <LiquidLissajousInterior controls={controls} timeline={timeline} />
 }
 
 
-export default function CyberSpaghetti() {
-
-
+export default function LiquidLissajous() {
     return <AssetProvider>
         <TimelineProvider
             defaultProject={defaultProject}
             defaultName={defaultName}
-            shouldCreate ={true}
+            shouldCreate={true}
         >
             <ControlsProvider>
-                <CyberSpaghettiExterior />
+                <LiquidLissajousExterior />
             </ControlsProvider>
         </TimelineProvider>
     </AssetProvider>;
-
-
 }

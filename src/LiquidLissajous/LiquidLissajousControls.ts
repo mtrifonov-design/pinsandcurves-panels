@@ -1,15 +1,7 @@
 
 type ControlsData = {
-    centerX: number;
-    centerY: number;
-    backgroundColor: [number, number, number];
-    maxRays: number;
-    rayColors: [number, number, number][];
-    averageThickness: number;
-    thicknessVariance: number;
-    lifespan: number;
-    waveAmplitude: number;
-    waveFrequency: number;
+    particleCount: number;
+    particleColors: [number, number, number][];
 }
 
 class Controls {
@@ -56,16 +48,12 @@ class Controls {
     }
 
     static defaultControls = {
-        centerX: 1920 /( 2),
-        centerY: 1080 /( 2),
-        backgroundColor: [0, 0, 0],
-        maxRays: 500,
-        rayColors: [[255, 255, 255]],
-        averageThickness: 2,
-        thicknessVariance: 1,
-        lifespan: 60,
-        waveAmplitude: 0,
-        waveFrequency: 0
+        particleCount: 10,
+        particleColors: [
+            [255, 0, 0],
+            [0,255, 0],
+            [0, 0, 255],
+        ],
     }
 }
 

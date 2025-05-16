@@ -24,21 +24,17 @@ export function CyberSpaghettiControlsInterior({
   };
 
   const updateColor = (idx, value) => {
-    const colors = state.rayColors.slice();
+    const colors = state.particleColors.slice();
     colors[idx] = hexToRgb(value);
-    update({ rayColors: colors });
+    update({ particleColors: colors });
   };
 
-  const addColor    = () => update({ rayColors: [...state.rayColors, [255,255,255]] });
+  const addColor    = () => update({ rayColors: [...state.particleColors, [255,255,255]] });
   const removeColor = idx => {
-    if (state.rayColors.length === 1) return;      // must keep ≥1 colour
-    update({ rayColors: state.rayColors.filter((_, i) => i !== idx) });
+    if (state.particleColors.length === 1) return;      // must keep ≥1 colour
+    update({ rayColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
-  const setBackgroundColor = value => {
-    const rgb = hexToRgb(value);
-    update({ backgroundColor: rgb });
-  };
 
   return (
     <div className="hyperspeed-controls" 
@@ -55,60 +51,7 @@ export function CyberSpaghettiControlsInterior({
             scrollbarColor: 'var(--gray3) var(--gray1)',
          }}
     >
-      {/* Centre */}
-      <fieldset style={{
-        borderColor: 'var(--gray4)',
-        borderRadius: 'var(--borderRadiusSmall)',
-        display: 'flex',
-        flexDirection: 'row',
-        gap: '0.5rem',
-        justifyContent: 'flex-start',
-      }}>
-        <legend>center point</legend>
-        <label>
-          X&nbsp;
-          <NumberInput
-                initialValue={state.centerX}
-                min={0}
-                max={1920}
-                step={5}
-                onChange={c => update({ centerX: c })}
-            />
-        </label>
-        <label>
-          Y&nbsp;
-          <NumberInput
-                initialValue={state.centerY}
-                min={0}
-                max={1080}
-                step={5}
-                onChange={c => update({ centerY: c })}
-            />
-        </label>
-      </fieldset>
-
-      {/* Background */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        background&nbsp;
-        <input
-              type="color"
-              style={{
-                border: "none",
-                backgroundColor: "var(--gray3)",
-                borderRadius: "var(--borderRadiusSmall)",
-                width: "35px",
-                height: "35px",
-              }}
-                value={rgbToHex(state.backgroundColor)}
-                onChange={e => setBackgroundColor(e.target.value)}
-                onBlur={e => setBackgroundColor(e.target.value)}
-            />
-      </label>
+    
 
       {/* Global limits */}
       <label style={{
@@ -117,13 +60,13 @@ export function CyberSpaghettiControlsInterior({
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        max rays&nbsp;
+        color particle count&nbsp;
         <NumberInput
-                initialValue={state.maxRays}
+                initialValue={state.particleCount}
                 min={0}
-                max={1000}
+                max={50}
                 step={1}
-                onChange={c => update({ maxRays: c })}
+                onChange={c => update({ particleCount: c })}
             />
 
       </label>
@@ -140,8 +83,8 @@ export function CyberSpaghettiControlsInterior({
             alignContent: 'center',
         }}
       >
-        <legend>ray colours</legend>
-        {state.rayColors.map((c, i) => (
+        <legend>particle colours</legend>
+        {state.particleColors.map((c, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4,
             justifyContent: 'center',
             borderRadius: "var(--borderRadiusSmall)",
@@ -151,7 +94,7 @@ export function CyberSpaghettiControlsInterior({
            }}>
             <input
               type="color"
-              value={rgbToHex(state.rayColors[i])}
+              value={rgbToHex(state.particleColors[i])}
               onChange={e => updateColor(i, e.target.value)}
               style={{
                 border: "none",
@@ -167,88 +110,6 @@ export function CyberSpaghettiControlsInterior({
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
 
-      {/* Thickness */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray average thickness (°)&nbsp;
-        <NumberInput
-                initialValue={state.averageThickness}
-                min={0}
-                max={5}
-                step={0.1}
-                onChange={c => update({ averageThickness: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray thickness variance (°)&nbsp;
-        <NumberInput
-                initialValue={state.thicknessVariance}
-                min={0}
-                max={5}
-                step={0.1}
-                onChange={c => update({ thicknessVariance: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray wavyness amplitude (°)&nbsp;
-        <NumberInput
-                initialValue={state.waveAmplitude}
-                min={0}
-                max={90}
-                step={1}
-                onChange={c => update({ waveAmplitude: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray wavyness frequency &nbsp;
-        <NumberInput
-                initialValue={state.waveFrequency}
-                min={0}
-                max={150}
-                step={1}
-                onChange={c => update({ waveFrequency: c })}
-            />
-      </label>
-
-
-      {/* Lifespan */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray lifespan (frames)&nbsp;
-        <NumberInput
-                initialValue={state.lifespan}
-                min={0}
-                max={300}
-                step={1}
-                onChange={c => update({ lifespan: c })}
-        />
-      </label>
     </div>
   );
 }

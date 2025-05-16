@@ -1,7 +1,7 @@
 import { randN, easeInExpo, easeInSine } from './math.js';
 import { colorConvert, colorsLinear } from './colors.js';
 import { PinsAndCurvesProjectController } from '@mtrifonov-design/pinsandcurves-external';
-import { ControlsData } from '../CyberSpaghettiControls.js';
+import { ControlsData } from '../LiquidLissajousControls.js';
 type Project = PinsAndCurvesProjectController.Project;
 
 export class RaySystem {
