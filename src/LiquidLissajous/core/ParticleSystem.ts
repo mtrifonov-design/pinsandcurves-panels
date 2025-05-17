@@ -69,7 +69,7 @@ export class ParticleSystem {
             let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE 
             t += (i  / this.PARTICLE_COUNT) * 2 * Math.PI;
             // Add deterministic noise to t
-            const noiseStrength = 0.0; // Adjust for more/less impact
+            const noiseStrength = 1.0; // Adjust for more/less impact
             const normalStrength = 0.0; // Offset along normal (pixels)
             const noiseVal = noise1D(i);
             t += noiseVal * noiseStrength;

@@ -10,7 +10,7 @@ export class WebGPURenderer {
         });
         this.particleSys = particleSystem;
         this.device = null;
-        this.showPoints = true;
+        this.showPoints = false;
     }
 
     async init() {

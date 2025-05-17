@@ -78,73 +78,53 @@ fn oklabToSRGB(o: vec3<f32>) -> vec3<f32> {
     return toSRGB(rgb);
 }
 
+
+fn hash2(p: vec2<f32>) -> f32 {
+    let dotp = dot(p, vec2<f32>(127.1, 311.7));
+    return fract(sin(dotp) * 43758.5453);
+}
+
+fn valueNoise(p: vec2<f32>) -> f32 {
+    let i = floor(p);
+    let f = fract(p);
+    // Four corners
+    let a = hash2(i);
+    let b = hash2(i + vec2<f32>(1.0, 0.0));
+    let c = hash2(i + vec2<f32>(0.0, 1.0));
+    let d = hash2(i + vec2<f32>(1.0, 1.0));
+    // Bilinear interpolation
+    let u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
 /*------------ fragment ------------------------------------------*/
 @fragment
 fn fs_main(
     @location(0) v_uv : vec2<f32>,
 ) -> @location(0) vec4<f32> {
-    let fragCoord = v_uv * uni.resolution;
+    // Convert UV to polar coordinates (centered at 0.5,0.5), correct for aspect ratio
+    let aspect = uni.resolution.x / uni.resolution.y;
+    var uv = v_uv - vec2<f32>(0.5, 0.5);
+    uv.x = uv.x * aspect;
+    let r = length(uv) * 2.0; // [0,1] at edge
+    // Map r to [0,1]
+    let t_r = r;
     let count = counts;
-    var d_min = 1e9;
-
-    // First pass: find minimum squared distance
-    for (var i = 0u; i < count; i = i + 1u) {
-        let base = i * 5u;
-        let px = particles[base + 0u];
-        let py = particles[base + 1u];
-        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
-        if (dist2 < d_min) {
-            d_min = dist2;
-        }
-    }
-
-    // Set dynamic alpha (inverse to d_min), clamped to avoid explosion
-    let epsilon = 1e-4;
-    let min_dist2 = max(d_min, epsilon);
-    let alpha = 1.3 / min_dist2; // You can tune this coefficient (1.0) if needed
-
-    var oklAccum = vec3<f32>(0.0);
-    var total = 0.0;
-
-    // Second pass: compute softmax weights
-    for (var i = 0u; i < count; i = i + 1u) {
-        let base = i * 5u;
-        let px = particles[base + 0u];
-        let py = particles[base + 1u];
-        let pr = particles[base + 2u];
-        let pg = particles[base + 3u];
-        let pb = particles[base + 4u];
-
-        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
-        let w = exp(-alpha * dist2);
-        oklAccum += srgbToOKLab(vec3<f32>(pr, pg, pb)) * w;
-        total += w;
-    }
-
-    var color = vec3<f32>(0.0);
-    if (total > 0.0) {
-        color = oklabToSRGB(oklAccum / total);
-    }
-
-    // Overlay control points if enabled
-    if (showPoints == 1u) {
-        let pointRadius = 10.0;
-        var show = false;
-        for (var i = 0u; i < count; i = i + 1u) {
-            let base = i * 5u;
-            let px = particles[base + 0u];
-            let py = particles[base + 1u];
-            let dist = length(fragCoord - vec2<f32>(px, py));
-            if (dist < pointRadius) {
-                show = true;
-                break;
-            }
-        }
-        if (show) {
-            return vec4<f32>(1.0, 1.0, 1.0, 1.0);
-        }
-    }
-
+    // Map t_r to [0, count] so that 0 and 1 both map to the first color, and stops are equidistant
+    let stops = f32(count);
+    let t_scaled = t_r * stops * 0.5;
+    let idx0 = u32(floor(t_scaled)) % count;
+    let idx1 = (idx0 + 1u) % count;
+    let frac = t_scaled - floor(t_scaled);
+    let base0 = idx0 * 5u;
+    let base1 = idx1 * 5u;
+    let c0 = vec3<f32>(particles[base0+2u], particles[base0+3u], particles[base0+4u]);
+    let c1 = vec3<f32>(particles[base1+2u], particles[base1+3u], particles[base1+4u]);
+    // Interpolate in OKLab
+    let okl0 = srgbToOKLab(c0);
+    let okl1 = srgbToOKLab(c1);
+    let okl = mix(okl0, okl1, frac);
+    let color = oklabToSRGB(okl);
     return vec4<f32>(color, 1.0);
 }
 
