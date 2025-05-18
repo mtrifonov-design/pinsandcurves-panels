@@ -64,7 +64,7 @@ class Controls {
         mixingIntensity: 0.3,
         showLissajousFigure: false,
         ratioA: 1,
-        ratioB: 1,
+        ratioB: 2,
         offset: Math.PI / 2,
     }
 }

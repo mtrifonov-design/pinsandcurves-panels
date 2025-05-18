@@ -56,6 +56,21 @@ export function CyberSpaghettiControlsInterior({
             scrollbarColor: 'var(--gray3) var(--gray1)',
          }}
     >
+      <h2 style={{
+        color: 'var(--gray7)',
+      }}>
+        Liquid-Lissajous-Worry-Free-Gradient-Generator (Beta)
+      </h2>
+      <div>
+        <a style={{
+          color: "var(--continuousBlue3)",
+          textDecoration: "underline",
+          cursor: "pointer",
+        }}>Learn more about this tool</a>
+      </div>
+      <hr></hr>
+
+
       {/* Global limits */}
       <label style={{
         display: 'flex',

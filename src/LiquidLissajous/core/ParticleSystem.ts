@@ -54,7 +54,7 @@ export class ParticleSystem {
         // Create a closed color loop (add first color to end)
         const baseColors = config.particleColors.map(colorConvert);
         const colorLoop = baseColors.length > 0 ? [...baseColors, baseColors[0]] : [[1,0,0],[0,1,0],[0,0,1],[1,0,0]];
-        this.PARTICLE_COUNT = config.mixingIntensity * ((colorLoop.length-1) * 4) + (colorLoop.length-1);
+        this.PARTICLE_COUNT = Math.floor(config.mixingIntensity * ((colorLoop.length-1) * 4) + (colorLoop.length-1));
         this.LOOP_LIFECYCLE = config.loopLifecycle;
 
         this.RATIO_A = config.ratioA;

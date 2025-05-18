@@ -11,11 +11,7 @@ import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pins
 
 const pb = new ProjectDataStructure.ProjectBuilder();
 pb.setTimelineData(900, 30, 45);
-pb.addContinuousSignal('s1', 'Birth Rate', [0, 1]);
-pb.addPin('s1', 10, 0, 'return easyLinear()');
-pb.addPin('s1', 20, 1, 'return easyEaseOut()');
-pb.addPin('s1', 40, 1, 'return easyLinear()');
-pb.addPin('s1', 50, 0, 'return easyEaseIn()');
+pb.addContinuousSignal('s1', 'Unused Signal', [0, 1]);
 pb.addContinuousSignal('cx', 'Center X', [0, 1]);
 pb.addPin('cx', 0, 0, 'return easyLinear()');
 pb.addPin('cx', 50, 1, 'return easyLinear()');
