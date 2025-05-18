@@ -59,14 +59,16 @@ export function CyberSpaghettiControlsInterior({
       <h2 style={{
         color: 'var(--gray7)',
       }}>
-        Liquid-Lissajous-Worry-Free-Gradient-Generator (Beta)
+        🎨 Liquid Lissajous Gradient Generator  (Beta)
       </h2>
       <div>
-        <a style={{
+        This tool is part of the Pins & Curves project. <a style={{
           color: "var(--continuousBlue3)",
           textDecoration: "underline",
           cursor: "pointer",
-        }}>Learn more about this tool</a>
+        }}
+        href="https://pinsandcurves.app"
+        >Learn more</a>
       </div>
       <hr></hr>
 

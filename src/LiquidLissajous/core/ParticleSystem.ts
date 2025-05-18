@@ -53,8 +53,16 @@ export class ParticleSystem {
         this.time = timeline.getProject().timelineData.playheadPosition;
         // Create a closed color loop (add first color to end)
         const baseColors = config.particleColors.map(colorConvert);
-        const colorLoop = baseColors.length > 0 ? [...baseColors, baseColors[0]] : [[1,0,0],[0,1,0],[0,0,1],[1,0,0]];
-        this.PARTICLE_COUNT = Math.floor(config.mixingIntensity * ((colorLoop.length-1) * 4) + (colorLoop.length-1));
+        // Compute subdivisions between each color
+        const subdivisions = Math.floor(config.mixingIntensity * 5);
+        // If more than one color, treat as a loop (closed)
+        let colorLoopCount = 0;
+        if (baseColors.length > 1) {
+            colorLoopCount = baseColors.length * (subdivisions + 1);
+            this.PARTICLE_COUNT = colorLoopCount;
+        } else {
+            this.PARTICLE_COUNT = baseColors.length;
+        }
         this.LOOP_LIFECYCLE = config.loopLifecycle;
 
         this.RATIO_A = config.ratioA;
@@ -104,21 +112,24 @@ export class ParticleSystem {
             return [r, g, b];
         }
         // Build color stops
-        const stops = this.PARTICLE_COUNT;
         const colorStops: number[][] = [];
-        for (let i = 0; i < stops; ++i) {
-            const t = i / stops * (colorLoop.length - 1);
-            const idx = Math.floor(t);
-            const frac = t - idx;
-            const c0 = rgbToHsl(colorLoop[idx]);
-            const c1 = rgbToHsl(colorLoop[idx + 1]);
-            // Interpolate hue circularly
-            let dh = c1[0] - c0[0];
-            if (Math.abs(dh) > 0.5) dh -= Math.sign(dh);
-            const h = (c0[0] + dh * frac + 1) % 1;
-            const s = c0[1] + (c1[1] - c0[1]) * frac;
-            const l = c0[2] + (c1[2] - c0[2]) * frac;
-            colorStops.push(hslToRgb([h, s, l]));
+        if (baseColors.length > 1) {
+            for (let i = 0; i < baseColors.length; ++i) {
+                const c0 = rgbToHsl(baseColors[i]);
+                const c1 = rgbToHsl(baseColors[(i + 1) % baseColors.length]);
+                for (let s = 0; s < subdivisions + 1; ++s) {
+                    const frac = s / (subdivisions + 1);
+                    // Interpolate hue circularly
+                    let dh = c1[0] - c0[0];
+                    if (Math.abs(dh) > 0.5) dh -= Math.sign(dh);
+                    const h = (c0[0] + dh * frac + 1) % 1;
+                    const s_ = c0[1] + (c1[1] - c0[1]) * frac;
+                    const l = c0[2] + (c1[2] - c0[2]) * frac;
+                    colorStops.push(hslToRgb([h, s_, l]));
+                }
+            }
+        } else if (baseColors.length === 1) {
+            colorStops.push(baseColors[0]);
         }
         this.PARTICLE_COLORS = colorStops;
 
