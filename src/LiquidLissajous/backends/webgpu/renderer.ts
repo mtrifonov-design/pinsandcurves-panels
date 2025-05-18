@@ -123,48 +123,60 @@ export class WebGPURenderer {
             primitive:{topology:'triangle-list'},
         });
 
-        // Polyline buffer for Lissajous overlay
-        this.lineBuf = this.device.createBuffer({
-            size: 1024 * 2 * 4, // up to 1024 points, 2 floats each
+        // Polyline buffer for Lissajous overlay (as quads for anti-aliased line)
+        this.lineQuadBuf = this.device.createBuffer({
+            size: 1024 * 4 * 4, // up to 1024 segments, 4 verts per segment, 2 floats each
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
-        // Polyline pipeline (simple color, no blending)
-        this.linePipeline = this.device.createRenderPipeline({
+        this.lineQuadBuf2 = this.device.createBuffer({
+            size: 1024 * 4 * 4, // up to 1024 segments, 4 verts per segment, 2 floats each
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        });
+        // Polyline pipeline (AA line as quad, smoothstep alpha)
+        this.lineQuadPipeline = this.device.createRenderPipeline({
             layout: 'auto',
             vertex: {
                 module: this.device.createShaderModule({
                     code: `
-                    struct VsOut {
+                    struct Out {
                         @builtin(position) position : vec4<f32>,
+                        @location(0) v_linepos : vec2<f32>,
                     };
                     @vertex
-                    fn main(@location(0) pos: vec2<f32>) -> VsOut {
-                        var out: VsOut;
-                        // Convert screen coords to NDC
+                    fn main(@location(0) pos: vec2<f32>, @location(1) linepos: vec2<f32>) -> Out {
+                        var out: Out;
                         out.position = vec4<f32>(
                             (pos.x / f32(${this.canvas.width}) * 2.0 - 1.0),
                             (pos.y / f32(${this.canvas.height}) * 2.0 - 1.0),
                             0.0, 1.0);
+                        out.v_linepos = linepos;
                         return out;
                     }
                     `
                 }),
                 entryPoint: 'main',
-                buffers: [{ arrayStride: 8, attributes: [{ shaderLocation: 0, format: 'float32x2', offset: 0 }] }]
+                buffers: [
+                    { arrayStride: 8, attributes: [{ shaderLocation: 0, format: 'float32x2', offset: 0 }] }, // pos
+                    { arrayStride: 8, attributes: [{ shaderLocation: 1, format: 'float32x2', offset: 0 }] }, // linepos
+                ]
             },
             fragment: {
                 module: this.device.createShaderModule({
                     code: `
                     @fragment
-                    fn main() -> @location(0) vec4<f32> {
-                        return vec4<f32>(0.85, 0.85, 0.95, 0.25); // subtle bluish-white
+                    fn main(@location(0) v_linepos: vec2<f32>) -> @location(0) vec4<f32> {
+                        let d = abs(v_linepos.y); // distance from line center
+                        let width = 4.0; // px
+                        let aa = 2.5; // px
+                        let alpha = smoothstep(width+aa, width, d);
+                        return vec4<f32>(0.85, 0.85, 0.95, 0.25 * alpha);
                     }
                     `
                 }),
                 entryPoint: 'main',
                 targets: [{ format }]
             },
-            primitive: { topology: 'line-strip' },
+            primitive: { topology: 'triangle-strip' },
         });
     }
 
@@ -249,16 +261,45 @@ export class WebGPURenderer {
         pass.setVertexBuffer(0,this.vertBuf);
         pass.draw(6, 1);   // 6 verts, 1 instance (full screen)
 
-        // Upload polyline buffer
-        if (particleSys.lissajousLineCount > 1) {
-            device.queue.writeBuffer(this.lineBuf, 0, particleSys.lissajousLineBuffer.subarray(0, particleSys.lissajousLineCount * 2));
+        // --- Upload AA polyline quad buffer only if overlay is enabled ---
+        let lineQuadVertCount = 0;
+        if (particleSys.SHOW_LISSAJOUS_FIGURE && particleSys.lissajousLineCount > 1) {
+            // Generate quad vertices for each segment
+            const N = particleSys.lissajousLineCount;
+            const src = particleSys.lissajousLineBuffer;
+            const quadVerts = new Float32Array((N-1)*4*2); // 4 verts per segment, 2 floats each
+            const quadLinepos = new Float32Array((N-1)*4*2); // 4 verts per segment, 2 floats each
+            let q = 0;
+            let l = 0;
+            const lineWidth = 4.0; // px (thicker)
+            for (let i = 0; i < N-1; ++i) {
+                const x0 = src[i*2],   y0 = src[i*2+1];
+                const x1 = src[(i+1)*2], y1 = src[(i+1)*2+1];
+                const dx = x1-x0, dy = y1-y0;
+                const len = Math.sqrt(dx*dx+dy*dy) || 1.0;
+                const nx = -dy/len, ny = dx/len;
+                // Two verts per end, offset by normal
+                quadVerts[q++] = x0 + nx*lineWidth; quadVerts[q++] = y0 + ny*lineWidth;
+                quadVerts[q++] = x0 - nx*lineWidth; quadVerts[q++] = y0 - ny*lineWidth;
+                quadVerts[q++] = x1 + nx*lineWidth; quadVerts[q++] = y1 + ny*lineWidth;
+                quadVerts[q++] = x1 - nx*lineWidth; quadVerts[q++] = y1 - ny*lineWidth;
+                // v_linepos: (x, y) where y is distance from center (for AA)
+                quadLinepos[l++] = 0; quadLinepos[l++] = +lineWidth;
+                quadLinepos[l++] = 0; quadLinepos[l++] = -lineWidth;
+                quadLinepos[l++] = 1; quadLinepos[l++] = +lineWidth;
+                quadLinepos[l++] = 1; quadLinepos[l++] = -lineWidth;
+            }
+            device.queue.writeBuffer(this.lineQuadBuf, 0, quadVerts);
+            device.queue.writeBuffer(this.lineQuadBuf2, 0, quadLinepos);
+            lineQuadVertCount = (particleSys.lissajousLineCount-1)*4;
         }
 
-        // Draw polyline overlay if enabled
-        if (particleSys.SHOW_LISSAJOUS_FIGURE && particleSys.lissajousLineCount > 1) {
-            pass.setPipeline(this.linePipeline);
-            pass.setVertexBuffer(0, this.lineBuf);
-            pass.draw(particleSys.lissajousLineCount, 1);
+        // Draw polyline overlay if enabled (as AA quad strip)
+        if (particleSys.SHOW_LISSAJOUS_FIGURE && lineQuadVertCount > 0) {
+            pass.setPipeline(this.lineQuadPipeline);
+            pass.setVertexBuffer(0, this.lineQuadBuf);
+            pass.setVertexBuffer(1, this.lineQuadBuf2);
+            pass.draw(lineQuadVertCount, 1);
         }
         pass.end();
         device.queue.submit([encoder.finish()]);
