@@ -3,42 +3,47 @@ import React, { useState, useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
-import hexToRgb, {rgbToHex} from '../core/hexToRgb';
+import hexToRgb, { rgbToHex } from '../core/hexToRgb';
+import type { Controls } from '../LiquidLissajousControls';
 
-/**
- * Control panel for the “hyperspeed dwarf” ray-field effect.
- *
- * @param {object}   props
- * @param {object=}  props.settings   – initial settings (optional)
- * @param {function} props.onChange   – receives every settings mutation (optional)
- */
 export function CyberSpaghettiControlsInterior({
     controls,
-}) {
-  const state = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
+}: { controls: Controls }) {
+  // Add missing fields to ControlsData for advanced controls
+  type AdvancedControls = ReturnType<Controls['getSnapshot']> & {
+    showLissajousFigure: boolean;
+    offset: number;
+    ratioA: number;
+    ratioB: number;
+  };
+  const state = useSyncExternalStore(
+    controls.subscribeInternal.bind(controls),
+    controls.getSnapshot.bind(controls)
+  ) as AdvancedControls;
 
-  /** Helpers to mutate state and notify the parent */
-  const update = patch => {
+  const update = (patch: Partial<AdvancedControls>) => {
     const next = { ...state, ...patch };
     controls.setData(next);
   };
 
-  const updateColor = (idx, value) => {
+  const updateColor = (idx: number, value: string) => {
     const colors = state.particleColors.slice();
-    colors[idx] = hexToRgb(value);
+    colors[idx] = hexToRgb(value) as [number, number, number];
     update({ particleColors: colors });
   };
 
-  const addColor    = () => update({ particleColors: [...state.particleColors, [255,255,255]] });
-  const removeColor = idx => {
-    if (state.particleColors.length === 1) return;      // must keep ≥1 colour
+  const addColor = () => update({ particleColors: [...state.particleColors, [255, 255, 255]] });
+  const removeColor = (idx: number) => {
+    if (state.particleColors.length === 1) return;
     update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
+  // Advanced menu toggle state
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
-    <div className="hyperspeed-controls" 
-        style={{ 
+    <div className="hyperspeed-controls"
+        style={{
             display: 'flex',
             gap: '20px',
             flexDirection: 'column',
@@ -51,8 +56,6 @@ export function CyberSpaghettiControlsInterior({
             scrollbarColor: 'var(--gray3) var(--gray1)',
          }}
     >
-    
-
       {/* Global limits */}
       <label style={{
         display: 'flex',
@@ -68,9 +71,7 @@ export function CyberSpaghettiControlsInterior({
                 step={0.01}
                 onChange={c => update({ mixingIntensity: c })}
             />
-
       </label>
-
       {/* Colours */}
       <fieldset
         style={{
@@ -84,13 +85,12 @@ export function CyberSpaghettiControlsInterior({
         }}
       >
         <legend>particle colours</legend>
-        {state.particleColors.map((c, i) => (
+        {state.particleColors.map((_, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4,
             justifyContent: 'center',
             borderRadius: "var(--borderRadiusSmall)",
             border: "1px solid var(--gray3)",
             padding: "0.0rem 0.5rem",
-
            }}>
             <input
               type="color"
@@ -109,8 +109,7 @@ export function CyberSpaghettiControlsInterior({
         ))}
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
-
-            <label style={{
+      <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
@@ -124,28 +123,123 @@ export function CyberSpaghettiControlsInterior({
                 step={1}
                 onChange={c => update({ loopLifecycle: c })}
             />
-
       </label>
-
+      {/* Advanced Section Toggle Button */}
+      <div style={{ marginTop: 12, marginBottom: 0 }}>
+        <Button
+          iconName={showAdvanced ? 'expand_less' : 'expand_more'}
+          text={showAdvanced ? 'Hide advanced' : 'Show advanced'}
+          onClick={() => setShowAdvanced(v => !v)}
+          bgColor={showAdvanced ? 'var(--gray4)' : 'var(--gray2)'}
+          color={showAdvanced ? 'white' : 'var(--gray6)'}
+        />
+      </div>
+      {/* Advanced Section */}
+      {showAdvanced && (
+        <fieldset
+          style={{
+            borderColor: 'var(--gray4)',
+            borderRadius: 'var(--borderRadiusSmall)',
+            marginTop: 16,
+            padding: '0.5rem 1rem 1rem 1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}
+        >
+          <legend>advanced</legend>
+          {/* Show Lissajous Figure Toggle */}
+          <div style={{ }}>
+            <Button
+              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
+              text={state.showLissajousFigure ? 'Hide lissajous figure' : 'Show lissajous figure'}
+              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
+              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
+              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
+            />
+          </div>
+          {/* Offset selection */}
+          <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>offset</div>
+            <SingleSelectButtonGroup<number>
+              options={[
+                { label: 'π/8', value: Math.PI / 8 },
+                { label: 'π/4', value: Math.PI / 4 },
+                { label: 'π/2', value: Math.PI / 2 },
+                { label: '3/4π', value: 0.75 * Math.PI },
+                { label: '7/8π', value: 7 / 8 * Math.PI },
+              ]}
+              value={state.offset}
+              onChange={v => update({ offset: v })}
+            />
+          </div>
+          {/* Ratio selection */}
+          <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>ratio</div>
+            <SingleSelectButtonGroup<string>
+              options={[
+                { label: '1:1', value: '1/1' },
+                { label: '1:2', value: '1/2' },
+                { label: '1:3', value: '1/3' },
+                { label: '2:3', value: '2/3' },
+                { label: '3:4', value: '3/4' },
+                { label: '3:5', value: '3/5' },
+                { label: '4:5', value: '4/5' },
+                { label: '5:6', value: '5/6' },
+              ]}
+              value={`${state.ratioA}/${state.ratioB}`}
+              onChange={v => {
+                const [a, b] = v.split('/').map(Number);
+                update({ ratioA: a, ratioB: b });
+              }}
+            />
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }
 
 function CyberSpaghettiExterior() {
     const controls = useControls();
-
     const ready = controls;
     if (!ready) {
         return <FullscreenLoader />
     }
-
     return <CyberSpaghettiControlsInterior controls={controls} />
 }
 
+interface SingleSelectOption<T> {
+  label: string;
+  value: T;
+}
+
+interface SingleSelectButtonGroupProps<T> {
+  options: SingleSelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  style?: React.CSSProperties;
+}
+
+function SingleSelectButtonGroup<T extends string | number>({ options, value, onChange, style = {} }: SingleSelectButtonGroupProps<T>) {
+  return (
+    <div style={{ display: 'flex', gap: 8, ...style }}>
+      {options.map(opt => (
+        <div key={opt.value} style={{ 
+          }}>
+          <Button
+            text={opt.label}
+            onClick={() => onChange(opt.value)}
+            bgColor={value === opt.value ? 'var(--gray4)' : 'var(--gray2)'}
+            color={value === opt.value ? 'var(--gray8)' : 'var(--gray6)'}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CyberSpaghettiControls() {
-
-
     return <AssetProvider>
             <ControlsProvider>
                 <CyberSpaghettiExterior />

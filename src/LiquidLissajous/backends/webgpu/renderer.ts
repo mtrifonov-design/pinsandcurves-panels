@@ -171,20 +171,23 @@ export class WebGPURenderer {
             offset = (particleSys.time % particleSys.LOOP_LIFECYCLE) / particleSys.LOOP_LIFECYCLE;
         }
 
-        // upload uniforms (Globals struct: resolution, center, particleCount, offset, _pad)
+        // upload uniforms (Globals struct: resolution, center, particleCount, offset, ratioA, ratioB, lissajousOffset, _pad)
         const res = new Float32Array([
             this.canvas.width, this.canvas.height, // resolution
             particleSys.CENTER_X, particleSys.CENTER_Y, // center
             particleSys.PARTICLE_COUNT, // particleCount
-            offset, // offset (for rotation)
-            0, 0 // _pad
+            offset, // animation offset (for rotation)
+            particleSys.RATIO_A ?? 1, // ratioA (Lissajous)
+            particleSys.RATIO_B ?? 1, // ratioB (Lissajous)
+            particleSys.LISSAJOUS_OFFSET ?? 0, // lissajous phase offset
+            0 // _pad
         ]);
         device.queue.writeBuffer(this.uniformBuf, 0, res);
         // upload count as u32
         const countArr = new Uint32Array([particleSys.PARTICLE_COUNT]);
         device.queue.writeBuffer(this.countBuf, 0, countArr);
         // upload showPoints as u32 (default to 0 if not set)
-        const showPointsArr = new Uint32Array([this.showPoints ? 1 : 0]);
+        const showPointsArr = new Uint32Array([particleSys.SHOW_LISSAJOUS_FIGURE ? 1 : 0]);
         device.queue.writeBuffer(this.showPointsBuf, 0, showPointsArr);
 
         // record 

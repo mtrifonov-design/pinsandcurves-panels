@@ -21,6 +21,10 @@ export class ParticleSystem {
     PARTICLE_COLORS: number[][] = [[1,0,0],[0,1,0],[0,0,1]];
     PARTICLE_COUNT: number = 3;
     LOOP_LIFECYCLE: number = 60;
+    SHOW_LISSAJOUS_FIGURE: boolean = false;
+    RATIO_A: number = 1;
+    RATIO_B: number = 1;
+    OFFSET: number = Math.PI / 2;
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
@@ -38,6 +42,8 @@ export class ParticleSystem {
         // y = centerY + scaleY * sin(ay * t + deltaY)
         const x = params.centerX + params.scaleX * Math.sin(params.ax * t + params.deltaX);
         const y = params.centerY + params.scaleY * Math.sin(params.ay * t + params.deltaY);
+        // const x = params.centerX + params.scaleX * Math.sin(t + Math.PI / 8);
+        // const y = params.centerY + params.scaleY * Math.sin(2*t);
         return [x, y];
     }
 
@@ -48,6 +54,11 @@ export class ParticleSystem {
         const colorLoop = baseColors.length > 0 ? [...baseColors, baseColors[0]] : [[1,0,0],[0,1,0],[0,0,1],[1,0,0]];
         this.PARTICLE_COUNT = config.mixingIntensity * ((colorLoop.length-1) * 4) + (colorLoop.length-1);
         this.LOOP_LIFECYCLE = config.loopLifecycle;
+
+        this.RATIO_A = config.ratioA;
+        this.RATIO_B = config.ratioB;
+        this.OFFSET = config.offset;
+        this.SHOW_LISSAJOUS_FIGURE = config.showLissajousFigure;
 
         // Interpolate PARTICLE_COUNT color stops in HSL (hue) space
         function rgbToHsl([r, g, b]: number[]): [number, number, number] {
@@ -111,8 +122,9 @@ export class ParticleSystem {
 
         // Default Lissajous parameters for a classic figure
         const lissajousParams = {
-            ax: 1, bx: 0, ay: 2, by: 0, // frequencies
-            deltaX: Math.PI / 2, deltaY: 0, // phase offsets
+            ax: this.RATIO_A, bx: 0, 
+            ay: this.RATIO_B, by: 0, // frequencies
+            deltaX: this.OFFSET, deltaY: 0, // phase offsets
             centerX: this.CENTER_X * 1920,
             centerY: this.CENTER_Y * 1080,
             scaleX: this.PARTICLE_RADIUS, // aspect ratio

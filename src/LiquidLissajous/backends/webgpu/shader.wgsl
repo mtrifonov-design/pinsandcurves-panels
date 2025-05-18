@@ -10,7 +10,10 @@ struct Globals {
     resolution : vec2<f32>,
     center     : vec2<f32>,
     particleCount : f32,
-    offset : f32,
+    offset : f32, // animation offset (rotation)
+    ratioA : f32, // Lissajous ratioA
+    ratioB : f32, // Lissajous ratioB
+    lissajousOffset : f32, // Lissajous phase offset
     _pad : f32,
 };
 
@@ -194,3 +197,9 @@ fn distanceSquared(a: vec2<f32>, b: vec2<f32>) -> f32 {
     let d = a - b;
     return dot(d, d);
 }
+
+// Use the new Lissajous parameters in the shader as needed
+// Example: (add this to the main loop or wherever the Lissajous curve is computed)
+// let lissajousX = cos(uni.ratioA * t + uni.lissajousOffset);
+// let lissajousY = sin(uni.ratioB * t);
+// (You can use uni.offset for animation phase, uni.lissajousOffset for static phase offset)

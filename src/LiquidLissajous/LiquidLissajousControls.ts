@@ -4,6 +4,10 @@ type ControlsData = {
     mixingIntensity: number;
     particleColors: [number, number, number][];
     loopLifecycle: number,
+    showLissajousFigure: boolean;
+    ratioA: number;
+    ratioB: number;
+    offset: number;
 }
 
 class Controls {
@@ -58,6 +62,10 @@ class Controls {
         ],
         loopLifecycle: 300,
         mixingIntensity: 0.3,
+        showLissajousFigure: false,
+        ratioA: 1,
+        ratioB: 1,
+        offset: Math.PI / 2,
     }
 }
 
