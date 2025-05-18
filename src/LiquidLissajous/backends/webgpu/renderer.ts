@@ -122,6 +122,50 @@ export class WebGPURenderer {
             },
             primitive:{topology:'triangle-list'},
         });
+
+        // Polyline buffer for Lissajous overlay
+        this.lineBuf = this.device.createBuffer({
+            size: 1024 * 2 * 4, // up to 1024 points, 2 floats each
+            usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
+        });
+        // Polyline pipeline (simple color, no blending)
+        this.linePipeline = this.device.createRenderPipeline({
+            layout: 'auto',
+            vertex: {
+                module: this.device.createShaderModule({
+                    code: `
+                    struct VsOut {
+                        @builtin(position) position : vec4<f32>,
+                    };
+                    @vertex
+                    fn main(@location(0) pos: vec2<f32>) -> VsOut {
+                        var out: VsOut;
+                        // Convert screen coords to NDC
+                        out.position = vec4<f32>(
+                            (pos.x / f32(${this.canvas.width}) * 2.0 - 1.0),
+                            (pos.y / f32(${this.canvas.height}) * 2.0 - 1.0),
+                            0.0, 1.0);
+                        return out;
+                    }
+                    `
+                }),
+                entryPoint: 'main',
+                buffers: [{ arrayStride: 8, attributes: [{ shaderLocation: 0, format: 'float32x2', offset: 0 }] }]
+            },
+            fragment: {
+                module: this.device.createShaderModule({
+                    code: `
+                    @fragment
+                    fn main() -> @location(0) vec4<f32> {
+                        return vec4<f32>(0.85, 0.85, 0.95, 0.25); // subtle bluish-white
+                    }
+                    `
+                }),
+                entryPoint: 'main',
+                targets: [{ format }]
+            },
+            primitive: { topology: 'line-strip' },
+        });
     }
 
     async onFrameReady(cb) {
@@ -204,6 +248,18 @@ export class WebGPURenderer {
         pass.setBindGroup(0,this.bindGroup);
         pass.setVertexBuffer(0,this.vertBuf);
         pass.draw(6, 1);   // 6 verts, 1 instance (full screen)
+
+        // Upload polyline buffer
+        if (particleSys.lissajousLineCount > 1) {
+            device.queue.writeBuffer(this.lineBuf, 0, particleSys.lissajousLineBuffer.subarray(0, particleSys.lissajousLineCount * 2));
+        }
+
+        // Draw polyline overlay if enabled
+        if (particleSys.SHOW_LISSAJOUS_FIGURE && particleSys.lissajousLineCount > 1) {
+            pass.setPipeline(this.linePipeline);
+            pass.setVertexBuffer(0, this.lineBuf);
+            pass.draw(particleSys.lissajousLineCount, 1);
+        }
         pass.end();
         device.queue.submit([encoder.finish()]);
     }

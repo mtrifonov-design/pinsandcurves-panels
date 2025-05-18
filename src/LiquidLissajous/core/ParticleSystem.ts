@@ -25,6 +25,8 @@ export class ParticleSystem {
     RATIO_A: number = 1;
     RATIO_B: number = 1;
     OFFSET: number = Math.PI / 2;
+    lissajousLineBuffer: Float32Array = new Float32Array(1024 * 2); // up to 1024 points
+    lissajousLineCount: number = 0;
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
@@ -160,6 +162,16 @@ export class ParticleSystem {
             this.buffer[ptr++] = color[0];
             this.buffer[ptr++] = color[1];
             this.buffer[ptr++] = color[2];
+        }
+
+        // Generate Lissajous polyline for overlay
+        const N = 256; // number of points in the polyline
+        this.lissajousLineCount = N;
+        for (let i = 0; i < N; ++i) {
+            const t = (i / (N - 1)) * 2 * Math.PI;
+            const [x, y] = this.lissajousXY(t, lissajousParams);
+            this.lissajousLineBuffer[i * 2 + 0] = x;
+            this.lissajousLineBuffer[i * 2 + 1] = y;
         }
     }
 }

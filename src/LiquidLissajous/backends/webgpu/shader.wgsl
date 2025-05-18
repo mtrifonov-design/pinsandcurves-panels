@@ -188,8 +188,8 @@ fn fs_main(
             }
         }
     }
+    return vec4<f32>(color, 0.0);
 
-    return vec4<f32>(color, 1.0);
 }
 
 // Helper for squared distance (cheaper than length)
