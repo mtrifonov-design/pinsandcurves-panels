@@ -160,8 +160,8 @@ fn fs_main(
 
     // Overlay control points if enabled
     if (showPoints == 1u) {
-        let pointRadius = 10.0;
-        let outlineRadius = 12.0;
+        let pointRadius = 25.0;
+        let outlineRadius = 27.0;
         var found = false;
         var foundColor = vec3<f32>(1.0, 1.0, 1.0);
         for (var i = 0u; i < count; i = i + 1u) {

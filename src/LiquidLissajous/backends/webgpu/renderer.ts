@@ -166,15 +166,29 @@ export class WebGPURenderer {
                     @fragment
                     fn main(@location(0) v_linepos: vec2<f32>) -> @location(0) vec4<f32> {
                         let d = abs(v_linepos.y); // distance from line center
-                        let width = 4.0; // px
-                        let aa = 2.5; // px
+                        let width = 1.5; // px
+                        let aa = 2.25; // px
                         let alpha = smoothstep(width+aa, width, d);
-                        return vec4<f32>(0.85, 0.85, 0.95, 0.25 * alpha);
+                        return vec4<f32>(1.,1.,1.,alpha);
                     }
                     `
                 }),
                 entryPoint: 'main',
-                targets: [{ format }]
+                targets: [{ 
+                    format,
+                    blend: {
+                        color: {
+                            srcFactor: 'src-alpha',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add'
+                        },
+                        alpha: {
+                            srcFactor: 'one',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add'
+                        }
+                    }
+                }]
             },
             primitive: { topology: 'triangle-strip' },
         });
@@ -253,7 +267,7 @@ export class WebGPURenderer {
         const pass    = encoder.beginRenderPass({
             colorAttachments:[{
                 view, clearValue:{r,g,b,a:1},
-                loadOp:'clear', storeOp:'store'
+                loadOp:'clear', storeOp:'store',
             }]
         });
         pass.setPipeline(this.pipeline);
