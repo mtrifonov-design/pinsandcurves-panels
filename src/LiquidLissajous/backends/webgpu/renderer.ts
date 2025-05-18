@@ -132,7 +132,7 @@ export class WebGPURenderer {
             size: 1024 * 4 * 4, // up to 1024 segments, 4 verts per segment, 2 floats each
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
-        // Polyline pipeline (AA line as quad, smoothstep alpha)
+        // --- Polyline pipeline (AA line as quad, smoothstep alpha) ---
         this.lineQuadPipeline = this.device.createRenderPipeline({
             layout: 'auto',
             vertex: {
@@ -169,7 +169,7 @@ export class WebGPURenderer {
                         let width = 1.5; // px
                         let aa = 2.25; // px
                         let alpha = smoothstep(width+aa, width, d);
-                        return vec4<f32>(1.,1.,1.,alpha);
+                        return vec4<f32>(1.,1.,1.,alpha * 0.5);
                     }
                     `
                 }),
@@ -191,6 +191,38 @@ export class WebGPURenderer {
                 }]
             },
             primitive: { topology: 'triangle-strip' },
+        });
+
+        // --- Points pipeline (third pass, alpha blend, fullscreen quad, new entry point) ---
+        this.pointsPipeline = this.device.createRenderPipeline({
+            layout: this.device.createPipelineLayout({bindGroupLayouts:[bindGroupLayout]}),
+            vertex: {
+                module: this.device.createShaderModule({code: shaderCode}),
+                entryPoint: 'vs_main', // same as first pass (fullscreen quad)
+                buffers: [
+                    { arrayStride: 8, attributes: [{ shaderLocation: 0, format: 'float32x2', offset: 0 }] }
+                ]
+            },
+            fragment: {
+                module: this.device.createShaderModule({code: shaderCode}),
+                entryPoint: 'fs_points', // new entry point for points
+                targets: [{
+                    format,
+                    blend: {
+                        color: {
+                            srcFactor: 'src-alpha',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add'
+                        },
+                        alpha: {
+                            srcFactor: 'one',
+                            dstFactor: 'one-minus-src-alpha',
+                            operation: 'add'
+                        }
+                    }
+                }]
+            },
+            primitive: { topology: 'triangle-list' },
         });
     }
 
@@ -315,6 +347,11 @@ export class WebGPURenderer {
             pass.setVertexBuffer(1, this.lineQuadBuf2);
             pass.draw(lineQuadVertCount, 1);
         }
+        // --- Third pass: draw points on top (fullscreen quad, alpha blend) ---
+        pass.setPipeline(this.pointsPipeline);
+        pass.setBindGroup(0, this.bindGroup);
+        pass.setVertexBuffer(0, this.vertBuf);
+        pass.draw(6, 1);
         pass.end();
         device.queue.submit([encoder.finish()]);
     }

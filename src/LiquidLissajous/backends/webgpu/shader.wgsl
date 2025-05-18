@@ -157,39 +157,49 @@ fn fs_main(
     if (total > 0.0) {
         color = oklabToSRGB(oklAccum / total);
     }
+    return vec4<f32>(color, 0.0);
 
-    // Overlay control points if enabled
+}
+
+// --- Points-only fragment entry point for third pass ---
+@fragment
+fn fs_points(@location(0) v_uv: vec2<f32>) -> @location(0) vec4<f32> {
+
     if (showPoints == 1u) {
-        let pointRadius = 25.0;
-        let outlineRadius = 27.0;
-        var found = false;
-        var foundColor = vec3<f32>(1.0, 1.0, 1.0);
-        for (var i = 0u; i < count; i = i + 1u) {
-            let base = i * 5u;
-            let px = particles[base + 0u];
-            let py = particles[base + 1u];
-            // Rotate about center for overlay as well
-            let dx = px - center.x;
-            let dy = py - center.y;
-            let cosr = cos(rot);
-            let sinr = sin(rot);
-            let rx = cosr * dx - sinr * dy + center.x;
-            let ry = sinr * dx + cosr * dy + center.y;
-            let dist = length(fragCoord - vec2<f32>(rx, ry));
-            if (dist < outlineRadius) {
-                found = true;
-                foundColor = vec3<f32>(particles[base+2u], particles[base+3u], particles[base+4u]);
-                // If within inner radius, use color; if in outline, use white
-                if (dist < pointRadius) {
-                    return vec4<f32>(foundColor, 1.0);
-                } else {
-                    return vec4<f32>(1.0, 1.0, 1.0, 1.0);
-                }
+
+    var fragCoord = v_uv * uni.resolution;
+    let count = counts;
+    let rot = 0.; //sin(uni.offset * 2.0 * PI) *  0.5 * PI +  0.25 * PI;
+    let center = uni.center * uni.resolution;
+    let pointRadius = 15.0;
+    let outlineRadius = 17.0;
+    var found = false;
+    var foundColor = vec3<f32>(1.0, 1.0, 1.0);
+    for (var i = 0u; i < count; i = i + 1u) {
+        let base = i * 5u;
+        let px = particles[base + 0u];
+        let py = particles[base + 1u];
+        // Rotate about center for overlay as well
+        let dx = px - center.x;
+        let dy = py - center.y;
+        let cosr = cos(rot);
+        let sinr = sin(rot);
+        let rx = cosr * dx - sinr * dy + center.x;
+        let ry = sinr * dx + cosr * dy + center.y;
+        let dist = length(fragCoord - vec2<f32>(rx, ry));
+        if (dist < outlineRadius) {
+            found = true;
+            foundColor = vec3<f32>(particles[base+2u], particles[base+3u], particles[base+4u]);
+            // If within inner radius, use color; if in outline, use white
+            if (dist < pointRadius) {
+                return vec4<f32>(foundColor, 1.0);
+            } else {
+                return vec4<f32>(1.0, 1.0, 1.0, 1.0);
             }
         }
     }
-    return vec4<f32>(color, 0.0);
-
+    }
+    return vec4<f32>(0.0, 0.0, 0.0, 0.0);
 }
 
 // Helper for squared distance (cheaper than length)
