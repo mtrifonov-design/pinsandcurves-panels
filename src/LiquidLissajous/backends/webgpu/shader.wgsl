@@ -10,7 +10,8 @@ struct Globals {
     resolution : vec2<f32>,
     center     : vec2<f32>,
     particleCount : f32,
-    _pad : vec3<f32>,
+    offset : f32,
+    _pad : f32,
 };
 
 @group(0) @binding(0) var<uniform>        uni  : Globals;
@@ -79,44 +80,72 @@ fn oklabToSRGB(o: vec3<f32>) -> vec3<f32> {
 }
 
 /*------------ fragment ------------------------------------------*/
+// --- Turbulent Displacement (modular, can be disabled) ---
+fn valueNoise(p: vec2<f32>) -> f32 {
+    let i = floor(p);
+    let f = fract(p);
+    let a = fract(sin(dot(i, vec2<f32>(127.1, 311.7))) * 43758.5453);
+    let b = fract(sin(dot(i + vec2<f32>(1.0, 0.0), vec2<f32>(127.1, 311.7))) * 43758.5453);
+    let c = fract(sin(dot(i + vec2<f32>(0.0, 1.0), vec2<f32>(127.1, 311.7))) * 43758.5453);
+    let d = fract(sin(dot(i + vec2<f32>(1.0, 1.0), vec2<f32>(127.1, 311.7))) * 43758.5453);
+    let u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+}
+
+fn turbulentDisplace(p: vec2<f32>, amount: f32, freq: f32, octaves: i32, gain: f32, lacunarity: f32) -> vec2<f32> {
+    var disp = vec2<f32>(0.0);
+    var amp = 1.0;
+    var f = freq;
+    var totalAmp = 0.0;
+    for (var i = 0; i < octaves; i = i + 1) {
+        let n1 = valueNoise(p * f);
+        let n2 = valueNoise((p + 100.0) * f);
+        disp += (vec2<f32>(n1, n2) * 2.0 - vec2<f32>(1.0, 1.0)) * amp;
+        totalAmp += amp;
+        amp *= gain;
+        f *= lacunarity;
+    }
+    disp = disp / totalAmp;
+    return p + disp * amount;
+}
+// --- End Turbulent Displacement ---
+
 @fragment
 fn fs_main(
     @location(0) v_uv : vec2<f32>,
 ) -> @location(0) vec4<f32> {
-    let fragCoord = v_uv * uni.resolution;
+    var fragCoord = v_uv * uni.resolution;
+    // --- Turbulent Displacement Layer (toggle by commenting next line) ---
+    // fragCoord = turbulentDisplace(fragCoord, 200.0, 0.0015, 5, 0.5, 2.0); // amount, freq, octaves, gain, lacunarity
+    // --- End Turbulent Displacement Layer ---
     let count = counts;
-    var d_min = 1e9;
+    let sigma = 320.0; // Gaussian width in pixels (tune as needed)
+    let inv2sigma2 = 1.0 / (2.0 * sigma * sigma);
 
-    // First pass: find minimum squared distance
-    for (var i = 0u; i < count; i = i + 1u) {
-        let base = i * 5u;
-        let px = particles[base + 0u];
-        let py = particles[base + 1u];
-        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
-        if (dist2 < d_min) {
-            d_min = dist2;
-        }
-    }
-
-    // Set dynamic alpha (inverse to d_min), clamped to avoid explosion
-    let epsilon = 1e-4;
-    let min_dist2 = max(d_min, epsilon);
-    let alpha = 1.3 / min_dist2; // You can tune this coefficient (1.0) if needed
+    // --- Rotation: rotate all particle points by offset*2*PI about center ---
+    let rot = 0.; //sin(uni.offset * 2.0 * PI) *  0.5 * PI +  0.25 * PI;
+    let center = uni.center * uni.resolution;
 
     var oklAccum = vec3<f32>(0.0);
     var total = 0.0;
 
-    // Second pass: compute softmax weights
     for (var i = 0u; i < count; i = i + 1u) {
         let base = i * 5u;
         let px = particles[base + 0u];
         let py = particles[base + 1u];
+        // Rotate about center
+        let dx = px - center.x;
+        let dy = py - center.y;
+        let cosr = cos(rot);
+        let sinr = sin(rot);
+        let rx = cosr * dx - sinr * dy + center.x;
+        let ry = sinr * dx + cosr * dy + center.y;
         let pr = particles[base + 2u];
         let pg = particles[base + 3u];
         let pb = particles[base + 4u];
 
-        let dist2 = distanceSquared(fragCoord, vec2<f32>(px, py));
-        let w = exp(-alpha * dist2);
+        let dist2 = distanceSquared(fragCoord, vec2<f32>(rx, ry));
+        let w = exp(-dist2 * inv2sigma2);
         oklAccum += srgbToOKLab(vec3<f32>(pr, pg, pb)) * w;
         total += w;
     }
@@ -129,19 +158,31 @@ fn fs_main(
     // Overlay control points if enabled
     if (showPoints == 1u) {
         let pointRadius = 10.0;
-        var show = false;
+        let outlineRadius = 12.0;
+        var found = false;
+        var foundColor = vec3<f32>(1.0, 1.0, 1.0);
         for (var i = 0u; i < count; i = i + 1u) {
             let base = i * 5u;
             let px = particles[base + 0u];
             let py = particles[base + 1u];
-            let dist = length(fragCoord - vec2<f32>(px, py));
-            if (dist < pointRadius) {
-                show = true;
-                break;
+            // Rotate about center for overlay as well
+            let dx = px - center.x;
+            let dy = py - center.y;
+            let cosr = cos(rot);
+            let sinr = sin(rot);
+            let rx = cosr * dx - sinr * dy + center.x;
+            let ry = sinr * dx + cosr * dy + center.y;
+            let dist = length(fragCoord - vec2<f32>(rx, ry));
+            if (dist < outlineRadius) {
+                found = true;
+                foundColor = vec3<f32>(particles[base+2u], particles[base+3u], particles[base+4u]);
+                // If within inner radius, use color; if in outline, use white
+                if (dist < pointRadius) {
+                    return vec4<f32>(foundColor, 1.0);
+                } else {
+                    return vec4<f32>(1.0, 1.0, 1.0, 1.0);
+                }
             }
-        }
-        if (show) {
-            return vec4<f32>(1.0, 1.0, 1.0, 1.0);
         }
     }
 

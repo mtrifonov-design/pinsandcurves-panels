@@ -165,11 +165,19 @@ export class WebGPURenderer {
             device.queue.writeBuffer(this.particleBuf, 0, slice);
         };
 
-        // upload uniforms (resolution + center)
+        // Compute normalized time offset for rotation
+        let offset = 0;
+        if (particleSys.LOOP_LIFECYCLE && particleSys.LOOP_LIFECYCLE > 0) {
+            offset = (particleSys.time % particleSys.LOOP_LIFECYCLE) / particleSys.LOOP_LIFECYCLE;
+        }
+
+        // upload uniforms (Globals struct: resolution, center, particleCount, offset, _pad)
         const res = new Float32Array([
-            this.canvas.width, this.canvas.height, 0, 0, // resolution (vec2) + padding
-            particleSys.CENTER_X, particleSys.CENTER_Y, 0, 0, // center (vec2) + padding
-            0,0,0,0
+            this.canvas.width, this.canvas.height, // resolution
+            particleSys.CENTER_X, particleSys.CENTER_Y, // center
+            particleSys.PARTICLE_COUNT, // particleCount
+            offset, // offset (for rotation)
+            0, 0 // _pad
         ]);
         device.queue.writeBuffer(this.uniformBuf, 0, res);
         // upload count as u32
