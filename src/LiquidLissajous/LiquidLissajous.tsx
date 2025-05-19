@@ -282,7 +282,7 @@ function FrameSaverScreen({ frameSaver }) {
             }}>
                 <div>
                     If you enjoy using this tool, subscribe to our email newsletter
-                    <br></br> to get updates on new features and releases!
+                    to get updates on new features and releases!
                 </div>
                 <Button
                 bgColor="var(--yellow3)"
