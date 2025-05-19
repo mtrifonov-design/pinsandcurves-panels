@@ -3,7 +3,7 @@ import { ParticleSystem } from './core/ParticleSystem.js';
 import { WebGPURenderer } from './backends/webgpu/renderer.js';
 import TimelineProvider, { useTimeline } from '../TimelineUtils/TimelineProvider.js';
 import { AssetProvider } from '../AssetManager/context/AssetProvider.js';
-import { Button, StyleProvider } from '@mtrifonov-design/pinsandcurves-design';
+import { Button, StyleProvider, Icon } from '@mtrifonov-design/pinsandcurves-design';
 import ControlsProvider, { useControls } from './ControlConsole/ControlProvider.js';
 import FullscreenLoader from '../FullscreenLoader/FullscreenLoader.js';
 import FrameSaver from './FrameSaver.js';
@@ -196,31 +196,106 @@ function FrameSaverScreen({ frameSaver }) {
         frameSaver.getStatus.bind(frameSaver),
     )
 
+    const [displayOverlay, setDisplayOverlay] = React.useState(false);
+
     return <div style={{
         position: "absolute",
         top: 0,
         left: 0,
         width: "100%",
-        height: "60px",
+        height: "100%",
         display: "flex",
         justifyContent: "flex-start",
-        alignItems: "center",
+        alignItems: "flex-start",
         padding: 10,
     }}>
         <Button
             onClick={() => {
                 frameSaver.begin();
+                setDisplayOverlay(true);
             }}
             text={"save as frames"}
             iconName="animated_images"
         />
-        {rendering && <div style={{
-
+        {displayOverlay && <div style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            padding: 30,
             color: "var(--gray6)",
+            backgroundColor: "var(--gray1)",
+            borderRadius: "var(--borderRadiusSmall)",
             marginLeft: 20,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "column",
+            gap: 40,
+
         }}>
-            {
-                `Rendering... ${renderedFrames} / ${totalFrames}`}
+            <div style={{
+                position: "absolute",
+                top: 10,
+                right: 10,
+            }}>
+                {!rendering &&
+                    <Icon
+                        iconName="close"
+                        onClick={() => {
+                            setDisplayOverlay(false);
+                        }}
+                    />}
+
+            </div>
+            <div style={{
+
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                gap: 10,
+            }}>
+                <div style={{
+                    color: "var(--gray7)",
+                    fontSize: 20,
+                    fontWeight: 600,
+
+                }}>
+                    {
+                        rendering ?
+                        `Rendering: ${renderedFrames} / ${totalFrames}`
+                        : "Done!"
+                    }
+                </div>
+                <div style={{
+                }}>
+                    {rendering ? "Your download will begin shortly..." : null}
+                </div>
+            </div>
+            <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                flexDirection: "column",
+                gap: 10,
+            }}>
+                <div>
+                    If you enjoy using this tool, subscribe to our email newsletter
+                    <br></br> to get updates on new features and releases!
+                </div>
+                <Button
+                bgColor="var(--yellow3)"
+                color="var(--gray1)"
+                hoverBgColor='var(--yellow2)'
+                hoverColor='var(--gray1)'
+                    onClick={() => {
+                        window.open("http://eepurl.com/i6WBsQ", "_blank");
+                    }}
+                    text={"Subscribe to newsletter"}
+                    iconName="email"
+                />
+            </div>
         </div>}
     </div>
 }
