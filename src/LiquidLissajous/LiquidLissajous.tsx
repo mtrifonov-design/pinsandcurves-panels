@@ -211,6 +211,10 @@ function FrameSaverScreen({ frameSaver }) {
     }}>
         <Button
             onClick={() => {
+                window.goatcounter.count({
+                    path:  "liquidlissajous-renderframes",
+                    event: true,
+                })
                 frameSaver.begin();
                 setDisplayOverlay(true);
             }}
