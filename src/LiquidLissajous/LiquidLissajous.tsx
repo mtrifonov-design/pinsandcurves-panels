@@ -49,7 +49,7 @@ function LiquidLissajousInterior({ width = 1920, height = 1080, timeline, contro
 
     useEffect(() => {
         window.goatcounter.count({
-            path: "liquidlissajous-loadedcorrectly",
+            path: "liquidlissajousviewer-loaded",
             event: true,
         })
     }, [])
