@@ -48,6 +48,14 @@ function LiquidLissajousInterior({ width = 1920, height = 1080, timeline, contro
     particleSystem.update(controlsSnapshot, timeline);
 
     useEffect(() => {
+        window.goatcounter.count({
+            path: "liquidlissajous-loadedcorrectly",
+            event: true,
+        })
+    }, [])
+
+
+    useEffect(() => {
         //resize canvas to window size
         function resizeCanvasToFit(container, canvas, aspectRatio) {
             const containerWidth = container.clientWidth;
