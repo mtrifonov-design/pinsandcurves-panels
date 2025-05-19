@@ -67,7 +67,7 @@ export function CyberSpaghettiControlsInterior({
           textDecoration: "underline",
           cursor: "pointer",
         }}
-        href="https://pinsandcurves.app"
+        onClick={() => window.open("https://pinsandcurves.app", "_blank")}
         >Learn more</a>
       </div>
       <hr></hr>
