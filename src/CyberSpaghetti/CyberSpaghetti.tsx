@@ -182,7 +182,7 @@ function FrameSaverScreen({ frameSaver }) {
             onClick={() => {
                 frameSaver.begin();
             }}
-            text={"save as frames"}
+            text={"export image sequence"}
             iconName="animated_images" 
          />
         {rendering && <div style={{

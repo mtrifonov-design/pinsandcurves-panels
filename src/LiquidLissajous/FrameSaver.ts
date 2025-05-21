@@ -4,7 +4,7 @@ import JSZip from "jszip";
 
 
 class FrameSaver {
-    #timeline : TimelineController;
+    #timeline : TimelineController.TimelineController;
     #width : number;    
     #height : number;
     #canvas : HTMLCanvasElement;

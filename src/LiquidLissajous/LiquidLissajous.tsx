@@ -226,7 +226,7 @@ function FrameSaverScreen({ frameSaver }) {
                 frameSaver.begin();
                 setDisplayOverlay(true);
             }}
-            text={"save as frames"}
+            text={"export image sequence"}
             iconName="animated_images"
         />
         {displayOverlay && <div style={{
