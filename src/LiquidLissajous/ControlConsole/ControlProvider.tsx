@@ -18,7 +18,7 @@ function ControlsProvider({
 
     const tController = useRef(new Controller())
     const timelineAssets = indexInitialized ? Object.entries(index.data)
-        .filter(([assetId, assetMetadata]) => assetMetadata.type === "controls" && assetMetadata.name === "cyberspaghetti.controls")
+        .filter(([assetId, assetMetadata]) => assetMetadata.type === "controls" && assetMetadata.name === "liquidlissajous.controls")
         .map(([assetId, assetMetadata]) => ({ assetId, assetController: tController.current })) : [];
     const assetId = timelineAssets.length > 0 ? timelineAssets[0].assetId : undefined;
 
@@ -37,12 +37,13 @@ function ControlsProvider({
                         data: Controls.defaultControls,
                         metadata: {
                             type: "controls",
-                            name: "cyberspaghetti.controls",
+                            name: "liquidlissajous.controls",
                             preferredEditorAddress: CONFIG.SELF_HOST + "cyberspaghetti-controlconsole",
                         },
                         on_update: {
                             type: "simple",
-                        }
+                        },
+                        id: "liquidlissajous.controls",
                     },
                 },
             });

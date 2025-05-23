@@ -26,6 +26,7 @@ class TController {
     data : TimelineController.TimelineController;
     constructor() {}
     load(data : any) {
+      //console.log("Loading data", data);
         this.data = new Controller(data);
         this.data.onPushUpdate(() => {
             const update = this.data.transferOutgoingEvent();
@@ -34,6 +35,7 @@ class TController {
         this.initialised = true;
     }
     receiveUpdate(update: any) {
+      //console.log("Receiving update", update);
         this.data.receiveIncomingEvent(update);
     }
     receiveMetadataUpdate(update: any) {}
@@ -85,6 +87,7 @@ function TimelineProvider({
     .filter(([assetId, assetMetadata]) => assetMetadata.type === "timeline")
     .map(([assetId, assetMetadata]) => ({ assetId, assetController: tController.current})) : [];
     const assetId = timelineAssets.length > 0 ? timelineAssets[0].assetId : undefined;
+    //console.log("Timeline assets", timelineAssets);
 
     const { FreeWorkload } = useCK();
 
@@ -110,46 +113,18 @@ function TimelineProvider({
                   modality: "wasmjs",
                   resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}TimelineProcessor`,
                 }
-              }
+              },
+              id: defaultName ? defaultName : "default.timeline",
             },
           },
         });
         workload.dispatch();
-      //   globalThis.CK_ADAPTER.pushWorkload({
-      //     default: [{
-      //         type: "worker",
-      //         receiver: {
-      //             instance_id: "ASSET_SERVER",
-      //             modality: "wasmjs",
-      //             resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-      //         },
-      //         payload: {
-      //             createAsset: {
-      //                 asset: {
-      //                     data: defaultProject !== undefined ? defaultProject() : makeFile(),
-      //                     metadata: { 
-      //                       type: "timeline", 
-      //                       name: defaultName ? defaultName : "default.timeline",
-      //                       preferredEditorAddress: CONFIG.SELF_HOST+"editing",
-      //                     },
-      //                     on_update: {
-      //                         type: "custom",
-      //                         processor: {
-      //                             modality: "wasmjs",
-      //                             resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}TimelineProcessor`,
-      //                         }
-      //                     }
-      //                 },
-      //             },
-      //         },
-      //     }],
-      // });
       }
     },[assetId,indexInitialized]);
 
 
     const { initialized: assetsInitialized, assets } = useAssets(timelineAssets);
-    //console.log(assets, assetId, assetsInitialized, timelineAssets);
+    ////console.log(assets, assetId, assetsInitialized, timelineAssets);
     const initialized = 
     indexInitialized 
     && assetsInitialized

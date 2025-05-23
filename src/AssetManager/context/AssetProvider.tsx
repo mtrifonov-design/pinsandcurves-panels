@@ -19,6 +19,7 @@ interface Registry {
   /** add / remove a manager instance */
   register: (m: SubscriptionManager) => void;
   unregister: (m: SubscriptionManager) => void;
+  vertexId?: string;
 }
 
 export const AssetManagerContext = createContext<Registry | null>(null);
@@ -53,13 +54,16 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   /* forward every CK event to *all* registered managers */
   useUnit((unit, workload) => {
     currentWorkloadRef.current = workload;
-    ////console.log("unit", unit);
+    //////console.log("unit", unit);
     const { sender, payload } = unit;
     const { INIT, TERMINATE, blocker_id, payload: p } = payload;
 
     if (INIT && !registryRef.current.initialized) {
       registryRef.current.initialized = true;
-      managersRef.current.forEach(m => m.handleInit());
+      registryRef.current.vertexId = p.vertexId;
+      //console.log("INIT", p);
+      managersRef.current.forEach(m => m.handleInit(p.vertexId));
+      //console.log(managersRef.current);
       setInitState(p);
       workload.dispatch();
       return;
@@ -84,12 +88,14 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
           workload.dispatch();
         }
       }, workload));
-      console.log(workload)
+      //console.log(workload)
       workload.dispatch();
       return;
     }
 
     /* regular payload: broadcast to every manager */
+    //console.log("payload", payload);
+    //console.log(managersRef.current);
     managersRef.current.forEach(m => m.handleEvent(sender, payload, workload));
     workload.dispatch();
   });

@@ -14,12 +14,17 @@ export class SubscriptionManager {
     #unrealized_desired: { assetId: string; assetController: unknown }[]; // unrealized desired assets
 
     FreeWorkload: () => CK_Workload;
+    vertexId: string;
     constructor({
         FreeWorkload,
+        vertexId,
     }: {
         FreeWorkload: () => CK_Workload;
+        vertexId?: string;
     }) {
         this.FreeWorkload = FreeWorkload;
+        this.id = crypto.randomUUID();
+        if (vertexId) this.vertexId = vertexId;
     }
 
     /** Desired asset list (called by useAssets each render) */
@@ -57,9 +62,11 @@ export class SubscriptionManager {
     getSnapshot = () => this.#snapshot;
 
     /** INIT event from server */
-    handleInit() {
+    handleInit(vertexId: string) {
         this.#initialized = true;
         this.updateSnapshot(true);
+        //console.log("handle Init, vertexId", vertexId);
+        this.vertexId = vertexId;
         this.setDesired(this.#unrealized_desired);
         this.#listeners.forEach(l => l());
     }
@@ -68,9 +75,9 @@ export class SubscriptionManager {
         const fsms = Array.from(this.fsms.values());
         const cb_fsm = (self: any) => {
             const idx = fsms.indexOf(self);
-            console.log(idx);
+            //console.log(idx);
             if (idx !== -1) fsms.splice(idx, 1);
-            console.log(fsms);
+            //console.log(fsms);
             if (fsms.length === 0) {
                 cb(this);
             }
@@ -89,22 +96,6 @@ export class SubscriptionManager {
         this.#listeners.add(listener);
         this.fsms.forEach(fsm => fsm.setCurrentWorkload(workload));
         this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
-
-        // await new Promise(resolve => {
-        //     if (this.fsms.size === 0) {
-        //         resolve(true);
-        //         return;
-        //     }
-        //     const listener = () => {
-        //         const fsmsArray = Array.from(this.fsms.values());
-        //         if (fsmsArray.filter(fsm => fsm.isDone() !== true).length === 0) {
-        //             this.#listeners.delete(listener);
-        //             resolve(true);
-        //         }
-        //     };
-        //     this.#listeners.add(listener);
-        //     this.fsms.forEach(fsm => fsm.unsubscribe(cb_fsm));
-        // });
     }
 
     handleEvent(sender: any, payload: any, workload: CK_Workload) {
@@ -117,9 +108,11 @@ export class SubscriptionManager {
             receiveMetadataUpdate,
         } = payload;
 
+        //console.log("SubscriptionManager: handleEvent", payload, this.vertexId);
+
         if (subscriptionConfirmation) {
-            const { subscription_id, subscription_name, asset_id } = subscriptionConfirmation;
-            const fsm = Array.from(this.fsms.values()).find(fsm => fsm.subName === subscription_name);
+            const { subscription_id, asset_id } = subscriptionConfirmation;
+            const fsm = Array.from(this.fsms.values()).find(fsm => fsm.subId === subscription_id);
             if (!fsm) {
                 return;
             }
@@ -160,7 +153,7 @@ export class SubscriptionManager {
         }
 
         const currentDesiredIds = this.#current_desired_ids;
-        ////console.log("currentDesiredIds", currentDesiredIds)
+        //////console.log("currentDesiredIds", currentDesiredIds)
         if (currentDesiredIds === undefined) {
             return {
                 initialized: false,

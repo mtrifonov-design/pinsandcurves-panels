@@ -21,7 +21,8 @@ import { useCK } from "../../CK_Adapter/CK_Provider";
   
     /* each hook call owns ONE manager instance */
     const managerRef = useRef<SubscriptionManager>();
-    if (!managerRef.current) managerRef.current = new SubscriptionManager({FreeWorkload});
+    //console.log("useAssets", registry)
+    if (!managerRef.current) managerRef.current = new SubscriptionManager({FreeWorkload,vertexId: registry ? registry.vertexId : undefined});
   
     /* register / unregister exactly once */
     useEffect(() => {

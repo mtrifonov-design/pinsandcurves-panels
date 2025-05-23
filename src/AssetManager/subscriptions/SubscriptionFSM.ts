@@ -1,9 +1,6 @@
 import { CK_Workload } from "../../CK_Adapter/types";
 import CONFIG from "../../Config";
 
-
-
-
 /** Finite‑state machine for ONE asset subscription */
 export enum FSMState {
     IDLE = "IDLE",            // not yet subscribed
@@ -15,7 +12,7 @@ export enum FSMState {
 
 export type FSMEvent =
     | { type: "CREATE", subName: string, asset: any }
-    | { type: "SUBSCRIBE_TO_EXISTING", subName: string, assetId: string }
+    | { type: "SUBSCRIBE_TO_EXISTING", subId: string, assetId: string }
     | { type: "SUBSCRIBE_CONFIRMED"; subId: string, assetId: string }
     | { type: "ASSET_DATA"; data: unknown }
     | { type: "RECEIVE_UPDATE"; update: unknown }
@@ -27,20 +24,6 @@ export type FSMEvent =
     | { type: "DELETE_NOTIFICATION" }
     | { type: "UNSUBSCRIBE_CONFIRMED" };
 
-
-// function sendToAssetServer(payload: any) {
-//     CK_ADAPTER.pushWorkload({
-//         default: [{
-//             type: "worker",
-//             receiver: {
-//                 instance_id: "ASSET_SERVER",
-//                 modality: "wasmjs",
-//                 resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-//             },
-//             payload,
-//         }],
-//     });
-// }
 
 export class SubscriptionFSM {
     assetId?: string;
@@ -69,9 +52,11 @@ export class SubscriptionFSM {
     }
 
     FreeWorkload: () => CK_Workload;
+    vertexId: string = "";
     constructor(controller: unknown, FreeWorkload: () => CK_Workload, manager?: unknown) {
         this.FreeWorkload = FreeWorkload;   
         this.manager = manager;
+        this.vertexId = manager?.vertexId || "";
         this.assetController = controller;
         this.assetController.setHooks({
             create: this.create.bind(this),
@@ -102,12 +87,12 @@ export class SubscriptionFSM {
         switch (this.state) {
             case FSMState.IDLE:
                 if (ev.type === "SUBSCRIBE_TO_EXISTING") {
-                    this.subName = ev.subName;
+                    this.subId = ev.subId;
                     this.assetId = ev.assetId;
                     this.sendToAssetServer({
                         subscribeToExistingAsset: {
                             asset_id: this.assetId,
-                            subscription_name: this.subName,
+                            subscription_id: this.subId,
                         }
                     },true)
                     this.state = FSMState.SUBSCRIBING;
@@ -130,7 +115,7 @@ export class SubscriptionFSM {
                     this.sendToAssetServer();
                 }
                 if (ev.type === "ASSET_DATA") {
-                    //console.log("ASSET_DATA", ev.data,this.assetId);
+                    ////console.log("ASSET_DATA", ev.data,this.assetId);
                     this.assetController.load(ev.data);
                     this.state = FSMState.ACTIVE;
                     this.notifyManager();
@@ -198,7 +183,7 @@ export class SubscriptionFSM {
                 if (ev.type === "UNSUBSCRIBE_CONFIRMED") {
                     this.state = FSMState.DONE;
                     //this.detachFromManager();
-                    console.log("UNSUBSCRIBE_CONFIRMED", this.assetId, this.cb_fsm);
+                    //console.log("UNSUBSCRIBE_CONFIRMED", this.assetId, this.cb_fsm);
                     this.assetController.destroy();
                     if (this.cb_fsm) this.cb_fsm(this);
                     this.notifyManager();
@@ -226,12 +211,14 @@ export class SubscriptionFSM {
     }
 
     create(asset: any) {
+        // should be deprecated 
         this.subName = crypto.randomUUID();
         this.dispatch({ type: "CREATE", subName: this.subName, asset: asset });
     }
     subscribe(assetId: string) { 
-        this.subName = crypto.randomUUID();
-        this.dispatch({ type: "SUBSCRIBE_TO_EXISTING", subName: this.subName, assetId: assetId });
+        this.subId = this.vertexId + "_" + assetId;
+        //console.log("subscribe", this.subId, assetId);
+        this.dispatch({ type: "SUBSCRIBE_TO_EXISTING", subId: this.subId, assetId: assetId });
     }
     delete() { 
         this.dispatch({ type: "DELETE" });
@@ -245,7 +232,7 @@ export class SubscriptionFSM {
 
     cb_fsm : ((self:any) => void) | undefined = undefined;
     unsubscribe(cb_fsm?: (self:any) => void) { 
-        console.log("unsubscribe", this.assetId, cb_fsm);
+        //console.log("unsubscribe", this.assetId, cb_fsm);
         if (cb_fsm) this.cb_fsm = cb_fsm;
         this.dispatch({ type: "UNSUBSCRIBE" });
     }
