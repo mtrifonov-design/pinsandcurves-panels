@@ -62,13 +62,13 @@ export function CyberSpaghettiControlsInterior({
         🎨 Liquid Lissajous Gradient Generator  (Beta)
       </h2>
       <div>
-        This tool is part of the Pins & Curves project. <a style={{
+       Version 0.0.1. <a style={{
           color: "var(--continuousBlue3)",
           textDecoration: "underline",
           cursor: "pointer",
         }}
-        onClick={() => window.open("https://pinsandcurves.app", "_blank")}
-        >Learn more</a>
+        onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
+        >Watch tutorial</a>
       </div>
       <hr></hr>
 
