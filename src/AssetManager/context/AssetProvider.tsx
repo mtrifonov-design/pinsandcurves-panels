@@ -25,6 +25,7 @@ interface Registry {
 export const AssetManagerContext = createContext<Registry | null>(null);
 const INITContext = createContext<any>(null);
 
+
 export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   children,
 }) => {
@@ -43,11 +44,13 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       managersRef.current.delete(m);
     },
   });
+  const { FreeWorkload } = useCK();
+
 
   /* blocker bookkeeping for TERMINATE */
   const blockerIdRef = useRef<string | null>(null);
 
-  const { FreeWorkload } = useCK();
+
 
   const currentWorkloadRef = useRef(null);
 
@@ -56,7 +59,8 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     currentWorkloadRef.current = workload;
     //////console.log("unit", unit);
     const { sender, payload } = unit;
-    const { INIT, TERMINATE, blocker_id, payload: p } = payload;
+    const { INIT, TERMINATE, blocker_id, payload: p, } = payload;
+
 
     if (INIT && !registryRef.current.initialized) {
       registryRef.current.initialized = true;
@@ -75,7 +79,7 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       const managers = Array.from(managersRef.current);
       const releaseManagers = [...managers];
       if (managers.length === 0) {
-        workload.thread("default").blocker(blockerIdRef.current as string,2);
+        workload.thread("default").blocker(blockerIdRef.current as string, 2);
         workload.dispatch();
         return;
       }
@@ -84,7 +88,7 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
         if (idx !== -1) releaseManagers.splice(idx, 1);
         if (releaseManagers.length === 0) {
           const workload = currentWorkloadRef.current;
-          workload.thread("default").blocker(blockerIdRef.current as string,2);
+          workload.thread("default").blocker(blockerIdRef.current as string, 2);
           workload.dispatch();
         }
       }, workload));
@@ -101,13 +105,14 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   });
 
   return (
-    <AssetManagerContext.Provider value={registryRef.current}>
-      <INITContext.Provider value={initState}>
-        {children}
-      </INITContext.Provider>
-    </AssetManagerContext.Provider>
+      <AssetManagerContext.Provider value={registryRef.current}>
+        <INITContext.Provider value={initState}>
+          {children}
+        </INITContext.Provider>
+      </AssetManagerContext.Provider>
   );
 };
+
 
 export function useInit() {
   const init = useContext(INITContext);

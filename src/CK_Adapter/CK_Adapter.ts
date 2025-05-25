@@ -25,6 +25,8 @@ class CK_Adapter {
           const { pw, instanceId, resourceId } = payload;
           this.PASSWORD = pw;
           this.CK_INSTANCE_ID = instanceId;
+          this.CK_RESOURCE_ID = resourceId;
+          globalThis.CK_INSTANCE = this.CK_INSTANCE;
           const metadata = metadata_registry[resourceId];
           m = {
             ...m,
@@ -99,6 +101,17 @@ class CK_Adapter {
   }
 
   public CK_INSTANCE_ID: string | undefined;
+  public CK_RESOURCE_ID: string | undefined;
+  public get CK_INSTANCE() {
+    if (!this.CK_INSTANCE_ID) {
+      throw new Error("CK_INSTANCE_ID is not set");
+    }
+    return {
+      instance_id: this.CK_INSTANCE_ID,
+      resource_id: this.CK_RESOURCE_ID,
+      modality: "iframe",
+    };
+  }
 
   pushWorkload(workload: unknown) {
     window.parent.postMessage({
