@@ -38,6 +38,8 @@ function EditingAreaContent({timeline}: {timeline: Controller}) {
         timeline.onTimelineUpdate.bind(timeline),
         timeline.getProject.bind(timeline),
     );
+    window.timeline = timeline; // for debugging purposes
+    console.log("projectState", projectState.timelineData.playheadPosition);
     const useProjectState = () => projectState;
     const projectTools = timeline.projectTools;
     //console.log("projectTools", projectTools);
@@ -93,7 +95,7 @@ function EditingAreaContent({timeline}: {timeline: Controller}) {
             }}>
                 <EditingAreaCanvas
                     activeTool={activeTool}
-                    useProjectState={useProjectState}
+                    project={useProjectState()}
                     projectTools={projectTools}
                     setActiveEditor={() => {}}
                     interpolateSignalValue={

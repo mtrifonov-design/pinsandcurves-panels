@@ -33,6 +33,9 @@ class TController {
       // -> -> -> *** *** *** *** -> -> ->
       // continue here.
       const update = this.data.transferOutgoingEvent();
+      if (update.commands.length === 0) {
+        return
+      }
       this.update(update);
     });
     this.initialised = true;
