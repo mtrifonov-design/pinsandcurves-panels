@@ -146,8 +146,8 @@ export class WebGPURenderer {
                     fn main(@location(0) pos: vec2<f32>, @location(1) linepos: vec2<f32>) -> Out {
                         var out: Out;
                         out.position = vec4<f32>(
-                            (pos.x / f32(${this.canvas.width}) * 2.0 - 1.0),
-                            (pos.y / f32(${this.canvas.height}) * 2.0 - 1.0),
+                            (pos.x / f32(${this.particleSys.WIDTH}) * 2.0 - 1.0),
+                            (pos.y / f32(${this.particleSys.HEIGHT}) * 2.0 - 1.0),
                             0.0, 1.0);
                         out.v_linepos = linepos;
                         return out;

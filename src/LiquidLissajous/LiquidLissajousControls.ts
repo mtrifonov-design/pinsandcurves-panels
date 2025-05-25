@@ -8,6 +8,10 @@ type ControlsData = {
     ratioA: number;
     ratioB: number;
     offset: number;
+    width: number;
+    height: number;
+    figureScaleX: number;
+    figureScaleY: number;
 }
 
 class Controls {
@@ -66,6 +70,10 @@ class Controls {
         ratioA: 1,
         ratioB: 2,
         offset: Math.PI / 2,
+        width: 1920,
+        height: 1080,
+        figureScaleX: 0.2,
+        figureScaleY: 0.3,
     }
 }
 

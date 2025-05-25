@@ -48,6 +48,7 @@ function CyberSpaghettiInterior({ width = 1920, height = 1080, timeline, control
 
     const controlsSnapshot = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const timelineProject = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
+    
     raySystem.update(timelineProject,controlsSnapshot,timeline); 
 
     useEffect(() => {

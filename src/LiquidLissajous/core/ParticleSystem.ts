@@ -27,6 +27,10 @@ export class ParticleSystem {
     OFFSET: number = Math.PI / 2;
     lissajousLineBuffer: Float32Array = new Float32Array(1024 * 2); // up to 1024 points
     lissajousLineCount: number = 0;
+    WIDTH: number = 1920;
+    HEIGHT: number = 1080;
+    FIGURE_SCALE_X: number = 0.5;
+    FIGURE_SCALE_Y: number = 0.5;
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
@@ -65,10 +69,14 @@ export class ParticleSystem {
         }
         this.LOOP_LIFECYCLE = config.loopLifecycle;
 
+        this.WIDTH = config.width;
+        this.HEIGHT = config.height;
         this.RATIO_A = config.ratioA;
         this.RATIO_B = config.ratioB;
         this.OFFSET = config.offset;
         this.SHOW_LISSAJOUS_FIGURE = config.showLissajousFigure;
+        this.FIGURE_SCALE_X = config.figureScaleX;
+        this.FIGURE_SCALE_Y = config.figureScaleY;
 
         // Interpolate PARTICLE_COUNT color stops in HSL (hue) space
         function rgbToHsl([r, g, b]: number[]): [number, number, number] {
@@ -138,10 +146,10 @@ export class ParticleSystem {
             ax: this.RATIO_A, bx: 0, 
             ay: this.RATIO_B, by: 0, // frequencies
             deltaX: this.OFFSET, deltaY: 0, // phase offsets
-            centerX: this.CENTER_X * 1920,
-            centerY: this.CENTER_Y * 1080,
-            scaleX: this.PARTICLE_RADIUS, // aspect ratio
-            scaleY: this.PARTICLE_RADIUS // aspect ratio
+            centerX: this.CENTER_X * this.WIDTH,
+            centerY: this.CENTER_Y * this.HEIGHT,
+            scaleX: this.WIDTH * this.FIGURE_SCALE_X, // aspect ratio
+            scaleY: this.HEIGHT * this.FIGURE_SCALE_Y // aspect ratio
         };
 
         let ptr = 0;
@@ -167,6 +175,8 @@ export class ParticleSystem {
             const normalOffset = (noise1D(i + 1000) - 0.5) * 2 * normalStrength;
             x += nx * normalOffset;
             y += ny * normalOffset;
+            // x = (x/1920) * this.WIDTH;
+            // y = (y/1080) * this.HEIGHT;
             const color = this.PARTICLE_COLORS[i];
             this.buffer[ptr++] = x;
             this.buffer[ptr++] = y;

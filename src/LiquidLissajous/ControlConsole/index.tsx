@@ -7,7 +7,7 @@ import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../LiquidLissajousControls';
 
 export function CyberSpaghettiControlsInterior({
-    controls,
+  controls,
 }: { controls: Controls }) {
   // Add missing fields to ControlsData for advanced controls
   type AdvancedControls = ReturnType<Controls['getSnapshot']> & {
@@ -43,18 +43,18 @@ export function CyberSpaghettiControlsInterior({
 
   return (
     <div className="hyperspeed-controls"
-        style={{
-            display: 'flex',
-            gap: '20px',
-            flexDirection: 'column',
-            backgroundColor: "var(--gray1)",
-            width: '100vw',
-            height: '100vh',
-            padding: '1rem',
-            color: 'var(--gray6)',
-            overflow: 'scroll',
-            scrollbarColor: 'var(--gray3) var(--gray1)',
-         }}
+      style={{
+        display: 'flex',
+        gap: '20px',
+        flexDirection: 'column',
+        backgroundColor: "var(--gray1)",
+        width: '100vw',
+        height: '100vh',
+        padding: '1rem',
+        color: 'var(--gray6)',
+        overflow: 'scroll',
+        scrollbarColor: 'var(--gray3) var(--gray1)',
+      }}
     >
       <h2 style={{
         color: 'var(--gray7)',
@@ -62,17 +62,42 @@ export function CyberSpaghettiControlsInterior({
         🎨 Liquid Lissajous Gradient Generator  (Beta)
       </h2>
       <div>
-       Version 0.0.1. <a style={{
+        Version 0.0.1. <a style={{
           color: "var(--continuousBlue3)",
           textDecoration: "underline",
           cursor: "pointer",
         }}
-        onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
+          onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
         >Watch tutorial</a>
       </div>
       <hr></hr>
 
 
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        canvas size &nbsp;
+        <div>
+          <NumberInput
+            initialValue={state.width}
+            min={100}
+            max={1920 * 2}
+            step={10}
+            onChange={c => update({ width: c })}
+          />
+          <span style={{ margin: '0 0.5rem' }}>x</span>
+          <NumberInput
+            initialValue={state.height}
+            min={100}
+            max={1080 * 2}
+            step={10}
+            onChange={c => update({ height: c })}
+          />
+        </div>
+      </label>
       {/* Global limits */}
       <label style={{
         display: 'flex',
@@ -82,33 +107,34 @@ export function CyberSpaghettiControlsInterior({
       }}>
         color mixing intensity &nbsp;
         <NumberInput
-                initialValue={state.mixingIntensity}
-                min={0}
-                max={1}
-                step={0.01}
-                onChange={c => update({ mixingIntensity: c })}
-            />
+          initialValue={state.mixingIntensity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => update({ mixingIntensity: c })}
+        />
       </label>
       {/* Colours */}
       <fieldset
         style={{
-            borderColor: 'var(--gray4)',
-            borderRadius: 'var(--borderRadiusSmall)',
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            alignContent: 'center',
+          borderColor: 'var(--gray4)',
+          borderRadius: 'var(--borderRadiusSmall)',
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          alignContent: 'center',
         }}
       >
         <legend>particle colours</legend>
         {state.particleColors.map((_, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4,
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
             justifyContent: 'center',
             borderRadius: "var(--borderRadiusSmall)",
             border: "1px solid var(--gray3)",
             padding: "0.0rem 0.5rem",
-           }}>
+          }}>
             <input
               type="color"
               value={rgbToHex(state.particleColors[i])}
@@ -134,12 +160,12 @@ export function CyberSpaghettiControlsInterior({
       }}>
         loop length (in frames) &nbsp;
         <NumberInput
-                initialValue={state.loopLifecycle}
-                min={30}
-                max={900}
-                step={1}
-                onChange={c => update({ loopLifecycle: c })}
-            />
+          initialValue={state.loopLifecycle}
+          min={30}
+          max={900}
+          step={1}
+          onChange={c => update({ loopLifecycle: c })}
+        />
       </label>
       {/* Advanced Section Toggle Button */}
       <div style={{ marginTop: 12, marginBottom: 0 }}>
@@ -166,7 +192,7 @@ export function CyberSpaghettiControlsInterior({
         >
           <legend>advanced</legend>
           {/* Show Lissajous Figure Toggle */}
-          <div style={{ }}>
+          <div style={{}}>
             <Button
               iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
               text={state.showLissajousFigure ? 'Hide lissajous figure' : 'Show lissajous figure'}
@@ -176,6 +202,28 @@ export function CyberSpaghettiControlsInterior({
             />
           </div>
           {/* Offset selection */}
+
+          {/* <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>scale</div>
+            <div>
+              <NumberInput
+                initialValue={state.figureScaleX}
+                min={0.1}
+                max={1}
+                step={0.01}
+                onChange={c => update({ figureScaleX: c })}
+              />
+              <span style={{ margin: '0 0.5rem' }}>x</span>
+              <NumberInput
+                initialValue={state.figureScaleY}
+                min={0.1}
+                max={1}
+                step={0.01}
+                onChange={c => update({ figureScaleY: c })}
+              />
+            </div>
+          </div> */}
+
           <div>
             <div style={{ marginBottom: 4, fontSize: 13 }}>offset</div>
             <SingleSelectButtonGroup<number>
@@ -218,12 +266,12 @@ export function CyberSpaghettiControlsInterior({
 }
 
 function CyberSpaghettiExterior() {
-    const controls = useControls();
-    const ready = controls;
-    if (!ready) {
-        return <FullscreenLoader />
-    }
-    return <CyberSpaghettiControlsInterior controls={controls} />
+  const controls = useControls();
+  const ready = controls;
+  if (!ready) {
+    return <FullscreenLoader />
+  }
+  return <CyberSpaghettiControlsInterior controls={controls} />
 }
 
 interface SingleSelectOption<T> {
@@ -242,8 +290,8 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
   return (
     <div style={{ display: 'flex', gap: 8, ...style }}>
       {options.map(opt => (
-        <div key={opt.value} style={{ 
-          }}>
+        <div key={opt.value} style={{
+        }}>
           <Button
             text={opt.label}
             onClick={() => onChange(opt.value)}
@@ -257,9 +305,9 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 }
 
 export default function CyberSpaghettiControls() {
-    return <AssetProvider>
-            <ControlsProvider>
-                <CyberSpaghettiExterior />
-            </ControlsProvider>
-    </AssetProvider>;
+  return <AssetProvider>
+    <ControlsProvider>
+      <CyberSpaghettiExterior />
+    </ControlsProvider>
+  </AssetProvider>;
 }
