@@ -39,7 +39,7 @@ function EditingAreaContent({timeline}: {timeline: Controller}) {
         timeline.getProject.bind(timeline),
     );
     window.timeline = timeline; // for debugging purposes
-    console.log("projectState", projectState.timelineData.playheadPosition);
+    //console.log("projectState", projectState.timelineData.playheadPosition);
     const useProjectState = () => projectState;
     const projectTools = timeline.projectTools;
     //console.log("projectTools", projectTools);

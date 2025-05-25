@@ -12,7 +12,7 @@
   "dependencies": {
     "@mtrifonov-design/pinsandcurves-design": "^0.0.9",
     "@mtrifonov-design/pinsandcurves-external": "^0.0.241",
-    "@mtrifonov-design/pinsandcurves-specialuicomponents": "^0.0.232",
+    "@mtrifonov-design/pinsandcurves-specialuicomponents": "^0.0.234",
     "jszip": "^3.10.1",
     "openai": "^4.94.0",
     "react": "^18.3.1",
