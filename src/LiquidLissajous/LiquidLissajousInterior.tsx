@@ -68,6 +68,7 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
         height,
     }));
     const frameSaver = frameSaverRef.current;
+    frameSaver.setSize(width, height);
 
     useEffect(() => {
         const canvas = canvasRef.current;

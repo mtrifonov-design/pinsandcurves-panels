@@ -1,6 +1,22 @@
 import React from 'react';
 import { Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
 
+function isBrowserKnownToWork(): boolean {
+  const ua = navigator.userAgent;
+
+  // Chromium-based (Chrome, Edge, Opera)
+  if (/Chrome\/\d+/.test(ua) && !/Edg/.test(ua) && !/OPR/.test(ua)) return true;
+
+  // Firefox: WebCodecs is experimental and broken for VideoEncoder
+  if (/Firefox/.test(ua)) return false;
+
+  // Safari: partially supported in 17+, but inconsistent — assume no for now
+  if (/Safari/.test(ua) && !/Chrome/.test(ua)) return false;
+
+  return false;
+}
+
+
 // Add minimal types for frameSaver and event
 interface FrameSaverStatus {
     rendering: boolean;
@@ -25,6 +41,9 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         frameSaver.getStatus.bind(frameSaver),
     );
 
+
+    const videoEncoderAvailable = isBrowserKnownToWork();
+
     const [displayOverlay, setDisplayOverlay] = React.useState(false);
 
     return <div style={{
@@ -41,12 +60,21 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         <Button
             onClick={() => {
                 recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                frameSaver.begin();
+                frameSaver.beginImSeq();
                 setDisplayOverlay(true);
             }}
             text={"export image sequence"}
             iconName="animated_images"
         />
+        {   videoEncoderAvailable && <Button
+            onClick={() => {
+                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                frameSaver.beginMp4();
+                setDisplayOverlay(true);
+            }}
+            text={"export as .mp4"}
+            iconName="movie"
+        />}
         {displayOverlay && <div style={{
             position: "absolute",
             top: "50%",

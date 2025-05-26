@@ -22,7 +22,7 @@ export class WebGL2Renderer {
     }
 
     async onFrameReady(cb) {
-        return
+        return cb();
     }
 
     draw() {
