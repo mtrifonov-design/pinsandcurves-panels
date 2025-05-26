@@ -31,8 +31,6 @@ export class ParticleSystem {
     HEIGHT: number = 1080;
     FIGURE_SCALE_X: number = 0.5;
     FIGURE_SCALE_Y: number = 0.5;
-    PARTICLES: any[] = []; // Placeholder for particles, if needed
-    LISSAJOUS_PATH: [number, number][] = []; // Placeholder for Lissajous path points
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
@@ -159,7 +157,6 @@ export class ParticleSystem {
             const s = Math.sin(x * 127.1 + 311.7) * 43758.5453;
             return s - Math.floor(s);
         }
-        this.PARTICLES = [];
         for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
             let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE 
             t += (i  / this.PARTICLE_COUNT) * 2 * Math.PI;
@@ -186,21 +183,16 @@ export class ParticleSystem {
             this.buffer[ptr++] = color[0];
             this.buffer[ptr++] = color[1];
             this.buffer[ptr++] = color[2];
-            this.PARTICLES[i] = { x, y, r: color[0],
-                g: color[1], b: color[2]
-             }; // Store particle data if needed
         }
 
         // Generate Lissajous polyline for overlay
         const N = 256; // number of points in the polyline
         this.lissajousLineCount = N;
-        this.LISSAJOUS_PATH = [];
         for (let i = 0; i < N; ++i) {
             const t = (i / (N - 1)) * 2 * Math.PI;
             const [x, y] = this.lissajousXY(t, lissajousParams);
             this.lissajousLineBuffer[i * 2 + 0] = x;
             this.lissajousLineBuffer[i * 2 + 1] = y;
-            this.LISSAJOUS_PATH[i] = [x, y]; // Store path points if needed
         }
     }
 }
