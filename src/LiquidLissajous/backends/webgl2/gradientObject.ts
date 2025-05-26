@@ -84,6 +84,7 @@ vec3 oklabToSRGB(vec3 o) {
 
 void main() {
   vec3 oklAccum = vec3(0.0);
+  float satAccum = 0.0;
   float total = 0.0;
   int PCOUNT = int(v_particleCount); // number of particles
   float sigma = 0.228; // Gaussian width in normalized units, matches WGSL
@@ -95,12 +96,23 @@ void main() {
     vec3 color = vec3(fetch(base + 2), fetch(base + 3), fetch(base + 4));
     float dist2 = distanceSquared(v_uv, center);
     float w = exp(-dist2 * inv2sigma2);
-    oklAccum += srgbToOKLab(color) * w;
+    vec3 okl = srgbToOKLab(color);
+    float sat = length(okl.yz); // OKLab saturation
+    oklAccum += okl * w;
+    satAccum += sat * w;
     total += w;
   }
   vec3 outCol = vec3(0.0);
   if (total > 0.0) {
-    outCol = oklabToSRGB(oklAccum / total);
+    vec3 oklBlended = oklAccum / total;
+    float satBlended = length(oklBlended.yz);
+    float satTarget = satAccum / total;
+    float factor = (satBlended > 0.0) ? (satTarget / satBlended) : 1.0;
+    // Clamp factor to avoid extreme values
+    factor = clamp(factor, 0.1, 1.3);
+    // Apply correction to a and b (oklBlended.yz)
+    oklBlended.yz *= factor;
+    outCol = oklabToSRGB(oklBlended);
   }
   outColor = vec4(outCol, 1.0);
 }`;
