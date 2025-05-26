@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
+import { useCK } from '../CK_Adapter/CK_Provider';
+import { useUnitCallbacks } from '../AssetManager/context/AssetProvider';
 
 function isBrowserKnownToWork(): boolean {
   const ua = navigator.userAgent;
@@ -44,6 +46,27 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
 
     const videoEncoderAvailable = isBrowserKnownToWork();
 
+    const { FreeWorkload } = useCK();
+    const unitCallbackManager = useUnitCallbacks();
+    useEffect(() => {
+        unitCallbackManager.registerCallback("beginRender", (payload, workload) => {
+            if (payload.type === "imseq") {
+                frameSaver.beginImSeq();
+                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                setDisplayOverlay(true);
+            }
+            if (payload.type === "mp4") {
+                frameSaver.beginMp4();
+                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                setDisplayOverlay(true);
+            }
+        }
+        );
+        return () => {
+            unitCallbackManager.unregisterCallback("beginRender");
+        }
+    },[])
+
     const [displayOverlay, setDisplayOverlay] = React.useState(false);
 
     return <div style={{
@@ -59,18 +82,32 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
     }}>
         <Button
             onClick={() => {
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                frameSaver.beginImSeq();
-                setDisplayOverlay(true);
+                const w = FreeWorkload();
+                w.thread("default").worker(globalThis.CK_INSTANCE, {
+                    beginRender: {
+                        type: "imseq"
+                    }
+                })
+                w.dispatch();
+                //recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                //frameSaver.beginImSeq();
+                //setDisplayOverlay(true);
             }}
             text={"export image sequence"}
             iconName="animated_images"
         />
         {   videoEncoderAvailable && <Button
             onClick={() => {
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                frameSaver.beginMp4();
-                setDisplayOverlay(true);
+                const w = FreeWorkload();
+                w.thread("default").worker(globalThis.CK_INSTANCE, {
+                    beginRender: {
+                        type: "mp4"
+                    }
+                })
+                w.dispatch();
+                //recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                //frameSaver.beginMp4();
+                //setDisplayOverlay(true);
             }}
             text={"export as .mp4"}
             iconName="movie"

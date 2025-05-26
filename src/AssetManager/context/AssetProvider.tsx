@@ -26,6 +26,21 @@ export const AssetManagerContext = createContext<Registry | null>(null);
 const INITContext = createContext<any>(null);
 
 
+class UnitCallbackManger {
+  callbacks: Map<string, (payload: any, workload: any) => void> = new Map();
+  registerCallback(
+    callbackId: string,
+    callback: (payload: any, workload: any) => void,
+  ) {
+    this.callbacks.set(callbackId, callback);
+  }
+  unregisterCallback(callbackId: string) {
+    this.callbacks.delete(callbackId);
+  }
+}
+
+const UnitCallbackContext = React.createContext<UnitCallbackManger | null>(null);
+
 export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   children,
 }) => {
@@ -50,7 +65,10 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   /* blocker bookkeeping for TERMINATE */
   const blockerIdRef = useRef<string | null>(null);
 
-
+  const UnitCallbackMangerRef = useRef<UnitCallbackManger>(
+    new UnitCallbackManger(),
+  );
+  const unitCallbackManager = UnitCallbackMangerRef.current;
 
   const currentWorkloadRef = useRef(null);
 
@@ -97,6 +115,19 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       return;
     }
 
+    const keys = Object.keys(payload);
+    if (Object.keys(unitCallbackManager.callbacks).some(k => keys.includes(k))) {
+      const first = keys.find(k => unitCallbackManager.callbacks.has(k));
+      if (first) {
+        const callback = unitCallbackManager.callbacks.get(first);
+        if (callback) {
+          callback(payload[first], workload);
+        }
+      }
+      workload.dispatch();
+      return;
+    }
+
     /* regular payload: broadcast to every manager */
     //console.log("payload", payload);
     //console.log(managersRef.current);
@@ -105,14 +136,24 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   });
 
   return (
+    <UnitCallbackContext.Provider value={unitCallbackManager}>
       <AssetManagerContext.Provider value={registryRef.current}>
         <INITContext.Provider value={initState}>
           {children}
         </INITContext.Provider>
       </AssetManagerContext.Provider>
+      </UnitCallbackContext.Provider>
   );
 };
 
+
+export function useUnitCallbacks() {
+  const unitCallbackManager = useContext(UnitCallbackContext);
+  if (!unitCallbackManager) {
+    throw new Error("useUnitCallbacks must be used within AssetProvider");
+  }
+  return unitCallbackManager;
+}
 
 export function useInit() {
   const init = useContext(INITContext);
