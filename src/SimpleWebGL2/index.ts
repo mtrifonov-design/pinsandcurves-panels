@@ -1,0 +1,302 @@
+/*======================================================================*\
+ |  MiniWebGL2 – ultra-small WebGL2 instanced-quad helper (TypeScript)   |
+ |                                                                       |
+ |  Six-function public API (names enclosed in double underscores):      |
+ |                                                                       |
+ |    MiniWebGL2.__init__(canvas)                                        |
+ |    MiniWebGL2.__defineobject__(definition)                            |
+ |    MiniWebGL2.__end__init__()                                         |
+ |                                                                       |
+ |    MiniWebGL2.__begin__()                                             |
+ |    MiniWebGL2.__drawobjectinstances__(typeName, drawParams)           |
+ |    MiniWebGL2.__end__()                                               |
+ |                                                                       |
+ |  – Each object type represents one instanced quad.                    |
+ |  – Caller supplies vertex + fragment shaders per type.                |
+ |  – Per-instance attributes are packed into a single interleaved VBO.  |
+ |  – Optionally a shared floating-point texture may be updated per draw |
+ |    call to provide dynamic data common to all instances in the batch. |
+ \*======================================================================*/
+
+// Disable lint / prettier reformatting for long GLSL and comments
+// eslint-disable prettier/prettier
+
+/*======================================================================
+  1.  Public TypeScript interfaces
+  =====================================================================*/
+export interface InstanceAttribute {
+  name: string;            // attribute name as used inside the shaders
+  size: 1 | 2 | 3 | 4;     // vec size (# of floats)
+}
+
+export interface DynamicDataDesc {
+  width: number;           // texture width  (Texel count, not pixels)
+  height: number;          // texture height (1-D array    → height = 1)
+}
+
+export interface ObjectDefinition {
+  name: string;                              // unique key, e.g. "circle"
+  instanceAttributes: InstanceAttribute[];   // per-instance streams
+  vertexShader: string;                      // GLSL ES 3.0 vertex shader
+  fragmentShader: string;                    // GLSL ES 3.0 fragment shader
+  dynamicData?: DynamicDataDesc;             // omit for none
+}
+
+export interface DrawParams {
+  count: number;                             // instance count (≥ 1)
+  attributes: Record<string, Float32Array>;  // one entry per attr name
+  dynamicData?: Float32Array;                // optional tex upload
+}
+
+/*======================================================================
+  2.  Internals
+  =====================================================================*/
+
+// Short local alias
+type GL = WebGL2RenderingContext;
+
+interface ObjectType {
+  program: WebGLProgram;
+  vao: WebGLVertexArrayObject;
+  instVBO: WebGLBuffer;
+  stride: number;                       // bytes per instance in instVBO
+  attributes: InstanceAttribute[];
+  dynTex?: WebGLTexture;                // optional texture
+  dynUniformLoc?: WebGLUniformLocation; // sampler uniform location
+  dynW?: number;
+  dynH?: number;
+}
+
+let gl: GL | null = null;                               // active GL context
+const objectTypes: Record<string, ObjectType> = Object.create(null);
+
+/*======================================================================
+  3.  Public API object
+  =====================================================================*/
+export const SimpleWebGL2 = {
+  __init__,
+  __defineobject__,
+  __end__init__,
+  __begin__,
+  __drawobjectinstances__,
+  __end__,
+};
+
+/*======================================================================
+  4.  Implementation
+  =====================================================================*/
+
+/*----------------------------- __init__ ------------------------------*/
+function __init__(canvas: HTMLCanvasElement): void {
+  gl = canvas.getContext("webgl2", { antialias: false });
+  if (!gl) throw new Error("WebGL 2 not supported by this browser");
+
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+}
+
+/*-------------------------- __defineobject__ -------------------------*/
+function __defineobject__(def: ObjectDefinition): void {
+  if (!gl) throw new Error("Call __init__ first");
+  if (objectTypes[def.name])
+    throw new Error(`Object type \"${def.name}\" already exists`);
+  if (!Array.isArray(def.instanceAttributes))
+    throw new Error("instanceAttributes must be an array");
+
+  /* 1.  Compile + link the user-provided shaders */
+  const program = linkProgram(def.vertexShader, def.fragmentShader);
+
+  /* 2.  Create static GPU resources */
+  const vao = gl.createVertexArray()!;
+  const vboQuad = gl.createBuffer()!;
+  const iboQuad = gl.createBuffer()!;
+  const instVBO = gl.createBuffer()!;
+
+  /* 3.  Upload a unit quad covering −1…1 in clip-space */
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboQuad);
+  gl.bufferData(
+    gl.ARRAY_BUFFER,
+    new Float32Array([ -1, -1,   1, -1,   1, 1,   -1, 1 ]),
+    gl.STATIC_DRAW,
+  );
+
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboQuad);
+  gl.bufferData(
+    gl.ELEMENT_ARRAY_BUFFER,
+    new Uint16Array([ 0, 1, 2,   0, 2, 3 ]),
+    gl.STATIC_DRAW,
+  );
+
+  /* 4.  Configure VAO --------------------------------------------------*/
+  gl.bindVertexArray(vao);
+  // Bind element array inside VAO – avoids GL_INVALID_OPERATION later
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboQuad);
+
+  // Attribute 0 → vertex position (in vec2 a_pos)
+  const locPos = gl.getAttribLocation(program, "a_pos");
+  if (locPos < 0)
+    throw new Error("vertex shader must declare 'in vec2 a_pos'");
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, vboQuad);
+  gl.enableVertexAttribArray(locPos);
+  gl.vertexAttribPointer(locPos, 2, gl.FLOAT, false, 0, 0);
+  gl.vertexAttribDivisor(locPos, 0);  // per-vertex
+
+  // Interleaved instance buffer
+  gl.bindBuffer(gl.ARRAY_BUFFER, instVBO);
+  const strideFloats = def.instanceAttributes.reduce((s, a) => s + a.size, 0);
+  const strideBytes  = strideFloats * 4;
+
+  let offsetBytes = 0;
+  def.instanceAttributes.forEach(attr => {
+    const loc = gl!.getAttribLocation(program, attr.name);
+    if (loc < 0) throw new Error(`Shader missing attribute ${attr.name}`);
+    gl!.enableVertexAttribArray(loc);
+    gl!.vertexAttribPointer(loc, attr.size, gl.FLOAT, false, strideBytes, offsetBytes);
+    gl!.vertexAttribDivisor(loc, 1);          // per-instance
+    offsetBytes += attr.size * 4;
+  });
+
+  gl.bindVertexArray(null);
+
+  /* 5.  Optional dynamic-data texture ---------------------------------*/
+  let dynTex: WebGLTexture | undefined;
+  let dynUniformLoc: WebGLUniformLocation | undefined;
+  let dynW = 0;
+  let dynH = 0;
+
+  if (def.dynamicData) {
+    dynW = def.dynamicData.width  | 0;
+    dynH = def.dynamicData.height | 0;
+
+    dynTex = gl.createTexture()!;
+    gl.bindTexture(gl.TEXTURE_2D, dynTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(
+      gl.TEXTURE_2D, 0, gl.R32F,
+      dynW, dynH, 0,
+      gl.RED, gl.FLOAT, null,
+    );
+
+    dynUniformLoc = gl.getUniformLocation(program, "u_dyn") || undefined;
+  }
+
+  /* 6.  Record descriptor */
+  objectTypes[def.name] = {
+    program,
+    vao,
+    instVBO,
+    stride: strideBytes,
+    attributes: def.instanceAttributes,
+    dynTex,
+    dynUniformLoc,
+    dynW,
+    dynH,
+  };
+}
+
+function __end__init__(): void {
+  /* Reserved for API completeness – does nothing currently */
+}
+
+/*------------------------------- __begin__ ---------------------------*/
+function __begin__(): void {
+  if (!gl) throw new Error("Call __init__ first");
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+  gl.clearColor(0, 0, 0, 0);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+}
+
+/*---------------------- __drawobjectinstances__ ----------------------*/
+function __drawobjectinstances__(typeName: string, params: DrawParams): void {
+  if (!gl) throw new Error("Call __init__ first");
+  const type = objectTypes[typeName];
+  if (!type) throw new Error(`Unknown object type \"${typeName}\"`);
+
+  const count = params.count | 0;
+  if (count <= 0) return;
+
+  /* 1.  Build interleaved instance buffer */
+  const floatsPerInstance = type.attributes.reduce((s, a) => s + a.size, 0);
+  const interleaved = new Float32Array(count * floatsPerInstance);
+
+  for (let inst = 0; inst < count; ++inst) {
+    let cursor = inst * floatsPerInstance;
+    type.attributes.forEach(attr => {
+      const src = params.attributes[attr.name];
+      if (!src)
+        throw new Error(`Missing attribute \"${attr.name}\" in draw params`);
+      interleaved.set(src.subarray(inst * attr.size, (inst + 1) * attr.size), cursor);
+      cursor += attr.size;
+    });
+  }
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, type.instVBO);
+  gl.bufferData(gl.ARRAY_BUFFER, interleaved, gl.DYNAMIC_DRAW);
+
+  /* 2.  Update dynamic texture (if used) */
+  if (type.dynTex && params.dynamicData) {
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, type.dynTex);
+    gl.texSubImage2D(
+      gl.TEXTURE_2D,
+      0,
+      0,
+      0,
+      type.dynW!,
+      type.dynH!,
+      gl.RED,
+      gl.FLOAT,
+      params.dynamicData,
+    );
+  }
+
+  /* 3.  Issue draw call */
+  gl.useProgram(type.program);
+  //console.log('dynUniformLoc', type.dynUniformLoc);
+
+  if (type.dynUniformLoc) gl.uniform1i(type.dynUniformLoc, 0);
+  gl.bindVertexArray(type.vao);
+  gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, count);
+  gl.bindVertexArray(null);
+}
+
+/*-------------------------------- __end__ ----------------------------*/
+function __end__(): void {
+  if (gl) gl.flush();
+}
+
+/*======================================================================
+  5.  Small GLSL helper functions
+  =====================================================================*/
+function compileShader(src: string, typeEnum: number): WebGLShader {
+  const sh = gl!.createShader(typeEnum)!;
+  gl!.shaderSource(sh, src);
+  gl!.compileShader(sh);
+  if (!gl!.getShaderParameter(sh, gl!.COMPILE_STATUS)) {
+    throw new Error(gl!.getShaderInfoLog(sh) || "shader compile error");
+  }
+  return sh;
+}
+
+function linkProgram(vsSrc: string, fsSrc: string): WebGLProgram {
+  const prog = gl!.createProgram()!;
+  gl!.attachShader(prog, compileShader(vsSrc, gl!.VERTEX_SHADER));
+  gl!.attachShader(prog, compileShader(fsSrc, gl!.FRAGMENT_SHADER));
+  gl!.linkProgram(prog);
+  if (!gl!.getProgramParameter(prog, gl!.LINK_STATUS)) {
+    throw new Error(gl!.getProgramInfoLog(prog) || "program link error");
+  }
+  // Optional: detach shaders to free driver memory
+  const attached = gl!.getAttachedShaders(prog) || [];
+  attached.forEach(sh => gl!.detachShader(prog, sh));
+  return prog;
+}
+
+/*======================================================================
+  End of file
+  =====================================================================*/

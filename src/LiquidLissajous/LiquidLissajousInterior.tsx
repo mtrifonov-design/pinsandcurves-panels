@@ -4,6 +4,7 @@ import { WebGPURenderer } from './backends/webgpu/renderer.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen';
 import useGoatCounter from '../hooks/useGoatCounter';
+import { WebGL2Renderer } from './backends/webgl2/renderer.js';
 
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
 
@@ -75,7 +76,8 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
         canvas.width = width;
         canvas.height = height;
         if (!rendererRef.current) {
-            rendererRef.current = new WebGPURenderer(canvas, particleSystem);
+            rendererRef.current = new WebGL2Renderer(canvas, particleSystem);
+            // rendererRef.current = new WebGPURenderer(canvas, particleSystem);
             const renderer = rendererRef.current;
             rendererRef.current.init().then(() => {
                 const loop = () => {
