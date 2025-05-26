@@ -39,8 +39,8 @@ float fetch(int index) {             // helper to fetch RED float
 float distanceSquared(vec2 a, vec2 b) {
     a = a + vec2(1.);
     b = b + vec2(1.);
-    a = a * vec2(0.5) * vec2(v_width, v_height); 
-    b = b * vec2(0.5) * vec2(v_width, v_height); 
+    a = a * vec2(0.5); // * vec2(v_width, v_height); 
+    b = b * vec2(0.5); // * vec2(v_width, v_height); 
     vec2 d = a - b;
     return dot(d, d);
 }
@@ -86,7 +86,7 @@ void main() {
   vec3 oklAccum = vec3(0.0);
   float total = 0.0;
   int PCOUNT = int(v_particleCount); // number of particles
-  float sigma = 320. / v_width; // Gaussian width in normalized units, matches WGSL
+  float sigma = 0.228; // Gaussian width in normalized units, matches WGSL
   float inv2sigma2 = 1.0 / (2.0 * sigma * sigma);
 
   for (int i = 0; i < PCOUNT; ++i) {

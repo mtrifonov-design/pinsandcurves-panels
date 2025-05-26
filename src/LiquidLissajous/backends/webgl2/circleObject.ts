@@ -9,8 +9,8 @@ out vec3 v_color;
 void main() {
   v_local = a_pos;
   v_color = fillColor;
-  float aspect = resolution.y / resolution.x; // aspect ratio
-  gl_Position = vec4(a_pos * vec2(radius * aspect, radius) + offset, 0.0, 1.0);
+  float aspect = resolution.x / resolution.y; // aspect ratio
+  gl_Position = vec4(a_pos * vec2(radius, radius * aspect) + offset, 0.0, 1.0);
 }`;
 
 const circleFS = `#version 300 es
