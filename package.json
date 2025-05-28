@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@mtrifonov-design/pinsandcurves-design": "^0.0.9",
-    "@mtrifonov-design/pinsandcurves-external": "^0.0.241",
-    "@mtrifonov-design/pinsandcurves-specialuicomponents": "^0.0.234",
+    "@mtrifonov-design/pinsandcurves-external": "^0.0.242",
+    "@mtrifonov-design/pinsandcurves-specialuicomponents": "^0.0.235",
     "jszip": "^3.10.1",
     "mp4-muxer": "^5.2.1",
     "openai": "^4.94.0",

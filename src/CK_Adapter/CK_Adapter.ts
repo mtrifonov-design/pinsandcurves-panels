@@ -113,13 +113,14 @@ class CK_Adapter {
     };
   }
 
-  pushWorkload(workload: unknown) {
+  pushWorkload(workload: unknown,metadata?: { [key: string]: unknown }) {
     window.parent.postMessage({
       type: "ck-message",
       payload: {
         PUSH_WORKLOAD: true,
         pw: this.PASSWORD,
         workload,
+        metadata: metadata || {},
       },
     }, "*");
   }

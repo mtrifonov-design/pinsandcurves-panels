@@ -31,6 +31,7 @@ type CK_Unit = CK_Worker_Unit | CK_Blocker_Unit | CK_Terminate_Unit;
 interface CK_Workload {
     thread(tId: string) : CK_Thread;
     dispatch() : void;
+    setMetadata(key: string, value: unknown) : void;
 }
 
 interface CK_Thread {

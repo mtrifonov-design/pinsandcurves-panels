@@ -123,20 +123,20 @@ class FrameSaver {
 
     #renderMode = 'imseq'; // or 'mp4'
     beginImSeq() {
+        if (this.#rendering) return;
         this.#renderMode = 'imseq';
         this.begin();
     }
 
     beginMp4() {
+        if (this.#rendering) return;
         this.#renderMode = 'mp4';
         this.begin();
     }
 
     #rendering = false;
     begin() {
-        if (this.#rendering) return;
         this.#rendering = true;
-
         const project = this.#timeline.getProject();
         const focusRange = project.timelineData.focusRange;
         this.#anticipatedFrame = focusRange[0];

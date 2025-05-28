@@ -6,9 +6,14 @@ import type { CK_Workload, CK_Thread, CK_Unit,
 
 class CK_Workload_Class implements CK_Workload {
 
-    private onDispatch: (w: unknown) => void;
-    constructor(onDispatch: (w: unknown) => void) {
+    private onDispatch: (w: unknown,m:unknown) => void;
+    constructor(onDispatch: (w: unknown, m:unknown) => void) {
         this.onDispatch = onDispatch;
+    }
+
+    metadata: { [key: string]: unknown } = {};
+    setMetadata(key: string, value: unknown): void {
+        this.metadata[key] = value;
     }
 
     private threads: { [key: string]: CK_Unit[] } = {};
@@ -26,7 +31,7 @@ class CK_Workload_Class implements CK_Workload {
         }
 
         this.expired = true;
-        this.onDispatch(this.threads);
+        this.onDispatch(this.threads, this.metadata);
     }
 
 }

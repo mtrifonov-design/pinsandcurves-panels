@@ -5,6 +5,7 @@ import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../LiquidLissajousControls';
+import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -20,6 +21,9 @@ export function CyberSpaghettiControlsInterior({
     controls.subscribeInternal.bind(controls),
     controls.getSnapshot.bind(controls)
   ) as AdvancedControls;
+
+  const timeline = useTimeline();
+
 
   const update = (patch: Partial<AdvancedControls>) => {
     const next = { ...state, ...patch };
@@ -58,8 +62,9 @@ export function CyberSpaghettiControlsInterior({
     >
       <h2 style={{
         color: 'var(--gray7)',
+        fontWeight: "normal",
       }}>
-        🎨 Liquid Lissajous Gradient Generator  (Beta)
+      Liquid Lissajous (Beta)
       </h2>
       <div>
         Version 0.0.1. <a style={{
@@ -164,7 +169,12 @@ export function CyberSpaghettiControlsInterior({
           min={30}
           max={900}
           step={1}
-          onChange={c => update({ loopLifecycle: c })}
+          onChange={c => {
+            update({ loopLifecycle: c })}}
+          onCommit={(c) => {
+            timeline?.projectTools.updateFocusRange([0, c],true);
+            update({ loopLifecycle: c });
+          }}
         />
       </label>
       {/* Advanced Section Toggle Button */}
@@ -307,7 +317,12 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 export default function CyberSpaghettiControls() {
   return <AssetProvider>
     <ControlsProvider>
+      <TimelineProvider
+       shouldCreate={false}
+       defaultName={"liquidlissajous.timeline"}
+      >
       <CyberSpaghettiExterior />
+            </TimelineProvider>
     </ControlsProvider>
   </AssetProvider>;
 }

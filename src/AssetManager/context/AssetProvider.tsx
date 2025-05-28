@@ -116,7 +116,7 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     }
 
     const keys = Object.keys(payload);
-    if (Object.keys(unitCallbackManager.callbacks).some(k => keys.includes(k))) {
+    if (keys.some(k => unitCallbackManager.callbacks.has(k))) {
       const first = keys.find(k => unitCallbackManager.callbacks.has(k));
       if (first) {
         const callback = unitCallbackManager.callbacks.get(first);
@@ -129,8 +129,6 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     }
 
     /* regular payload: broadcast to every manager */
-    //console.log("payload", payload);
-    //console.log(managersRef.current);
     managersRef.current.forEach(m => m.handleEvent(sender, payload, workload));
     workload.dispatch();
   });

@@ -50,6 +50,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
     const unitCallbackManager = useUnitCallbacks();
     useEffect(() => {
         unitCallbackManager.registerCallback("beginRender", (payload, workload) => {
+
             if (payload.type === "imseq") {
                 frameSaver.beginImSeq();
                 recordEvent({ path: "liquidlissajous-renderframes", event: true });
@@ -74,7 +75,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         top: 0,
         left: 0,
         width: "100%",
-        height: "100%",
+        height: "calc(100% - 60px)",
         display: "flex",
         justifyContent: "flex-start",
         alignItems: "flex-start",
@@ -83,6 +84,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         <Button
             onClick={() => {
                 const w = FreeWorkload();
+                w.setMetadata("recording", false);
                 w.thread("default").worker(globalThis.CK_INSTANCE, {
                     beginRender: {
                         type: "imseq"
@@ -99,6 +101,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         {   videoEncoderAvailable && <Button
             onClick={() => {
                 const w = FreeWorkload();
+                w.setMetadata("recording", false);
                 w.thread("default").worker(globalThis.CK_INSTANCE, {
                     beginRender: {
                         type: "mp4"

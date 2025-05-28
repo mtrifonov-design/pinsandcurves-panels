@@ -5,7 +5,7 @@ import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen';
 import useGoatCounter from '../hooks/useGoatCounter';
 import { WebGL2Renderer } from './backends/webgl2/renderer.js';
-
+import TimelineBar from './TimelineBar.js';
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
 
 export default function LiquidLissajousInterior({ timeline, controls }: any) {
@@ -29,7 +29,7 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
         const canvas = canvasRef.current;
         canvas.width = width;
         canvas.height = height;
-    }, [width,height,canvasRef])
+    }, [width, height, canvasRef])
 
     useEffect(() => {
         function resizeCanvasToFit(container, canvas, aspectRatio) {
@@ -60,7 +60,7 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
         return () => {
             window.removeEventListener('resize', handleResize);
         }
-    }, [width,height])
+    }, [width, height])
 
     const frameSaverRef = useRef(new FrameSaver({
         timeline,
@@ -100,19 +100,40 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
     }
 
     return <div
-        ref={containerRef}
+
         style={{
             width: "100vw",
             height: "100vh",
             backgroundColor: "var(--gray1)",
             position: "relative",
         }}>
-        <canvas ref={canvasRef} style={{
+        <div ref={containerRef}
+            style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "calc(100% - 60px)",
+            }}
+        >
+            <canvas ref={canvasRef} style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+            }} />
+        </div>
+
+        <div style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-        }} />
+            bottom: 0,
+            left: 0,
+            width: "100%",
+            height: "60px",
+            backgroundColor: "var(--gray2)",
+        }}>
+            <TimelineBar timeline={timeline} />
+        </div>
         <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} />
     </div>
 }

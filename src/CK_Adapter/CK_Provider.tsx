@@ -9,7 +9,7 @@ const CK_Context = createContext<{
 function CK_Provider(p: { 
     renderedCallback: () => void,
     onUnit: (callback: OnUnit) => void,
-    pushWorkload: (workload: any) => void,
+    pushWorkload: (workload: any, metadata:any) => void,
     children: React.ReactNode
 }) {
 
@@ -20,8 +20,8 @@ function CK_Provider(p: {
     }
   }, []);
 
-  const FreeWorkload = () => new CK_Workload_Class((w) => {
-    p.pushWorkload(w);
+  const FreeWorkload = () => new CK_Workload_Class((w,m) => {
+    p.pushWorkload(w,m);
   });
 
   return (
