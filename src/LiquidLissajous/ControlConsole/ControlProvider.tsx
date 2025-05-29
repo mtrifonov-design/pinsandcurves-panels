@@ -38,7 +38,7 @@ function ControlsProvider({
                         metadata: {
                             type: "controls",
                             name: "liquidlissajous.controls",
-                            preferredEditorAddress: CONFIG.SELF_HOST + "cyberspaghetti-controlconsole",
+                            preferredEditorAddress: CONFIG.SELF_HOST + "liquidlissajous-controlconsole",
                         },
                         on_update: {
                             type: "simple",

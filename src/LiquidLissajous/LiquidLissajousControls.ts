@@ -22,13 +22,30 @@ class Controls {
 
     setData(data : ControlsData) {
         this.data = data;
-        this.#notifyInternalSubscribers();
+        //this.#notifyInternalSubscribers();
         this.#notifyExternalSubscribers();
     }
 
+    externalState: string = crypto.randomUUID();
     receiveExternalUpdate(update : ControlsData) {
         this.data = update
+        this.externalState = crypto.randomUUID();
+        this.#notifyExternalStateSubscribers();
         this.#notifyInternalSubscribers();
+    }
+
+    #externalStateSubscribers = [];
+    subscribeToExternalState(cb: () => void) {
+        this.#externalStateSubscribers.push(cb);
+        return () => {
+            this.#externalStateSubscribers = this.#externalStateSubscribers.filter((c) => c !== cb);
+        }
+    }
+    #notifyExternalStateSubscribers() {
+        this.#externalStateSubscribers.forEach((cb) => cb());
+    }
+    getExternalState() {
+        return this.externalState;
     }
 
     #internalSubscribers = [];
@@ -39,6 +56,7 @@ class Controls {
         }
     }
     #notifyInternalSubscribers() {
+        console.log("Internal subscribers count:", this.#internalSubscribers);
         this.#internalSubscribers.forEach((cb) => cb());
     }
 

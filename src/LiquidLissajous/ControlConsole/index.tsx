@@ -22,6 +22,11 @@ export function CyberSpaghettiControlsInterior({
     controls.getSnapshot.bind(controls)
   ) as AdvancedControls;
 
+  const externalState = useSyncExternalStore(
+    controls.subscribeToExternalState.bind(controls),
+    controls.getExternalState.bind(controls)
+  );
+
   const timeline = useTimeline();
 
 
@@ -92,6 +97,7 @@ export function CyberSpaghettiControlsInterior({
             max={1920 * 2}
             step={10}
             onChange={c => update({ width: c })}
+            key={externalState+"w"}
           />
           <span style={{ margin: '0 0.5rem' }}>x</span>
           <NumberInput
@@ -100,6 +106,7 @@ export function CyberSpaghettiControlsInterior({
             max={1080 * 2}
             step={10}
             onChange={c => update({ height: c })}
+                      key={externalState+"h"}
           />
         </div>
       </label>
@@ -117,6 +124,7 @@ export function CyberSpaghettiControlsInterior({
           max={1}
           step={0.01}
           onChange={c => update({ mixingIntensity: c })}
+                    key={externalState}
         />
       </label>
       {/* Colours */}
@@ -175,6 +183,7 @@ export function CyberSpaghettiControlsInterior({
             timeline?.projectTools.updateFocusRange([0, c],true);
             update({ loopLifecycle: c });
           }}
+                      key={externalState}
         />
       </label>
       {/* Advanced Section Toggle Button */}
@@ -246,6 +255,7 @@ export function CyberSpaghettiControlsInterior({
               ]}
               value={state.offset}
               onChange={v => update({ offset: v })}
+
             />
           </div>
           {/* Ratio selection */}
