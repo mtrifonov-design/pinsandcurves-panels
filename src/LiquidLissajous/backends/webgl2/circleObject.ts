@@ -46,7 +46,7 @@ export function circleDraw(particleSystem) {
     const { x, y, r, g, b } = particle;
     offsetArr.push(x / particleSystem.WIDTH * 2 - 1); // map to -1..1
     offsetArr.push(y / particleSystem.HEIGHT * 2 - 1); // map to -1..1
-    const pixelRadius = 20;
+    const pixelRadius = 12;
     const radius = (pixelRadius*2) / (particleSystem.WIDTH); // map to -1..1
     radiusArr.push(radius); // fixed radius
     colorArr.push(r,g,b); // RGB color

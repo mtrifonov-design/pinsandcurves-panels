@@ -63,7 +63,7 @@ export function pathDraw(particleSystem: ParticleSystemWithPath) {
   const endArr = [];
   const colorArr = [];
   const thicknessArr = [];
-  const thickness = 0.01; // in clip-space units, adjust as needed
+  const thickness = 0.005; // in clip-space units, adjust as needed
   for (let i = 0; i < path.length - 1; i++) {
     // Map to clip space (-1..1)
     const [x,y] = path[i];
