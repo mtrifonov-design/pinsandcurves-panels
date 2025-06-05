@@ -7,8 +7,10 @@ import React, {
   useState,
 } from "react";
 import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
-import { useUnit } from "../../hooks";
+//import { useUnit } from "../../hooks";
 import { useCK } from "../../CK_Adapter/CK_Provider";
+import { useUnit } from "../../CK_Adapter/CK_UnitProvider";
+
 /* ——————————————————————————————————————————————————————— */
 /* Registry: keeps track of *all* managers created by hooks */
 /* ——————————————————————————————————————————————————————— */
@@ -26,20 +28,20 @@ export const AssetManagerContext = createContext<Registry | null>(null);
 const INITContext = createContext<any>(null);
 
 
-class UnitCallbackManger {
-  callbacks: Map<string, (payload: any, workload: any) => void> = new Map();
-  registerCallback(
-    callbackId: string,
-    callback: (payload: any, workload: any) => void,
-  ) {
-    this.callbacks.set(callbackId, callback);
-  }
-  unregisterCallback(callbackId: string) {
-    this.callbacks.delete(callbackId);
-  }
-}
+// class UnitCallbackManger {
+//   callbacks: Map<string, (payload: any, workload: any) => void> = new Map();
+//   registerCallback(
+//     callbackId: string,
+//     callback: (payload: any, workload: any) => void,
+//   ) {
+//     this.callbacks.set(callbackId, callback);
+//   }
+//   unregisterCallback(callbackId: string) {
+//     this.callbacks.delete(callbackId);
+//   }
+// }
 
-const UnitCallbackContext = React.createContext<UnitCallbackManger | null>(null);
+// const UnitCallbackContext = React.createContext<UnitCallbackManger | null>(null);
 
 export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   children,
@@ -65,17 +67,20 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   /* blocker bookkeeping for TERMINATE */
   const blockerIdRef = useRef<string | null>(null);
 
-  const UnitCallbackMangerRef = useRef<UnitCallbackManger>(
-    new UnitCallbackManger(),
-  );
-  const unitCallbackManager = UnitCallbackMangerRef.current;
-
   const currentWorkloadRef = useRef(null);
 
   /* forward every CK event to *all* registered managers */
-  useUnit((unit, workload) => {
+  useUnit((unit) => {
+    return "TERMINATE" in unit.payload
+    || "INIT" in unit.payload
+    || "receiveUpdate" in unit.payload
+    || "subscriptionConfirmation" in unit.payload
+    || "unsubscribeConfirmation" in unit.payload
+    || "getAssetResponse" in unit.payload
+    || "deleteNotification" in unit.payload
+    || "receiveMetadataUpdate" in unit.payload;
+  },(unit, workload) => {
     currentWorkloadRef.current = workload;
-    //////console.log("unit", unit);
     const { sender, payload } = unit;
     const { INIT, TERMINATE, blocker_id, payload: p, } = payload;
 
@@ -115,18 +120,6 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
       return;
     }
 
-    const keys = Object.keys(payload);
-    if (keys.some(k => unitCallbackManager.callbacks.has(k))) {
-      const first = keys.find(k => unitCallbackManager.callbacks.has(k));
-      if (first) {
-        const callback = unitCallbackManager.callbacks.get(first);
-        if (callback) {
-          callback(payload[first], workload);
-        }
-      }
-      workload.dispatch();
-      return;
-    }
 
     /* regular payload: broadcast to every manager */
     managersRef.current.forEach(m => m.handleEvent(sender, payload, workload));
@@ -134,24 +127,15 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   });
 
   return (
-    <UnitCallbackContext.Provider value={unitCallbackManager}>
       <AssetManagerContext.Provider value={registryRef.current}>
         <INITContext.Provider value={initState}>
           {children}
         </INITContext.Provider>
       </AssetManagerContext.Provider>
-      </UnitCallbackContext.Provider>
   );
 };
 
 
-export function useUnitCallbacks() {
-  const unitCallbackManager = useContext(UnitCallbackContext);
-  if (!unitCallbackManager) {
-    throw new Error("useUnitCallbacks must be used within AssetProvider");
-  }
-  return unitCallbackManager;
-}
 
 export function useInit() {
   const init = useContext(INITContext);

@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { HashRouter } from 'react-router';
 import CK_Adapter from './CK_Adapter/CK_Adapter.ts';
 import { CK_Provider } from './CK_Adapter/CK_Provider.tsx';
+import { CK_UnitProvider } from './CK_Adapter/CK_UnitProvider.tsx';
 
 new CK_Adapter((cb : () => void, onUnit : unknown, pushWorkload:unknown) => {
       const root = document.getElementById('root');
@@ -17,7 +18,9 @@ new CK_Adapter((cb : () => void, onUnit : unknown, pushWorkload:unknown) => {
                 onUnit={onUnit}
                 pushWorkload={pushWorkload}
               >
-                <App renderedCallback={cb} />
+                <CK_UnitProvider>
+                  <App renderedCallback={cb} />
+                </CK_UnitProvider>
               </CK_Provider>
             </HashRouter>
           </StrictMode>,

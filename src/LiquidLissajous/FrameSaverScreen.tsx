@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
 import { Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
 import { useCK } from '../CK_Adapter/CK_Provider';
-import { useUnitCallbacks } from '../AssetManager/context/AssetProvider';
+import { useRegisterUnitProcessor, useUnit } from '../CK_Adapter/CK_UnitProvider';
+import { CK_Circuit } from '../CK_Adapter/CK_Circuit';
+import FrameSaver from './FrameSaver';
 
 function isBrowserKnownToWork(): boolean {
   const ua = navigator.userAgent;
@@ -18,22 +20,8 @@ function isBrowserKnownToWork(): boolean {
   return false;
 }
 
-
-// Add minimal types for frameSaver and event
-interface FrameSaverStatus {
-    rendering: boolean;
-    totalFrames: number;
-    renderedFrames: number;
-}
-
-interface FrameSaverLike {
-    subscribe: (cb: () => void) => () => void;
-    getStatus: () => FrameSaverStatus;
-    begin: () => void;
-}
-
 interface FrameSaverScreenProps {
-    frameSaver: FrameSaverLike;
+    frameSaver: FrameSaver;
     recordEvent: (event: { path: string; event: boolean }) => void;
 }
 
@@ -47,28 +35,30 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
     const videoEncoderAvailable = isBrowserKnownToWork();
 
     const { FreeWorkload } = useCK();
-    const unitCallbackManager = useUnitCallbacks();
-    useEffect(() => {
-        unitCallbackManager.registerCallback("beginRender", (payload, workload) => {
+    useUnit((unit) => {
+        return "beginRender" in unit.payload }, (unit, workload) => {
+            workload.thread("default").worker(globalThis.CK_INSTANCE, {
+                beginRender_response: true,
+            });
+            workload.dispatch();
 
-            if (payload.type === "imseq") {
-                frameSaver.beginImSeq();
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                setDisplayOverlay(true);
-            }
-            if (payload.type === "mp4") {
-                frameSaver.beginMp4();
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                setDisplayOverlay(true);
-            }
+            // const payload = unit.payload.beginRender;
+            // if (payload.type === "imseq") {
+            //     frameSaver.begin();
+            //     recordEvent({ path: "liquidlissajous-renderframes", event: true });
+            //     setDisplayOverlay(true);
+            // }
+            // if (payload.type === "mp4") {
+            //     frameSaver.begin();
+            //     recordEvent({ path: "liquidlissajous-renderframes", event: true });
+            //     setDisplayOverlay(true);
+            // }
+            // workload.dispatch();
         }
-        );
-        return () => {
-            unitCallbackManager.unregisterCallback("beginRender");
-        }
-    },[])
+    );
 
     const [displayOverlay, setDisplayOverlay] = React.useState(false);
+    const registerUnitProcessor = useRegisterUnitProcessor();
 
     return <div style={{
         position: "absolute",
@@ -82,18 +72,23 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
         padding: 10,
     }}>
         <Button
-            onClick={() => {
+            onClick={async () => {
                 const w = FreeWorkload();
                 w.setMetadata("recording", false);
-                w.thread("default").worker(globalThis.CK_INSTANCE, {
-                    beginRender: {
-                        type: "imseq"
-                    }
-                })
-                w.dispatch();
-                //recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                //frameSaver.beginImSeq();
-                //setDisplayOverlay(true);
+                // w.thread("default").worker(globalThis.CK_INSTANCE, {
+                //     beginRender: {
+                //         type: "imseq"
+                //     }
+                // })
+                // w.dispatch();
+
+                const c = new CK_Circuit(registerUnitProcessor, w);
+                await c.instance(globalThis.CK_INSTANCE).call("beginRender");
+                c.complete();
+                frameSaver.beginImSeq();
+                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                setDisplayOverlay(true);
+
             }}
             text={"export image sequence"}
             iconName="animated_images"
@@ -102,15 +97,19 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
             onClick={() => {
                 const w = FreeWorkload();
                 w.setMetadata("recording", false);
-                w.thread("default").worker(globalThis.CK_INSTANCE, {
-                    beginRender: {
-                        type: "mp4"
-                    }
-                })
-                w.dispatch();
-                //recordEvent({ path: "liquidlissajous-renderframes", event: true });
-                //frameSaver.beginMp4();
-                //setDisplayOverlay(true);
+                // w.thread("default").worker(globalThis.CK_INSTANCE, {
+                //     beginRender: {
+                //         type: "mp4"
+                //     }
+                // })
+                // w.dispatch();
+
+                const c = new CK_Circuit(registerUnitProcessor, w);
+                c.instance(globalThis.CK_INSTANCE).call("beginRender");
+                c.complete();
+                frameSaver.beginMp4();
+                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                setDisplayOverlay(true);
             }}
             text={"export as .mp4"}
             iconName="movie"
