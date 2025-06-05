@@ -38,6 +38,10 @@ class CK_Circuit {
     instance(instance : CK_Instance) {
         return new CK_Circuit_Instance(instance, this);
     }
+
+    thread(threadId: string) {
+        return this.workload.thread(threadId);
+    }
 }
 
 class CK_Circuit_Instance {
