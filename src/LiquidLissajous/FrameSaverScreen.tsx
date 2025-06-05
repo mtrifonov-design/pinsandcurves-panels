@@ -94,7 +94,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
             iconName="animated_images"
         />
         {   videoEncoderAvailable && <Button
-            onClick={() => {
+            onClick={async () => {
                 const w = FreeWorkload();
                 w.setMetadata("recording", false);
                 // w.thread("default").worker(globalThis.CK_INSTANCE, {
@@ -105,7 +105,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
                 // w.dispatch();
 
                 const c = new CK_Circuit(registerUnitProcessor, w);
-                c.instance(globalThis.CK_INSTANCE).call("beginRender");
+                await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
                 frameSaver.beginMp4();
                 recordEvent({ path: "liquidlissajous-renderframes", event: true });
