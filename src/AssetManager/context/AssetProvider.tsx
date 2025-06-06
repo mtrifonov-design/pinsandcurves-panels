@@ -37,16 +37,15 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     const vertexId = unit.payload.payload.vertexId;
     const c = new CK_Circuit(registerUnitProcessor, workload);
     await subscriptionManager.init(vertexId, c);
-    console.log("init complete")
     c.complete();
   });
 
   useUnit((unit) => {
     return "TERMINATE" in unit.payload
   }, async (unit, workload) => {
-    const blockerId = unit.payload.payload.blocker_id;
+    const blockerId = unit.payload.blocker_id;
     const c = new CK_Circuit(registerUnitProcessor, workload);
-    await subscriptionManager.terminate(blockerId, c);
+    await subscriptionManager.terminate(c);
     c.thread("default").blocker(blockerId, 2);
     c.complete();
   });

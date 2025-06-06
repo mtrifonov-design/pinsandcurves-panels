@@ -83,6 +83,7 @@ class CK_Adapter {
             },
           }, "*");
         }
+        // console.log("CK_Adapter: computeUnit", unit);
         const newWorkload = new CK_Workload_Class(onDispatch);
         this.unitCallback(unit, newWorkload);
         return;

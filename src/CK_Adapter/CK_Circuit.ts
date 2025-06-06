@@ -22,6 +22,8 @@ class CK_Circuit {
                 (unit, workload) => {
                     this.workload = workload;
                     callback(unit.payload[responseRoute]);
+                    this.registeredRoutes[route]();
+                    delete this.registeredRoutes[route];
                 }
             );
         }

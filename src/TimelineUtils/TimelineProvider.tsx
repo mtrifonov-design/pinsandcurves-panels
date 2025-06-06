@@ -58,16 +58,8 @@ class TController {
   }
   update: (u: any) => void;
   updateMetadata: (m: any) => void;
-  create: (c: any) => void;
-  delete: (d: any) => void;
-  subscribe: (s: any) => void;
-  unsubscribe: (u: any) => void;
   setHooks(hooks) {
     this.update = hooks.update;
-    this.create = hooks.create;
-    this.delete = hooks.delete;
-    this.subscribe = hooks.subscribe;
-    this.unsubscribe = hooks.unsubscribe;
     this.updateMetadata = hooks.updateMetadata;
   }
 }
