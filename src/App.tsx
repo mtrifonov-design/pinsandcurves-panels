@@ -13,6 +13,7 @@ import CyberSpaghetti from './CyberSpaghetti/CyberSpaghetti';
 import CyberSpaghettiControlConsole from './CyberSpaghetti/ControlConsole';
 import LiquidLissajous from './LiquidLissajous/LiquidLissajous';
 import LiquidLissajousControlConsole from './LiquidLissajous/ControlConsole';
+import AssetTestPanel from './AssetManager/testPanel/AssetTestPanel';
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -30,6 +31,7 @@ function App(p: { renderedCallback: Function }) {
       <StyleProvider>
         <Routes>
           <Route path="/" element={<Default />} />
+          <Route path="/asset-test-panel" element={<AssetTestPanel />} />
           <Route path="/signals" element={<SignalList />} />
           <Route path="/editing" element={<EditingArea />} />
           {/* <Route path="/p5" element={<P5JSCanvas />} /> */}

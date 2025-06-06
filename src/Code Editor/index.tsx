@@ -7,7 +7,7 @@ import { useAssets } from "../AssetManager/hooks/useAssets";
 import { AssetProvider } from "../AssetManager/context/AssetProvider";
 import { useIndex } from "../AssetManager/hooks/useIndex";
 import ReturnBar from "./ReturnBar";
-import { useInit } from "../AssetManager/context/AssetProvider";
+//import { useInit } from "../AssetManager/context/AssetProvider";
 import { CanvasCodeEditor } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
 
 class TextController {

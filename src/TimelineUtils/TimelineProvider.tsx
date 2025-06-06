@@ -87,7 +87,6 @@ function TimelineProvider({
 }) {
 
   const { initialized: indexInitialized, index } = useIndex();
-
   const tController = useRef(new TController())
   const timelineAssets = indexInitialized ? Object.entries(index.data)
     .filter(([assetId, assetMetadata]) => assetMetadata.type === "timeline")
@@ -99,6 +98,7 @@ function TimelineProvider({
 
   useEffect(() => {
     if (indexInitialized && (assetId === undefined) && shouldCreate) {
+      console.log("Creating default timeline asset");
       const workload = FreeWorkload();
       workload.thread("default").worker({
         instance_id: "ASSET_SERVER",

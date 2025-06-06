@@ -4,7 +4,7 @@ import React, {
   useRef,
   PropsWithChildren,
 } from "react";
-import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
+import { SubscriptionManager } from "../SubscriptionManager";
 import { useCK } from "../../CK_Adapter/CK_Provider";
 import { useRegisterUnitProcessor, useUnit } from "../../CK_Adapter/CK_UnitProvider";
 import { CK_Circuit } from "../../CK_Adapter/CK_Circuit";
@@ -22,27 +22,28 @@ export const AssetManagerContext = createContext<AssetProviderContext | null>(nu
 export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   children,
 }) => {
-  const subscriptionManagerRef = useRef<SubscriptionManager>(new SubscriptionManager());
+  const registerUnitProcessor = useRegisterUnitProcessor();
+  const { FreeWorkload } = useCK();
+  const subscriptionManagerRef = useRef<SubscriptionManager>(new SubscriptionManager(FreeWorkload, registerUnitProcessor));
   const subscriptionManager = subscriptionManagerRef.current;
   const assets = useSyncExternalStore(
-    subscriptionManager.subscribe,
-    subscriptionManager.getSnapshot
+    subscriptionManager.subscribe.bind(subscriptionManager),
+    subscriptionManager.getSnapshot.bind(subscriptionManager),
   )
-
-  const registerUnitProcessor = useRegisterUnitProcessor();
 
   useUnit((unit) => {
     return "INIT" in unit.payload
-  },async (unit, workload) => {
+  }, async (unit, workload) => {
     const vertexId = unit.payload.payload.vertexId;
     const c = new CK_Circuit(registerUnitProcessor, workload);
     await subscriptionManager.init(vertexId, c);
+    console.log("init complete")
     c.complete();
   });
 
   useUnit((unit) => {
     return "TERMINATE" in unit.payload
-  },async (unit, workload) => {
+  }, async (unit, workload) => {
     const blockerId = unit.payload.payload.blocker_id;
     const c = new CK_Circuit(registerUnitProcessor, workload);
     await subscriptionManager.terminate(blockerId, c);
@@ -50,12 +51,13 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     c.complete();
   });
 
+
   return (
-      <AssetManagerContext.Provider value={{
-        assets,
-        submitAssetIdDiffs: subscriptionManager.submitAssetIdDiffs.bind(subscriptionManager),
-      }}>
-          {children}
-      </AssetManagerContext.Provider>
+    <AssetManagerContext.Provider value={{
+      assets,
+      submitAssetIdDiffs: subscriptionManager.submitAssetIdDiffs.bind(subscriptionManager),
+    }}>
+      {children}
+    </AssetManagerContext.Provider>
   );
 };

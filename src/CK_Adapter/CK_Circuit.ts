@@ -15,9 +15,9 @@ class CK_Circuit {
             const responseRoute = `${route}_response`;
             this.registeredRoutes[route] = this.registerUnitProcessor(
                 (unit) => unit.type === "worker" 
-                && unit.receiver.instance_id === instance.instance_id
-                && unit.receiver.resource_id === instance.resource_id
-                && unit.receiver.modality === instance.modality
+                && unit.sender.instance_id === instance.instance_id
+                && unit.sender.resource_id === instance.resource_id
+                && unit.sender.modality === instance.modality
                 && responseRoute in unit.payload,
                 (unit, workload) => {
                     this.workload = workload;

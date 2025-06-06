@@ -1,46 +1,50 @@
 import {
-    useContext,
-    useEffect,
-    useLayoutEffect,
-    useRef,
-    useSyncExternalStore,
-  } from "react";
-  import { AssetManagerContext } from "../context/AssetProvider";
-  import { SubscriptionManager } from "../subscriptions/SubscriptionManager";
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useSyncExternalStore,
+} from "react";
+import { AssetManagerContext } from "../context/AssetProvider";
+import { Asset, SubscriptionManager } from "../SubscriptionManager";
 import { useCK } from "../../CK_Adapter/CK_Provider";
-  
-  /** Hook signature stays the same, you pass any number of desired assets */
-  export function useAssets(
-    desired: { assetId: string; assetController: unknown }[]
-  ) {
-    const registry = useContext(AssetManagerContext);
-    if (!registry)
-      throw new Error("useAssets must be used inside an <AssetProvider>.");
 
-    const { FreeWorkload} = useCK();
-  
-    /* each hook call owns ONE manager instance */
-    const managerRef = useRef<SubscriptionManager>();
-    //console.log("useAssets", registry)
-    if (!managerRef.current) managerRef.current = new SubscriptionManager({FreeWorkload,vertexId: registry ? registry.vertexId : undefined});
-  
-    /* register / unregister exactly once */
-    useEffect(() => {
-      registry.register(managerRef.current!);
-      return () => registry.unregister(managerRef.current!);
-    }, [registry]);
-  
-    /* push desired list every render */
-    useLayoutEffect(() => {
-      managerRef.current!.setDesired(desired);
-    }, [desired] );
-  
-    /* React 18 external‑store glue */
-    const ext = useSyncExternalStore(
-      managerRef.current!.subscribe,
-      managerRef.current!.getSnapshot
-    );
-    return managerRef.current!.getAssetPresentation();
+/** Hook signature stays the same, you pass any number of desired assets */
+export function useAssets(
+  assetList: { assetId: string; assetController: unknown }[]
+) {
+  const { assets, submitAssetIdDiffs } = useContext(AssetManagerContext);
 
+  const lastAssetListRef = useRef<{ assetId: string; assetController: unknown }[]>(
+    []
+  );
+  useEffect(() => {
+
+    const lastAssetList = lastAssetListRef.current;
+    if (lastAssetList.length === assetList.length &&
+      lastAssetList.every((item, index) => item.assetId === assetList[index].assetId)) {
+      return; // No changes in the asset list
+    }
+    const outList = lastAssetListRef.current;
+    const inList = assetList;
+    submitAssetIdDiffs({ in: inList, out: outList });
+    lastAssetListRef.current = assetList;
+  }, [assetList, submitAssetIdDiffs, lastAssetListRef]);
+
+  const finalAssets = {}
+  let initialized = true;
+  for (let i = 0; i < assetList.length; i++) {
+    const { assetId } = assetList[i];
+    const asset = assets[assetId]
+    if (asset && asset.initialized) {
+      finalAssets[assetId] = asset.controller;
+    } else {
+      initialized = false;
+    }
   }
-  
+
+  return {
+    initialized: initialized,
+    assets: finalAssets,
+  };
+}
