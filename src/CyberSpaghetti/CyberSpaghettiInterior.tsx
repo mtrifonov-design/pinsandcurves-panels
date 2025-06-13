@@ -1,6 +1,5 @@
 import React, { useRef, useEffect, useSyncExternalStore } from 'react';
 import { ParticleSystem } from './core/ParticleSystem.js';
-import { WebGPURenderer } from './backends/webgpu/renderer.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen.js';
 import useGoatCounter from '../hooks/useGoatCounter.js';
