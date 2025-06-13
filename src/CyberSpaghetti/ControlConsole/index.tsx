@@ -5,6 +5,8 @@ import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import type { Controls } from '../CyberSpaghettiControls';
 import TimelineProvider from '../../TimelineUtils/TimelineProvider';
+import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
+import './CollapsibleSection/CollapsibleSection.css';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -38,21 +40,31 @@ export function CyberSpaghettiControlsInterior({
   };
 
   // Shared styles
-  const fieldsetStyle: React.CSSProperties = {
-    borderColor: 'var(--gray4)',
-    borderRadius: 'var(--borderRadiusSmall)',
-    padding: 8,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '0.75rem',
-    marginBottom: 16,
-  };
   const labelRowStyle: React.CSSProperties = {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: '0.75rem',
     marginBottom: 2,
+  };
+  const groupedRowStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between', // <-- add this for right-justified pairs
+    gap: '0.75rem',
+    marginBottom: 2,
+  };
+  const colorBoxStyle: React.CSSProperties = {
+    backgroundColor: 'var(--gray2)',
+    borderRadius: 'var(--borderRadiusSmall)',
+    padding: '0.5rem',
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8,
+    margin: '0.5rem 0',
+    alignItems: 'center',
   };
   const legendStyle: React.CSSProperties = {
     color: 'white',
@@ -82,19 +94,25 @@ export function CyberSpaghettiControlsInterior({
       <hr />
       {/* --- Composition --- */}
       <CollapsibleSection title="Composition">
-        <div style={labelRowStyle}>
+        <div style={groupedRowStyle}>
           <span>Canvas Size</span>
-          <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
-          <span style={{ margin: '0 0.5rem' }}>x</span>
-          <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
+            <span style={{ margin: '0 0.5rem' }}>x</span>
+            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
+          </div>
+        </div>
+        <div style={groupedRowStyle}>
+          <span>Center</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
+            <span style={{ margin: '0 0.5rem' }}>x</span>
+            <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })} key={externalState+"cy"} />
+          </div>
         </div>
         <div style={labelRowStyle}>
-          <span>Center X</span>
-          <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
-        </div>
-        <div style={labelRowStyle}>
-          <span>Center Y</span>
-          <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })} key={externalState+"cy"} />
+          <span>Num Rays</span>
+          <NumberInput initialValue={state.numRays} min={0} max={500} step={1} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
         </div>
         <div style={labelRowStyle}>
           <span>Inner Radius</span>
@@ -124,12 +142,8 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} onChange={v => update({ numCycles: v })} key={externalState+"nc"} />
         </div>
       </CollapsibleSection>
-      {/* --- Rays --- */}
-      <CollapsibleSection title="Rays - Global">
-        <div style={labelRowStyle}>
-          <span>Num Rays</span>
-          <NumberInput initialValue={state.numRays} min={0} max={500} step={1} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
-        </div>
+      {/* --- Rays - Appearance --- */}
+      <CollapsibleSection title="Rays - Appearance">
         <div style={labelRowStyle}>
           <span>Blend Mode</span>
           <SingleSelectButtonGroup options={[
@@ -137,18 +151,18 @@ export function CyberSpaghettiControlsInterior({
             { label: 'Additive', value: 'additive' },
           ]} value={state.blendMode} onChange={v => update({ blendMode: v as NewControls['blendMode'] })} />
         </div>
-        <div style={{ margin: '0.5rem 0' }}>
-          <div style={{ ...legendStyle, color: 'var(--gray5)', fontSize: '1rem', marginBottom: 4 }}>Ray Colors</div>
-          {state.rayColors.map((color, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <input type="color" value={color} onChange={e => updateColor(i, e.target.value)} style={{ width: 35, height: 35 }} />
-              <Icon iconName={"delete"} onClick={() => removeColor(i)} />
-            </div>
-          ))}
-          <Button text={"+ add color"} onClick={addColor} />
+        <div>
+          <span style={{ display: 'block', marginBottom: 4, color: 'var(--gray6)', fontWeight: 500 }}>Colors</span>
+          <div style={colorBoxStyle}>
+            {state.rayColors.map((color, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, border: '2px solid var(--gray4)', borderRadius: 'var(--borderRadiusSmall)', padding: '2px 8px' }}>
+                <input type="color" value={color} onChange={e => updateColor(i, e.target.value)} style={{ width: 35, height: 35, background: 'none', border: 'none' }} />
+                <Icon iconName={"delete"} onClick={() => removeColor(i)} />
+              </div>
+            ))}
+            <Button text={"+ add color"} onClick={addColor} />
+          </div>
         </div>
-      </CollapsibleSection>
-      <CollapsibleSection title="Rays - Appearance">
         <div style={labelRowStyle}>
           <span>Thickness</span>
           <NumberInput initialValue={state.thickness} min={0} max={1} step={0.01} onChange={v => update({ thickness: v })} key={externalState+"th"} />
@@ -222,40 +236,6 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
           />
         </div>
       ))}
-    </div>
-  );
-}
-
-function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false);
-  return (
-    <div style={{
-      borderRadius: 'var(--borderRadiusSmall)',
-      border: '2px solid var(--gray3)',
-      marginBottom: 16,
-      boxShadow: open ? '0 2px 8px 0 rgba(0,0,0,0.08)' : undefined,
-      transition: 'box-shadow 0.2s',
-    }}>
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          cursor: 'pointer',
-          padding: '0.5rem 1rem',
-          userSelect: 'none',
-        }}
-        onClick={() => setOpen(o => !o)}
-      >
-        <span style={{ color: 'white', fontSize: '1.15rem', fontWeight: 600, flex: 1 }}>{title}</span>
-        <span className="materialSymbols" style={{ fontSize: 30, color: 'var(--gray6)', marginLeft: 8 }}>
-          {open ? 'arrow_drop_up' : 'arrow_drop_down'}
-        </span>
-      </div>
-      {open && <div style={{ padding: '0.75rem 1rem 1rem 1rem',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '1rem',
-       }}>{children}</div>}
     </div>
   );
 }
