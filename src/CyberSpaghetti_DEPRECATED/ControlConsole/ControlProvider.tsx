@@ -42,14 +42,38 @@ function ControlsProvider({
                         },
                         on_update: {
                             type: "simple",
-                        },
-                        id: "cyberspaghetti.controls",
+                        }
                     },
                 },
             });
             workload.dispatch();
+            // globalThis.CK_ADAPTER.pushWorkload({
+            //     default: [{
+            //         type: "worker",
+            //         receiver: {
+            //             instance_id: "ASSET_SERVER",
+            //             modality: "wasmjs",
+            //             resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+            //         },
+            //         payload: {
+            //             createAsset: {
+            //                 asset: {
+            //                     data: Controls.defaultControls,
+            //                     metadata: {
+            //                         type: "controls",
+            //                         name: "cyberspaghetti.controls",
+            //                         preferredEditorAddress: CONFIG.SELF_HOST + "cyberspaghetti-controlconsole",
+            //                     },
+            //                     on_update: {
+            //                         type: "simple",
+            //                     }
+            //                 },
+            //             },
+            //         },
+            //     }],
+            // });
         }
-    }, [indexInitialized, assetId, FreeWorkload]);
+    }, [assetId, indexInitialized]);
 
 
     const { initialized: assetsInitialized, assets } = useAssets(timelineAssets);

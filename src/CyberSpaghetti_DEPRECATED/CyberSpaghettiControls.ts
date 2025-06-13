@@ -1,17 +1,15 @@
 
 type ControlsData = {
-    particleCount: number;
-    mixingIntensity: number;
-    particleColors: [number, number, number][];
-    loopLifecycle: number,
-    showLissajousFigure: boolean;
-    ratioA: number;
-    ratioB: number;
-    offset: number;
-    width: number;
-    height: number;
-    figureScaleX: number;
-    figureScaleY: number;
+    centerX: number;
+    centerY: number;
+    backgroundColor: [number, number, number];
+    maxRays: number;
+    rayColors: [number, number, number][];
+    averageThickness: number;
+    thicknessVariance: number;
+    lifespan: number;
+    waveAmplitude: number;
+    waveFrequency: number;
 }
 
 class Controls {
@@ -22,30 +20,13 @@ class Controls {
 
     setData(data : ControlsData) {
         this.data = data;
-        //this.#notifyInternalSubscribers();
+        this.#notifyInternalSubscribers();
         this.#notifyExternalSubscribers();
     }
 
-    externalState: string = crypto.randomUUID();
     receiveExternalUpdate(update : ControlsData) {
         this.data = update
-        this.externalState = crypto.randomUUID();
-        this.#notifyExternalStateSubscribers();
         this.#notifyInternalSubscribers();
-    }
-
-    #externalStateSubscribers = [];
-    subscribeToExternalState(cb: () => void) {
-        this.#externalStateSubscribers.push(cb);
-        return () => {
-            this.#externalStateSubscribers = this.#externalStateSubscribers.filter((c) => c !== cb);
-        }
-    }
-    #notifyExternalStateSubscribers() {
-        this.#externalStateSubscribers.forEach((cb) => cb());
-    }
-    getExternalState() {
-        return this.externalState;
     }
 
     #internalSubscribers = [];
@@ -56,7 +37,6 @@ class Controls {
         }
     }
     #notifyInternalSubscribers() {
-        console.log("Internal subscribers count:", this.#internalSubscribers);
         this.#internalSubscribers.forEach((cb) => cb());
     }
 
@@ -76,22 +56,16 @@ class Controls {
     }
 
     static defaultControls = {
-        particleCount: 10,
-        particleColors: [
-            [255, 0, 0],
-            [0,255, 0],
-            [0, 0, 255],
-        ],
-        loopLifecycle: 300,
-        mixingIntensity: 0.3,
-        showLissajousFigure: false,
-        ratioA: 1,
-        ratioB: 2,
-        offset: Math.PI / 2,
-        width: 1920,
-        height: 1080,
-        figureScaleX: 0.2,
-        figureScaleY: 0.3,
+        centerX: 1920 /( 2),
+        centerY: 1080 /( 2),
+        backgroundColor: [0, 0, 0],
+        maxRays: 500,
+        rayColors: [[255, 255, 255]],
+        averageThickness: 2,
+        thicknessVariance: 1,
+        lifespan: 60,
+        waveAmplitude: 0,
+        waveFrequency: 0
     }
 }
 
@@ -120,8 +94,16 @@ export default class Controller {
     }
     update: (u: any) => void;
     updateMetadata: (m: any) => void;
+    create: (c: any) => void;
+    delete: (d: any) => void;
+    subscribe: (s: any) => void;
+    unsubscribe: (u: any) => void;
     setHooks(hooks) {
         this.update = hooks.update;
+        this.create = hooks.create;
+        this.delete = hooks.delete;
+        this.subscribe = hooks.subscribe;
+        this.unsubscribe = hooks.unsubscribe;
         this.updateMetadata = hooks.updateMetadata;
     }
 }

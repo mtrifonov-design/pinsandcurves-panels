@@ -3,113 +3,113 @@ import React, { useState, useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
-import hexToRgb, {rgbToHex} from '../core/hexToRgb';
+import hexToRgb, { rgbToHex } from '../core/hexToRgb';
+import type { Controls } from '../CyberSpaghettiControls';
+import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
 
-/**
- * Control panel for the “hyperspeed dwarf” ray-field effect.
- *
- * @param {object}   props
- * @param {object=}  props.settings   – initial settings (optional)
- * @param {function} props.onChange   – receives every settings mutation (optional)
- */
 export function CyberSpaghettiControlsInterior({
-    controls,
-}) {
-  const state = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
+  controls,
+}: { controls: Controls }) {
+  // Add missing fields to ControlsData for advanced controls
+  type AdvancedControls = ReturnType<Controls['getSnapshot']> & {
+    showLissajousFigure: boolean;
+    offset: number;
+    ratioA: number;
+    ratioB: number;
+  };
+  const state = useSyncExternalStore(
+    controls.subscribeInternal.bind(controls),
+    controls.getSnapshot.bind(controls)
+  ) as AdvancedControls;
 
-  /** Helpers to mutate state and notify the parent */
-  const update = patch => {
+  const externalState = useSyncExternalStore(
+    controls.subscribeToExternalState.bind(controls),
+    controls.getExternalState.bind(controls)
+  );
+
+  const timeline = useTimeline();
+
+
+  const update = (patch: Partial<AdvancedControls>) => {
     const next = { ...state, ...patch };
     controls.setData(next);
   };
 
-  const updateColor = (idx, value) => {
-    const colors = state.rayColors.slice();
-    colors[idx] = hexToRgb(value);
-    update({ rayColors: colors });
+  const updateColor = (idx: number, value: string) => {
+    const colors = state.particleColors.slice();
+    colors[idx] = hexToRgb(value) as [number, number, number];
+    update({ particleColors: colors });
   };
 
-  const addColor    = () => update({ rayColors: [...state.rayColors, [255,255,255]] });
-  const removeColor = idx => {
-    if (state.rayColors.length === 1) return;      // must keep ≥1 colour
-    update({ rayColors: state.rayColors.filter((_, i) => i !== idx) });
+  const addColor = () => update({ particleColors: [...state.particleColors, [255, 255, 255]] });
+  const removeColor = (idx: number) => {
+    if (state.particleColors.length === 1) return;
+    update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
-  const setBackgroundColor = value => {
-    const rgb = hexToRgb(value);
-    update({ backgroundColor: rgb });
-  };
+  // Advanced menu toggle state
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   return (
-    <div className="hyperspeed-controls" 
-        style={{ 
-            display: 'flex',
-            gap: '20px',
-            flexDirection: 'column',
-            backgroundColor: "var(--gray1)",
-            width: '100vw',
-            height: '100vh',
-            padding: '1rem',
-            color: 'var(--gray6)',
-            overflow: 'scroll',
-            scrollbarColor: 'var(--gray3) var(--gray1)',
-         }}
-    >
-      {/* Centre */}
-      <fieldset style={{
-        borderColor: 'var(--gray4)',
-        borderRadius: 'var(--borderRadiusSmall)',
+    <div className="hyperspeed-controls"
+      style={{
         display: 'flex',
-        flexDirection: 'row',
-        gap: '0.5rem',
-        justifyContent: 'flex-start',
+        gap: '20px',
+        flexDirection: 'column',
+        backgroundColor: "var(--gray1)",
+        width: '100vw',
+        height: '100vh',
+        padding: '1rem',
+        color: 'var(--gray6)',
+        overflow: 'scroll',
+        scrollbarColor: 'var(--gray3) var(--gray1)',
+      }}
+    >
+      <h2 style={{
+        color: 'var(--gray7)',
+        fontWeight: "normal",
       }}>
-        <legend>center point</legend>
-        <label>
-          X&nbsp;
-          <NumberInput
-                initialValue={state.centerX}
-                min={0}
-                max={1920}
-                step={5}
-                onChange={c => update({ centerX: c })}
-            />
-        </label>
-        <label>
-          Y&nbsp;
-          <NumberInput
-                initialValue={state.centerY}
-                min={0}
-                max={1080}
-                step={5}
-                onChange={c => update({ centerY: c })}
-            />
-        </label>
-      </fieldset>
+      Liquid Lissajous (Beta)
+      </h2>
+      <div>
+        Version 0.0.2. <a style={{
+          color: "var(--continuousBlue3)",
+          textDecoration: "underline",
+          cursor: "pointer",
+        }}
+          onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
+        >Watch tutorial</a>
+      </div>
+      <hr></hr>
 
-      {/* Background */}
+
       <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        background&nbsp;
-        <input
-              type="color"
-              style={{
-                border: "none",
-                backgroundColor: "var(--gray3)",
-                borderRadius: "var(--borderRadiusSmall)",
-                width: "35px",
-                height: "35px",
-              }}
-                value={rgbToHex(state.backgroundColor)}
-                onChange={e => setBackgroundColor(e.target.value)}
-                onBlur={e => setBackgroundColor(e.target.value)}
-            />
+        canvas size &nbsp;
+        <div>
+          <NumberInput
+            initialValue={state.width}
+            min={100}
+            max={1920 * 2}
+            step={10}
+            onChange={c => update({ width: c })}
+            key={externalState+"w"}
+          />
+          <span style={{ margin: '0 0.5rem' }}>x</span>
+          <NumberInput
+            initialValue={state.height}
+            min={100}
+            max={1080 * 2}
+            step={10}
+            onChange={c => update({ height: c })}
+                      key={externalState+"h"}
+          />
+        </div>
       </label>
-
       {/* Global limits */}
       <label style={{
         display: 'flex',
@@ -117,41 +117,40 @@ export function CyberSpaghettiControlsInterior({
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        max rays&nbsp;
+        color mixing intensity &nbsp;
         <NumberInput
-                initialValue={state.maxRays}
-                min={0}
-                max={1000}
-                step={1}
-                onChange={c => update({ maxRays: c })}
-            />
-
+          initialValue={state.mixingIntensity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => update({ mixingIntensity: c })}
+                    key={externalState}
+        />
       </label>
-
       {/* Colours */}
       <fieldset
         style={{
-            borderColor: 'var(--gray4)',
-            borderRadius: 'var(--borderRadiusSmall)',
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'wrap',
-            gap: '0.5rem',
-            alignContent: 'center',
+          borderColor: 'var(--gray4)',
+          borderRadius: 'var(--borderRadiusSmall)',
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          alignContent: 'center',
         }}
       >
-        <legend>ray colours</legend>
-        {state.rayColors.map((c, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4,
+        <legend>particle colours</legend>
+        {state.particleColors.map((_, i) => (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 4,
             justifyContent: 'center',
             borderRadius: "var(--borderRadiusSmall)",
             border: "1px solid var(--gray3)",
             padding: "0.0rem 0.5rem",
-
-           }}>
+          }}>
             <input
               type="color"
-              value={rgbToHex(state.rayColors[i])}
+              value={rgbToHex(state.particleColors[i])}
               onChange={e => updateColor(i, e.target.value)}
               style={{
                 border: "none",
@@ -166,111 +165,174 @@ export function CyberSpaghettiControlsInterior({
         ))}
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
-
-      {/* Thickness */}
       <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        ray average thickness (°)&nbsp;
+        loop length (in frames) &nbsp;
         <NumberInput
-                initialValue={state.averageThickness}
-                min={0}
-                max={5}
-                step={0.1}
-                onChange={c => update({ averageThickness: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray thickness variance (°)&nbsp;
-        <NumberInput
-                initialValue={state.thicknessVariance}
-                min={0}
-                max={5}
-                step={0.1}
-                onChange={c => update({ thicknessVariance: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray wavyness amplitude (°)&nbsp;
-        <NumberInput
-                initialValue={state.waveAmplitude}
-                min={0}
-                max={90}
-                step={1}
-                onChange={c => update({ waveAmplitude: c })}
-            />
-      </label>
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray wavyness frequency &nbsp;
-        <NumberInput
-                initialValue={state.waveFrequency}
-                min={0}
-                max={150}
-                step={1}
-                onChange={c => update({ waveFrequency: c })}
-            />
-      </label>
-
-
-      {/* Lifespan */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        ray lifespan (frames)&nbsp;
-        <NumberInput
-                initialValue={state.lifespan}
-                min={0}
-                max={300}
-                step={1}
-                onChange={c => update({ lifespan: c })}
+          initialValue={state.loopLifecycle}
+          min={30}
+          max={900}
+          step={1}
+          onChange={c => {
+            update({ loopLifecycle: c })}}
+          onCommit={(c) => {
+            timeline?.projectTools.updateFocusRange([0, c],true);
+            update({ loopLifecycle: c });
+          }}
+                      key={externalState}
         />
       </label>
+      {/* Advanced Section Toggle Button */}
+      <div style={{ marginTop: 12, marginBottom: 0 }}>
+        <Button
+          iconName={showAdvanced ? 'expand_less' : 'expand_more'}
+          text={showAdvanced ? 'Hide advanced' : 'Show advanced'}
+          onClick={() => setShowAdvanced(v => !v)}
+          bgColor={showAdvanced ? 'var(--gray4)' : 'var(--gray2)'}
+          color={showAdvanced ? 'white' : 'var(--gray6)'}
+        />
+      </div>
+      {/* Advanced Section */}
+      {showAdvanced && (
+        <fieldset
+          style={{
+            borderColor: 'var(--gray4)',
+            borderRadius: 'var(--borderRadiusSmall)',
+            marginTop: 16,
+            padding: '0.5rem 1rem 1rem 1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '1rem',
+          }}
+        >
+          <legend>advanced</legend>
+          {/* Show Lissajous Figure Toggle */}
+          <div style={{}}>
+            <Button
+              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
+              text={state.showLissajousFigure ? 'Hide lissajous figure' : 'Show lissajous figure'}
+              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
+              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
+              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
+            />
+          </div>
+          {/* Offset selection */}
+
+          {/* <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>scale</div>
+            <div>
+              <NumberInput
+                initialValue={state.figureScaleX}
+                min={0.1}
+                max={1}
+                step={0.01}
+                onChange={c => update({ figureScaleX: c })}
+              />
+              <span style={{ margin: '0 0.5rem' }}>x</span>
+              <NumberInput
+                initialValue={state.figureScaleY}
+                min={0.1}
+                max={1}
+                step={0.01}
+                onChange={c => update({ figureScaleY: c })}
+              />
+            </div>
+          </div> */}
+
+          <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>offset</div>
+            <SingleSelectButtonGroup<number>
+              options={[
+                { label: 'π/8', value: Math.PI / 8 },
+                { label: 'π/4', value: Math.PI / 4 },
+                { label: 'π/2', value: Math.PI / 2 },
+                { label: '3/4π', value: 0.75 * Math.PI },
+                { label: '7/8π', value: 7 / 8 * Math.PI },
+              ]}
+              value={state.offset}
+              onChange={v => update({ offset: v })}
+
+            />
+          </div>
+          {/* Ratio selection */}
+          <div>
+            <div style={{ marginBottom: 4, fontSize: 13 }}>ratio</div>
+            <SingleSelectButtonGroup<string>
+              options={[
+                { label: '1:1', value: '1/1' },
+                { label: '1:2', value: '1/2' },
+                { label: '1:3', value: '1/3' },
+                { label: '2:3', value: '2/3' },
+                { label: '3:4', value: '3/4' },
+                { label: '3:5', value: '3/5' },
+                { label: '4:5', value: '4/5' },
+                { label: '5:6', value: '5/6' },
+              ]}
+              value={`${state.ratioA}/${state.ratioB}`}
+              onChange={v => {
+                const [a, b] = v.split('/').map(Number);
+                update({ ratioA: a, ratioB: b });
+              }}
+            />
+          </div>
+        </fieldset>
+      )}
     </div>
   );
 }
 
 function CyberSpaghettiExterior() {
-    const controls = useControls();
-
-    const ready = controls;
-    if (!ready) {
-        return <FullscreenLoader />
-    }
-
-    return <CyberSpaghettiControlsInterior controls={controls} />
+  const controls = useControls();
+  const ready = controls;
+  if (!ready) {
+    return <FullscreenLoader />
+  }
+  return <CyberSpaghettiControlsInterior controls={controls} />
 }
 
+interface SingleSelectOption<T> {
+  label: string;
+  value: T;
+}
+
+interface SingleSelectButtonGroupProps<T> {
+  options: SingleSelectOption<T>[];
+  value: T;
+  onChange: (value: T) => void;
+  style?: React.CSSProperties;
+}
+
+function SingleSelectButtonGroup<T extends string | number>({ options, value, onChange, style = {} }: SingleSelectButtonGroupProps<T>) {
+  return (
+    <div style={{ display: 'flex', gap: 8, ...style }}>
+      {options.map(opt => (
+        <div key={opt.value} style={{
+        }}>
+          <Button
+            text={opt.label}
+            onClick={() => onChange(opt.value)}
+            bgColor={value === opt.value ? 'var(--gray4)' : 'var(--gray2)'}
+            color={value === opt.value ? 'var(--gray8)' : 'var(--gray6)'}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function CyberSpaghettiControls() {
-
-
-    return <AssetProvider>
-            <ControlsProvider>
-                <CyberSpaghettiExterior />
-            </ControlsProvider>
-    </AssetProvider>;
+  return <AssetProvider>
+    <ControlsProvider>
+      <TimelineProvider
+       shouldCreate={false}
+       defaultName={"cyberspaghetti.timeline"}
+      >
+      <CyberSpaghettiExterior />
+            </TimelineProvider>
+    </ControlsProvider>
+  </AssetProvider>;
 }

@@ -1,24 +1,18 @@
 
 import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 import JSZip from "jszip";
-import { imagesToMp4 } from "./imagesToMp4";
 
 
 class FrameSaver {
-    #timeline: TimelineController.TimelineController;
-    #width: number;
-    #height: number;
-    #canvas: HTMLCanvasElement;
-    #anticipatedFrame: number;
-    #frames: any[] = [];
+    #timeline : TimelineController;
+    #width : number;    
+    #height : number;
+    #canvas : HTMLCanvasElement;
+    #anticipatedFrame : number;
+    #frames : any[] = [];
     constructor({ timeline, width, height }) {
         //console.log('FrameSaver', timeline, width, height);
         this.#timeline = timeline;
-        this.#width = width;
-        this.#height = height;
-    }
-
-    setSize(width: number, height: number) {
         this.#width = width;
         this.#height = height;
     }
@@ -59,7 +53,7 @@ class FrameSaver {
             this.#timeline.projectTools.updatePlayheadPosition(currentFrame + 1, true);
             this.#status = {
                 ...this.#status,
-                renderedFrames: this.#status.renderedFrames + 1,
+                renderedFrames: this.#status.renderedFrames + 1,    
             }
         } else {
             // finish rendering
@@ -76,67 +70,33 @@ class FrameSaver {
                 const fileName = 'frame' + String(index).padStart(5, '0') + '.png';
                 folder.file(fileName, bytes, { base64: true });
             });
-            if (this.#renderMode === "imseq") {
-                jszip.generateAsync({ type: 'blob' }).then(content =>  {
-                    const blobUrl = URL.createObjectURL(content);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = 'frames.zip';
-                    a.click();
-                    URL.revokeObjectURL(blobUrl);
-                    this.#status = {
-                        ...this.#status,
-                        renderedFrames: 0,
-                        totalFrames: 0,
-                        rendering: false,
-                    }
-                });
-            }
-            if (this.#renderMode === "mp4") {
-                const mp4 = imagesToMp4(this.#frames, {
-                    width: this.#width,
-                    height: this.#height,
-                    fps: 30,
-                }).then(mp4Blob => {
-                    const mp4BlobUrl = URL.createObjectURL(mp4Blob);
-                    const a = document.createElement('a');
-                    a.href = mp4BlobUrl;
-                    a.download = 'animation.mp4';
-                    a.click();
-                    URL.revokeObjectURL(mp4BlobUrl);
-                    this.#status = {
-                        ...this.#status,
-                        renderedFrames: 0,
-                        totalFrames: 0,
-                        rendering: false,
-                    }
-                })
-            }
+            jszip.generateAsync({ type: 'blob' }).then(function (content) {
+                const blobUrl = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = 'frames.zip';
+                a.click();
+                URL.revokeObjectURL(blobUrl);
+            });
             this.#frames = [];
             this.#anticipatedFrame = 0;
             this.#timeline.projectTools.updatePlayheadPosition(0, true);
             this.#rendering = false;
+            this.#status ={
+                ...this.#status,
+                renderedFrames: 0,
+                totalFrames: 0,
+                rendering: false,
+            }
         }
 
     }
 
-
-    #renderMode = 'imseq'; // or 'mp4'
-    beginImSeq() {
-        if (this.#rendering) return;
-        this.#renderMode = 'imseq';
-        this.begin();
-    }
-
-    beginMp4() {
-        if (this.#rendering) return;
-        this.#renderMode = 'mp4';
-        this.begin();
-    }
-
     #rendering = false;
     begin() {
+        if (this.#rendering) return;
         this.#rendering = true;
+
         const project = this.#timeline.getProject();
         const focusRange = project.timelineData.focusRange;
         this.#anticipatedFrame = focusRange[0];
