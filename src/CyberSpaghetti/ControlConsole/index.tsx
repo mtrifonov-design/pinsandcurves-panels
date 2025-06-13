@@ -1,54 +1,65 @@
 import { NumberInput, Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
-import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../CyberSpaghettiControls';
-import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
+import TimelineProvider from '../../TimelineUtils/TimelineProvider';
 
 export function CyberSpaghettiControlsInterior({
   controls,
 }: { controls: Controls }) {
-  // Add missing fields to ControlsData for advanced controls
-  type AdvancedControls = ReturnType<Controls['getSnapshot']> & {
-    showLissajousFigure: boolean;
-    offset: number;
-    ratioA: number;
-    ratioB: number;
-  };
+  type NewControls = ReturnType<Controls['getSnapshot']>;
   const state = useSyncExternalStore(
     controls.subscribeInternal.bind(controls),
     controls.getSnapshot.bind(controls)
-  ) as AdvancedControls;
+  ) as NewControls;
 
   const externalState = useSyncExternalStore(
     controls.subscribeToExternalState.bind(controls),
     controls.getExternalState.bind(controls)
   );
 
-  const timeline = useTimeline();
-
-
-  const update = (patch: Partial<AdvancedControls>) => {
+  const update = (patch: Partial<NewControls>) => {
     const next = { ...state, ...patch };
     controls.setData(next);
   };
 
+  // Color helpers for new rayColors (hex strings)
   const updateColor = (idx: number, value: string) => {
-    const colors = state.particleColors.slice();
-    colors[idx] = hexToRgb(value) as [number, number, number];
-    update({ particleColors: colors });
+    const colors = state.rayColors.slice();
+    colors[idx] = value;
+    update({ rayColors: colors });
   };
-
-  const addColor = () => update({ particleColors: [...state.particleColors, [255, 255, 255]] });
+  const addColor = () => update({ rayColors: [...state.rayColors, '#ffffff'] });
   const removeColor = (idx: number) => {
-    if (state.particleColors.length === 1) return;
-    update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
+    if (state.rayColors.length === 1) return;
+    update({ rayColors: state.rayColors.filter((_, i) => i !== idx) });
   };
 
-  // Advanced menu toggle state
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  // Shared styles
+  const fieldsetStyle: React.CSSProperties = {
+    borderColor: 'var(--gray4)',
+    borderRadius: 'var(--borderRadiusSmall)',
+    padding: 8,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    marginBottom: 16,
+  };
+  const labelRowStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: '0.75rem',
+    marginBottom: 2,
+  };
+  const legendStyle: React.CSSProperties = {
+    color: 'white',
+    fontSize: '1.15rem',
+    fontWeight: 600,
+    marginBottom: 8,
+  };
 
   return (
     <div className="hyperspeed-controls"
@@ -65,222 +76,113 @@ export function CyberSpaghettiControlsInterior({
         scrollbarColor: 'var(--gray3) var(--gray1)',
       }}
     >
-      <h2 style={{
-        color: 'var(--gray7)',
-        fontWeight: "normal",
-      }}>
-      Liquid Lissajous (Beta)
+      <h2 style={{ color: 'var(--gray7)', fontWeight: "normal" }}>
+        Cyber Spaghetti (New Controls)
       </h2>
-      <div>
-        Version 0.0.2. <a style={{
-          color: "var(--continuousBlue3)",
-          textDecoration: "underline",
-          cursor: "pointer",
-        }}
-          onClick={() => window.open("https://www.youtube.com/watch?v=ivXyCjc1SoM", "_blank")}
-        >Watch tutorial</a>
-      </div>
-      <hr></hr>
-
-
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        canvas size &nbsp;
-        <div>
-          <NumberInput
-            initialValue={state.width}
-            min={100}
-            max={1920 * 2}
-            step={10}
-            onChange={c => update({ width: c })}
-            key={externalState+"w"}
-          />
+      <hr />
+      {/* --- Composition --- */}
+      <CollapsibleSection title="Composition">
+        <div style={labelRowStyle}>
+          <span>Canvas Size</span>
+          <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
           <span style={{ margin: '0 0.5rem' }}>x</span>
-          <NumberInput
-            initialValue={state.height}
-            min={100}
-            max={1080 * 2}
-            step={10}
-            onChange={c => update({ height: c })}
-                      key={externalState+"h"}
-          />
+          <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
         </div>
-      </label>
-      {/* Global limits */}
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        color mixing intensity &nbsp;
-        <NumberInput
-          initialValue={state.mixingIntensity}
-          min={0}
-          max={1}
-          step={0.01}
-          onChange={c => update({ mixingIntensity: c })}
-                    key={externalState}
-        />
-      </label>
-      {/* Colours */}
-      <fieldset
-        style={{
-          borderColor: 'var(--gray4)',
-          borderRadius: 'var(--borderRadiusSmall)',
-          display: 'flex',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          gap: '0.5rem',
-          alignContent: 'center',
-        }}
-      >
-        <legend>particle colours</legend>
-        {state.particleColors.map((_, i) => (
-          <div key={i} style={{
-            display: 'flex', alignItems: 'center', gap: 4,
-            justifyContent: 'center',
-            borderRadius: "var(--borderRadiusSmall)",
-            border: "1px solid var(--gray3)",
-            padding: "0.0rem 0.5rem",
-          }}>
-            <input
-              type="color"
-              value={rgbToHex(state.particleColors[i])}
-              onChange={e => updateColor(i, e.target.value)}
-              style={{
-                border: "none",
-                backgroundColor: "var(--gray3)",
-                borderRadius: "var(--borderRadiusSmall)",
-                width: "35px",
-                height: "35px",
-              }}
-            />
-            <Icon iconName={"delete"} onClick={() => removeColor(i)} />
-          </div>
-        ))}
-        <Button text={"+ add colour"} onClick={addColor} />
-      </fieldset>
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        loop length (in frames) &nbsp;
-        <NumberInput
-          initialValue={state.loopLifecycle}
-          min={30}
-          max={900}
-          step={1}
-          onChange={c => {
-            update({ loopLifecycle: c })}}
-          onCommit={(c) => {
-            timeline?.projectTools.updateFocusRange([0, c],true);
-            update({ loopLifecycle: c });
-          }}
-                      key={externalState}
-        />
-      </label>
-      {/* Advanced Section Toggle Button */}
-      <div style={{ marginTop: 12, marginBottom: 0 }}>
-        <Button
-          iconName={showAdvanced ? 'expand_less' : 'expand_more'}
-          text={showAdvanced ? 'Hide advanced' : 'Show advanced'}
-          onClick={() => setShowAdvanced(v => !v)}
-          bgColor={showAdvanced ? 'var(--gray4)' : 'var(--gray2)'}
-          color={showAdvanced ? 'white' : 'var(--gray6)'}
-        />
-      </div>
-      {/* Advanced Section */}
-      {showAdvanced && (
-        <fieldset
-          style={{
-            borderColor: 'var(--gray4)',
-            borderRadius: 'var(--borderRadiusSmall)',
-            marginTop: 16,
-            padding: '0.5rem 1rem 1rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-          }}
-        >
-          <legend>advanced</legend>
-          {/* Show Lissajous Figure Toggle */}
-          <div style={{}}>
-            <Button
-              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
-              text={state.showLissajousFigure ? 'Hide lissajous figure' : 'Show lissajous figure'}
-              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
-              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
-              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
-            />
-          </div>
-          {/* Offset selection */}
-
-          {/* <div>
-            <div style={{ marginBottom: 4, fontSize: 13 }}>scale</div>
-            <div>
-              <NumberInput
-                initialValue={state.figureScaleX}
-                min={0.1}
-                max={1}
-                step={0.01}
-                onChange={c => update({ figureScaleX: c })}
-              />
-              <span style={{ margin: '0 0.5rem' }}>x</span>
-              <NumberInput
-                initialValue={state.figureScaleY}
-                min={0.1}
-                max={1}
-                step={0.01}
-                onChange={c => update({ figureScaleY: c })}
-              />
+        <div style={labelRowStyle}>
+          <span>Center X</span>
+          <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Center Y</span>
+          <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })} key={externalState+"cy"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Inner Radius</span>
+          <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Outer Radius</span>
+          <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Start Angle</span>
+          <NumberInput initialValue={state.startAngle} min={0} max={360} step={1} onChange={v => update({ startAngle: v })} key={externalState+"sa"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>End Angle</span>
+          <NumberInput initialValue={state.endAngle} min={0} max={360} step={1} onChange={v => update({ endAngle: v })} key={externalState+"ea"} />
+        </div>
+      </CollapsibleSection>
+      {/* --- Motion --- */}
+      <CollapsibleSection title="Motion">
+        <div style={labelRowStyle}>
+          <span>Ray Life (frames)</span>
+          <NumberInput initialValue={state.rayLife} min={0} max={300} step={1} onChange={v => update({ rayLife: v })} key={externalState+"rl"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Num Cycles</span>
+          <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} onChange={v => update({ numCycles: v })} key={externalState+"nc"} />
+        </div>
+      </CollapsibleSection>
+      {/* --- Rays --- */}
+      <CollapsibleSection title="Rays - Global">
+        <div style={labelRowStyle}>
+          <span>Num Rays</span>
+          <NumberInput initialValue={state.numRays} min={0} max={500} step={1} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Blend Mode</span>
+          <SingleSelectButtonGroup options={[
+            { label: 'Normal', value: 'normal' },
+            { label: 'Additive', value: 'additive' },
+          ]} value={state.blendMode} onChange={v => update({ blendMode: v as NewControls['blendMode'] })} />
+        </div>
+        <div style={{ margin: '0.5rem 0' }}>
+          <div style={{ ...legendStyle, color: 'var(--gray5)', fontSize: '1rem', marginBottom: 4 }}>Ray Colors</div>
+          {state.rayColors.map((color, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <input type="color" value={color} onChange={e => updateColor(i, e.target.value)} style={{ width: 35, height: 35 }} />
+              <Icon iconName={"delete"} onClick={() => removeColor(i)} />
             </div>
-          </div> */}
-
-          <div>
-            <div style={{ marginBottom: 4, fontSize: 13 }}>offset</div>
-            <SingleSelectButtonGroup<number>
-              options={[
-                { label: 'π/8', value: Math.PI / 8 },
-                { label: 'π/4', value: Math.PI / 4 },
-                { label: 'π/2', value: Math.PI / 2 },
-                { label: '3/4π', value: 0.75 * Math.PI },
-                { label: '7/8π', value: 7 / 8 * Math.PI },
-              ]}
-              value={state.offset}
-              onChange={v => update({ offset: v })}
-
-            />
-          </div>
-          {/* Ratio selection */}
-          <div>
-            <div style={{ marginBottom: 4, fontSize: 13 }}>ratio</div>
-            <SingleSelectButtonGroup<string>
-              options={[
-                { label: '1:1', value: '1/1' },
-                { label: '1:2', value: '1/2' },
-                { label: '1:3', value: '1/3' },
-                { label: '2:3', value: '2/3' },
-                { label: '3:4', value: '3/4' },
-                { label: '3:5', value: '3/5' },
-                { label: '4:5', value: '4/5' },
-                { label: '5:6', value: '5/6' },
-              ]}
-              value={`${state.ratioA}/${state.ratioB}`}
-              onChange={v => {
-                const [a, b] = v.split('/').map(Number);
-                update({ ratioA: a, ratioB: b });
-              }}
-            />
-          </div>
-        </fieldset>
-      )}
+          ))}
+          <Button text={"+ add color"} onClick={addColor} />
+        </div>
+      </CollapsibleSection>
+      <CollapsibleSection title="Rays - Appearance">
+        <div style={labelRowStyle}>
+          <span>Thickness</span>
+          <NumberInput initialValue={state.thickness} min={0} max={1} step={0.01} onChange={v => update({ thickness: v })} key={externalState+"th"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Feather</span>
+          <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Shape</span>
+          <SingleSelectButtonGroup options={[
+            { label: 'Constant', value: 'constant' },
+            { label: 'Tapered', value: 'tapered' },
+          ]} value={state.shape} onChange={v => update({ shape: v as NewControls['shape'] })} />
+        </div>
+      </CollapsibleSection>
+      <CollapsibleSection title="Rays - Distortion">
+        <div style={labelRowStyle}>
+          <span>Amplitude</span>
+          <NumberInput initialValue={state.amplitude} min={0} max={1} step={0.01} onChange={v => update({ amplitude: v })} key={externalState+"am"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Frequency</span>
+          <NumberInput initialValue={state.frequency} min={0} max={1} step={0.01} onChange={v => update({ frequency: v })} key={externalState+"fr"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Pattern</span>
+          <SingleSelectButtonGroup options={[
+            { label: 'Zigzag', value: 'zigzag' },
+            { label: 'Sine', value: 'sine' },
+            { label: 'Jitter', value: 'jitter' },
+          ]} value={state.pattern} onChange={v => update({ pattern: v as NewControls['pattern'] })} />
+        </div>
+      </CollapsibleSection>
     </div>
   );
 }
@@ -320,6 +222,40 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
           />
         </div>
       ))}
+    </div>
+  );
+}
+
+function CollapsibleSection({ title, children }: { title: string; children: React.ReactNode }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div style={{
+      borderRadius: 'var(--borderRadiusSmall)',
+      border: '2px solid var(--gray3)',
+      marginBottom: 16,
+      boxShadow: open ? '0 2px 8px 0 rgba(0,0,0,0.08)' : undefined,
+      transition: 'box-shadow 0.2s',
+    }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          cursor: 'pointer',
+          padding: '0.5rem 1rem',
+          userSelect: 'none',
+        }}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span style={{ color: 'white', fontSize: '1.15rem', fontWeight: 600, flex: 1 }}>{title}</span>
+        <span className="materialSymbols" style={{ fontSize: 30, color: 'var(--gray6)', marginLeft: 8 }}>
+          {open ? 'arrow_drop_up' : 'arrow_drop_down'}
+        </span>
+      </div>
+      {open && <div style={{ padding: '0.75rem 1rem 1rem 1rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+       }}>{children}</div>}
     </div>
   );
 }

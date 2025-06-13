@@ -1,17 +1,28 @@
-
 type ControlsData = {
-    particleCount: number;
-    mixingIntensity: number;
-    particleColors: [number, number, number][];
-    loopLifecycle: number,
-    showLissajousFigure: boolean;
-    ratioA: number;
-    ratioB: number;
-    offset: number;
-    width: number;
-    height: number;
-    figureScaleX: number;
-    figureScaleY: number;
+    // Composition
+    canvasWidth: number; // [0, 3840]
+    canvasHeight: number; // [0, 3840]
+    centerX: number; // [0.0, 1.0]
+    centerY: number; // [0.0, 1.0]
+    innerRadius: number; // [0.0, 1.0]
+    outerRadius: number; // [0.0, 1.0]
+    startAngle: number; // [0, 360]
+    endAngle: number; // [0, 360]
+    // Motion
+    rayLife: number; // [0, 300]
+    numCycles: number; // [1, 10]
+    // Rays - Global
+    numRays: number; // [0, 500]
+    rayColors: string[]; // array of color values (hex strings)
+    blendMode: 'normal' | 'additive';
+    // Rays - Appearance
+    thickness: number; // [0.0, 1.0]
+    feather: number; // [0.0, 1.0]
+    shape: 'constant' | 'tapered';
+    // Rays - Distortion
+    amplitude: number; // [0.0, 1.0]
+    frequency: number; // [0.0, 1.0]
+    pattern: 'zigzag' | 'sine' | 'jitter';
 }
 
 class Controls {
@@ -34,7 +45,7 @@ class Controls {
         this.#notifyInternalSubscribers();
     }
 
-    #externalStateSubscribers = [];
+    #externalStateSubscribers: Array<() => void> = [];
     subscribeToExternalState(cb: () => void) {
         this.#externalStateSubscribers.push(cb);
         return () => {
@@ -48,7 +59,7 @@ class Controls {
         return this.externalState;
     }
 
-    #internalSubscribers = [];
+    #internalSubscribers: Array<() => void> = [];
     subscribeInternal(cb: () => void) {
         this.#internalSubscribers.push(cb);
         return () => {
@@ -60,7 +71,7 @@ class Controls {
         this.#internalSubscribers.forEach((cb) => cb());
     }
 
-    #externalSubscribers = [];
+    #externalSubscribers: Array<() => void> = [];
     subscribeExternal(cb: () => void ) {
         this.#externalSubscribers.push(cb);
         return () => {
@@ -76,22 +87,25 @@ class Controls {
     }
 
     static defaultControls = {
-        particleCount: 10,
-        particleColors: [
-            [255, 0, 0],
-            [0,255, 0],
-            [0, 0, 255],
-        ],
-        loopLifecycle: 300,
-        mixingIntensity: 0.3,
-        showLissajousFigure: false,
-        ratioA: 1,
-        ratioB: 2,
-        offset: Math.PI / 2,
-        width: 1920,
-        height: 1080,
-        figureScaleX: 0.2,
-        figureScaleY: 0.3,
+        canvasWidth: 1920,
+        canvasHeight: 1080,
+        centerX: 0.5,
+        centerY: 0.5,
+        innerRadius: 0.2,
+        outerRadius: 0.8,
+        startAngle: 0,
+        endAngle: 360,
+        rayLife: 120,
+        numCycles: 3,
+        numRays: 100,
+        rayColors: ['#ff0000', '#00ff00', '#0000ff'],
+        blendMode: 'normal',
+        thickness: 0.5,
+        feather: 0.2,
+        shape: 'constant',
+        amplitude: 0.2,
+        frequency: 0.5,
+        pattern: 'sine',
     }
 }
 
@@ -103,7 +117,7 @@ export default class Controller {
         this.data = new Controls(data);
         this.data.subscribeExternal(() => {
             const update = this.data?.getSnapshot();
-            this.update(update);
+            if (update) this.update(update);
         })
         this.initialised = true;
     }
@@ -118,9 +132,9 @@ export default class Controller {
         this.data = undefined;
         this.initialised = false;
     }
-    update: (u: any) => void;
-    updateMetadata: (m: any) => void;
-    setHooks(hooks) {
+    update!: (u: ControlsData) => void;
+    updateMetadata!: (m: unknown) => void;
+    setHooks(hooks: { update: (u: ControlsData) => void; updateMetadata: (m: unknown) => void; }) {
         this.update = hooks.update;
         this.updateMetadata = hooks.updateMetadata;
     }
