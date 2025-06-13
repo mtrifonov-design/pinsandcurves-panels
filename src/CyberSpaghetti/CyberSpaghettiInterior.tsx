@@ -17,7 +17,7 @@ export default function CyberSpaghettiInterior({ timeline, controls }: any) {
     const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const timelineProject = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
 
-    const { width, height } = controlsSnapshot;
+    const { canvasWidth: width, canvasHeight: height } = controlsSnapshot;
 
     particleSystem.update(controlsSnapshot, timeline);
 
