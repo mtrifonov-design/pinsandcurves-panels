@@ -7,6 +7,7 @@ import type { Controls } from '../CyberSpaghettiControls';
 import TimelineProvider from '../../TimelineUtils/TimelineProvider';
 import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import './CollapsibleSection/CollapsibleSection.css';
+import hexToRgb from '../core/hexToRgb';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -28,12 +29,12 @@ export function CyberSpaghettiControlsInterior({
   };
 
   // Color helpers for new rayColors (hex strings)
-  const updateColor = (idx: number, value: string) => {
+  const updateColor = (idx: number, value: number[]) => {
     const colors = state.rayColors.slice();
     colors[idx] = value;
     update({ rayColors: colors });
   };
-  const addColor = () => update({ rayColors: [...state.rayColors, '#ffffff'] });
+  const addColor = () => update({ rayColors: [...state.rayColors, [255,255,255]] });
   const removeColor = (idx: number) => {
     if (state.rayColors.length === 1) return;
     update({ rayColors: state.rayColors.filter((_, i) => i !== idx) });
@@ -156,7 +157,7 @@ export function CyberSpaghettiControlsInterior({
           <div style={colorBoxStyle}>
             {state.rayColors.map((color, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, border: '2px solid var(--gray4)', borderRadius: 'var(--borderRadiusSmall)', padding: '2px 8px' }}>
-                <input type="color" value={color} onChange={e => updateColor(i, e.target.value)} style={{ width: 35, height: 35, background: 'none', border: 'none' }} />
+                <input type="color" value={color} onChange={e => updateColor(i, hexToRgb(e.target.value))} style={{ width: 35, height: 35, background: 'none', border: 'none' }} />
                 <Icon iconName={"delete"} onClick={() => removeColor(i)} />
               </div>
             ))}
@@ -178,8 +179,13 @@ export function CyberSpaghettiControlsInterior({
             { label: 'Tapered', value: 'tapered' },
           ]} value={state.shape} onChange={v => update({ shape: v as NewControls['shape'] })} />
         </div>
+        <div style={labelRowStyle}>
+          <span>Perspective Skew</span>
+          <NumberInput initialValue={state.perspectiveSkew} min={0} max={1} step={0.01} onChange={v => update({ perspectiveSkew: v })} key={externalState+"ps"} />
+        </div>
       </CollapsibleSection>
       <CollapsibleSection title="Rays - Distortion">
+
         <div style={labelRowStyle}>
           <span>Amplitude</span>
           <NumberInput initialValue={state.amplitude} min={0} max={1} step={0.01} onChange={v => update({ amplitude: v })} key={externalState+"am"} />

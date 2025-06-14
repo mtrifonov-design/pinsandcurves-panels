@@ -13,7 +13,7 @@ type ControlsData = {
     numCycles: number; // [1, 10]
     // Rays - Global
     numRays: number; // [0, 500]
-    rayColors: string[]; // array of color values (hex strings)
+    rayColors: number[][]; // array of color values (hex strings)
     blendMode: 'normal' | 'additive';
     // Rays - Appearance
     thickness: number; // [0.0, 1.0]
@@ -23,6 +23,7 @@ type ControlsData = {
     amplitude: number; // [0.0, 1.0]
     frequency: number; // [0.0, 1.0]
     pattern: 'zigzag' | 'sine' | 'jitter';
+    perspectiveSkew: number; // [0, 1.0]
 }
 
 class Controls {
@@ -98,7 +99,7 @@ class Controls {
         rayLife: 120,
         numCycles: 3,
         numRays: 100,
-        rayColors: ['#ff0000', '#00ff00', '#0000ff'],
+        rayColors: [[255,0,0]],
         blendMode: 'normal',
         thickness: 0.5,
         feather: 0.2,
@@ -106,6 +107,7 @@ class Controls {
         amplitude: 0.2,
         frequency: 0.5,
         pattern: 'sine',
+        perspectiveSkew: 0.1,
     }
 }
 

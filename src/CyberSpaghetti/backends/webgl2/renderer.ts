@@ -23,7 +23,7 @@ export class WebGL2Renderer {
 
     draw() {
         SimpleWebGL2.__begin__();
-        SimpleWebGL2.__drawobjectinstances__("circle", circleDraw());
+        SimpleWebGL2.__drawobjectinstances__("circle", circleDraw(this.particleSys));
         // SimpleWebGL2.__drawobjectinstances__("voronoiBG", gradientDraw(this.particleSys));
         // if (this.particleSys.SHOW_LISSAJOUS_FIGURE) {
         //     SimpleWebGL2.__drawobjectinstances__("path", pathDraw(this.particleSys));

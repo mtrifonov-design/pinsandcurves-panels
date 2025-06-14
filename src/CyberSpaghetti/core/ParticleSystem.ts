@@ -8,7 +8,7 @@ export class ParticleSystem {
     static HARD_MAX = 200;
     buffer: Float32Array;
     time: number;
-    CONFIG: ControlsData;
+    CONFIG: ControlsData = Controls.defaultControls;
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
