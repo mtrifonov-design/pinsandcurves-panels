@@ -26,7 +26,7 @@ out float v_offsetEnd;
 out float v_amplitude; // amplitude of the distortion
 out float v_frequency; // frequency of the distortion
 out float v_perspectiveSkew; // perspective skew factor
-out int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
+flat out int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
 void main() {
   // Compute line direction and perpendicular
   vec2 lA = linePointA;
@@ -75,7 +75,7 @@ in float v_offsetEnd;
 in float v_amplitude; // amplitude of the distortion
 in float v_frequency; // frequency of the distortion
 in float v_perspectiveSkew; // perspective skew factor
-in int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
+flat in int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
 out vec4 outColor;
 
 // Toggle bounding box display
@@ -138,11 +138,11 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
         offset = localAmp * sin(phaseT * frequency);
     } else if (type == 1) {
         // Zigzag (triangle wave)
-        float tri = abs(fract(phaseT / 3.14159265359) * 2.0 - 1.0) * 2.0 - 1.0;
+        float tri = abs(fract(phaseT * frequency / 3.14159265359) * 2.0 - 1.0) * 2.0 - 1.0;
         offset = localAmp * tri;
     } else if (type == 2) {
         // Electric (randomized jagged)
-        float s = sin(phaseT) * sin(3.7 * phaseT + 1.3) * sin(7.3 * phaseT + 2.1);
+        float s = sin(phaseT * frequency) * sin(3.7 * phaseT * frequency + 1.3) * sin(7.3 * phaseT * frequency + 2.1);
         offset = localAmp * s;
     }
     return vec2(x, y + offset);
@@ -216,7 +216,7 @@ const circleObject = {
                 { name: "amplitude", size: 1 },
                 { name: "frequency", size: 1 },
                 { name: "perspectiveSkew", size: 1 },
-                { name: "distortType", size: 1 }, // 0 = sine, 1 = zigzag, 2 = electric
+                { name: "distortType", size: 1, type:"int" }, // 0 = sine, 1 = zigzag, 2 = electric
             ],
             vertexShader: circleVS,
             fragmentShader: circleFS,
@@ -228,7 +228,7 @@ function getDistortType(pattern: string): number {
             return 0; // sine
         case "zigzag":
             return 1; // zigzag
-        case "electric":
+        case "jitter":
             return 2; // electric
         default:
             console.warn(`Unknown distortion pattern: ${pattern}, defaulting to sine.`);
@@ -253,7 +253,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
                 amplitude: new Float32Array([particleSystem.CONFIG.amplitude]),
                 frequency: new Float32Array([particleSystem.CONFIG.frequency]),
                 perspectiveSkew: new Float32Array([particleSystem.CONFIG.perspectiveSkew]),
-                distortType: new Float32Array([getDistortType(particleSystem.CONFIG.pattern)]), // 0 = sine, 1 = zigzag, 2 = electric
+                distortType: new Uint32Array([getDistortType(particleSystem.CONFIG.pattern)]), // 0 = sine, 1 = zigzag, 2 = electric
             },
         }
 }

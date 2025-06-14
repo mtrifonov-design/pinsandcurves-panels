@@ -27,6 +27,7 @@
 export interface InstanceAttribute {
   name: string;            // attribute name as used inside the shaders
   size: 1 | 2 | 3 | 4;     // vec size (# of floats)
+  type?: 'float' | 'int';  // optional: 'int' for integer attributes, default is 'float'
 }
 
 export interface DynamicDataDesc {
@@ -99,8 +100,9 @@ function __init__(canvas: HTMLCanvasElement): void {
 /*-------------------------- __defineobject__ -------------------------*/
 function __defineobject__(def: ObjectDefinition): void {
   if (!gl) throw new Error("Call __init__ first");
+  const glCtx = gl!; // Non-null assertion for the rest of the function
   if (objectTypes[def.name])
-    throw new Error(`Object type \"${def.name}\" already exists`);
+    throw new Error(`Object type "${def.name}" already exists`);
   if (!Array.isArray(def.instanceAttributes))
     throw new Error("instanceAttributes must be an array");
 
@@ -108,57 +110,63 @@ function __defineobject__(def: ObjectDefinition): void {
   const program = linkProgram(def.vertexShader, def.fragmentShader);
 
   /* 2.  Create static GPU resources */
-  const vao = gl.createVertexArray()!;
-  const vboQuad = gl.createBuffer()!;
-  const iboQuad = gl.createBuffer()!;
-  const instVBO = gl.createBuffer()!;
+  const vao = glCtx.createVertexArray()!;
+  const vboQuad = glCtx.createBuffer()!;
+  const iboQuad = glCtx.createBuffer()!;
+  const instVBO = glCtx.createBuffer()!;
 
   /* 3.  Upload a unit quad covering −1…1 in clip-space */
-  gl.bindBuffer(gl.ARRAY_BUFFER, vboQuad);
-  gl.bufferData(
-    gl.ARRAY_BUFFER,
+  glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vboQuad);
+  glCtx.bufferData(
+    glCtx.ARRAY_BUFFER,
     new Float32Array([ -1, -1,   1, -1,   1, 1,   -1, 1 ]),
-    gl.STATIC_DRAW,
+    glCtx.STATIC_DRAW,
   );
 
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboQuad);
-  gl.bufferData(
-    gl.ELEMENT_ARRAY_BUFFER,
+  glCtx.bindBuffer(glCtx.ELEMENT_ARRAY_BUFFER, iboQuad);
+  glCtx.bufferData(
+    glCtx.ELEMENT_ARRAY_BUFFER,
     new Uint16Array([ 0, 1, 2,   0, 2, 3 ]),
-    gl.STATIC_DRAW,
+    glCtx.STATIC_DRAW,
   );
 
   /* 4.  Configure VAO --------------------------------------------------*/
-  gl.bindVertexArray(vao);
+  glCtx.bindVertexArray(vao);
   // Bind element array inside VAO – avoids GL_INVALID_OPERATION later
-  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, iboQuad);
+  glCtx.bindBuffer(glCtx.ELEMENT_ARRAY_BUFFER, iboQuad);
 
   // Attribute 0 → vertex position (in vec2 a_pos)
-  const locPos = gl.getAttribLocation(program, "a_pos");
+  const locPos = glCtx.getAttribLocation(program, "a_pos");
   if (locPos < 0)
     throw new Error("vertex shader must declare 'in vec2 a_pos'");
 
-  gl.bindBuffer(gl.ARRAY_BUFFER, vboQuad);
-  gl.enableVertexAttribArray(locPos);
-  gl.vertexAttribPointer(locPos, 2, gl.FLOAT, false, 0, 0);
-  gl.vertexAttribDivisor(locPos, 0);  // per-vertex
+  glCtx.bindBuffer(glCtx.ARRAY_BUFFER, vboQuad);
+  glCtx.enableVertexAttribArray(locPos);
+  glCtx.vertexAttribPointer(locPos, 2, glCtx.FLOAT, false, 0, 0);
+  glCtx.vertexAttribDivisor(locPos, 0);  // per-vertex
 
   // Interleaved instance buffer
-  gl.bindBuffer(gl.ARRAY_BUFFER, instVBO);
+  glCtx.bindBuffer(glCtx.ARRAY_BUFFER, instVBO);
   const strideFloats = def.instanceAttributes.reduce((s, a) => s + a.size, 0);
   const strideBytes  = strideFloats * 4;
 
   let offsetBytes = 0;
   def.instanceAttributes.forEach(attr => {
-    const loc = gl!.getAttribLocation(program, attr.name);
+    const loc = glCtx.getAttribLocation(program, attr.name);
     if (loc < 0) throw new Error(`Shader missing attribute ${attr.name}`);
-    gl!.enableVertexAttribArray(loc);
-    gl!.vertexAttribPointer(loc, attr.size, gl.FLOAT, false, strideBytes, offsetBytes);
-    gl!.vertexAttribDivisor(loc, 1);          // per-instance
+    glCtx.enableVertexAttribArray(loc);
+    if (attr.type === 'int') {
+      // Integer attribute
+      glCtx.vertexAttribIPointer(loc, attr.size, glCtx.INT, strideBytes, offsetBytes);
+    } else {
+      // Default: float attribute
+      glCtx.vertexAttribPointer(loc, attr.size, glCtx.FLOAT, false, strideBytes, offsetBytes);
+    }
+    glCtx.vertexAttribDivisor(loc, 1);          // per-instance
     offsetBytes += attr.size * 4;
   });
 
-  gl.bindVertexArray(null);
+  glCtx.bindVertexArray(null);
 
   /* 5.  Optional dynamic-data texture ---------------------------------*/
   let dynTex: WebGLTexture | undefined;
@@ -215,30 +223,46 @@ function __begin__(): void {
 function __drawobjectinstances__(typeName: string, params: DrawParams): void {
   if (!gl) throw new Error("Call __init__ first");
   const type = objectTypes[typeName];
-  if (!type) throw new Error(`Unknown object type \"${typeName}\"`);
+  if (!type) throw new Error(`Unknown object type "${typeName}"`);
 
   const count = params.count | 0;
   if (count <= 0) return;
 
-  /* 1.  Build interleaved instance buffer */
-  const floatsPerInstance = type.attributes.reduce((s, a) => s + a.size, 0);
-  const interleaved = new Float32Array(count * floatsPerInstance);
+  const totalStride = type.stride;
+  const buffer = new ArrayBuffer(count * totalStride);
 
+  let offsetBytes = 0;
+  const attributeWriters = type.attributes.map(attr => {
+    const byteOffset = offsetBytes;
+    const entrySize = attr.size;
+    const write = attr.type === "int"
+      ? (view: DataView, val: Float32Array | Int32Array, offset: number) => {
+          for (let i = 0; i < entrySize; ++i)
+            view.setInt32(offset + i * 4, (val as Int32Array)[i], true);
+        }
+      : (view: DataView, val: Float32Array | Int32Array, offset: number) => {
+          for (let i = 0; i < entrySize; ++i)
+            view.setFloat32(offset + i * 4, (val as Float32Array)[i], true);
+        };
+    offsetBytes += entrySize * 4;
+    return { name: attr.name, byteOffset, entrySize, write };
+  });
+
+  const view = new DataView(buffer);
   for (let inst = 0; inst < count; ++inst) {
-    let cursor = inst * floatsPerInstance;
-    type.attributes.forEach(attr => {
+    const instOffset = inst * totalStride;
+    for (const attr of attributeWriters) {
       const src = params.attributes[attr.name];
-      if (!src)
-        throw new Error(`Missing attribute \"${attr.name}\" in draw params`);
-      interleaved.set(src.subarray(inst * attr.size, (inst + 1) * attr.size), cursor);
-      cursor += attr.size;
-    });
+      if (!src) throw new Error(`Missing attribute "${attr.name}" in draw params`);
+      const sub = src.subarray(inst * attr.entrySize, (inst + 1) * attr.entrySize);
+      attr.write(view, sub, instOffset + attr.byteOffset);
+    }
   }
 
   gl.bindBuffer(gl.ARRAY_BUFFER, type.instVBO);
-  gl.bufferData(gl.ARRAY_BUFFER, interleaved, gl.DYNAMIC_DRAW);
+  gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.DYNAMIC_DRAW);
 
-  /* 2.  Update dynamic texture (if used) */
+  // Optional texture update
   if (type.dynTex && params.dynamicData) {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, type.dynTex);
@@ -255,15 +279,13 @@ function __drawobjectinstances__(typeName: string, params: DrawParams): void {
     );
   }
 
-  /* 3.  Issue draw call */
   gl.useProgram(type.program);
-  //console.log('dynUniformLoc', type.dynUniformLoc);
-
   if (type.dynUniformLoc) gl.uniform1i(type.dynUniformLoc, 0);
   gl.bindVertexArray(type.vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, count);
   gl.bindVertexArray(null);
 }
+
 
 /*-------------------------------- __end__ ----------------------------*/
 function __end__(): void {
