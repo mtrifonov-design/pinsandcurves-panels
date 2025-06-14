@@ -36,30 +36,15 @@ const circleObject = {
             fragmentShader: circleFS,
         }
 
-export function circleDraw(particleSystem) {
-
-  const offsetArr = [];
-  const radiusArr = [];
-  const colorArr = [];
-  const resArr = [];
-  particleSystem.PARTICLES.forEach(particle => {
-    const { x, y, r, g, b } = particle;
-    offsetArr.push(x / particleSystem.WIDTH * 2 - 1); // map to -1..1
-    offsetArr.push(y / particleSystem.HEIGHT * 2 - 1); // map to -1..1
-    const pixelRadius = 12;
-    const radius = (pixelRadius*2) / (particleSystem.WIDTH); // map to -1..1
-    radiusArr.push(radius); // fixed radius
-    colorArr.push(r,g,b); // RGB color
-    resArr.push(particleSystem.WIDTH, particleSystem.HEIGHT); // resolution (not used, but required)
-  });
+export function circleDraw() {
   return {
-            count: particleSystem.PARTICLES.length, // number of instances
+            count: 1, // number of instances
             attributes: {
                 /* instance 0 then 1 … */
-                offset: new Float32Array(offsetArr),  // centers
-                radius: new Float32Array(radiusArr),               // sizes
-                fillColor: new Float32Array(colorArr), // blue, red
-                resolution: new Float32Array(resArr), // resolution (not used, but required)
+                offset: new Float32Array([0.,0.]),  // centers
+                radius: new Float32Array([0.2]),               // sizes
+                fillColor: new Float32Array([1.,1.,1.,]), // blue, red
+                resolution: new Float32Array([1920,1080]), // resolution (not used, but required)
             },
         }
 }
