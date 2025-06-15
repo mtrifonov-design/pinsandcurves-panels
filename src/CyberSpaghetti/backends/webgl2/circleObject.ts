@@ -272,6 +272,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
   const linePointB = [];
   const fillColor = [];
   const phaseOffset = [];
+  const thickness = [];
   for (let i = 0; i < numRays; i++) {
     const ray = particleSystem.rays[i];
     if (!ray) continue; // skip if ray is not defined
@@ -281,6 +282,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
     linePointB.push(ray.endPoint[0], ray.endPoint[1]);
     fillColor.push(...ray.color.map(c => c / 255.)); // normalize RGB to [0,1]
     phaseOffset.push(ray.phaseOffset);
+    thickness.push(ray.thickness);
   }
 
   return {
@@ -288,7 +290,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
             attributes: {
                 /* instance 0 then 1 … */
                 offset: repeat(0,numRays * 2),  
-                thickness: repeat(particleSystem.CONFIG.thickness, numRays),             
+                thickness: new Float32Array(thickness), // per-instance thickness          
                 fillColor: new Float32Array(fillColor), // RGB normalized to [0,1]
                 feather: repeat(particleSystem.CONFIG.feather, numRays),
                 linePointA: new Float32Array(linePointA),

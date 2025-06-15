@@ -26,6 +26,9 @@ type ControlsData = {
     perspectiveSkew: number; // [0, 1.0]
     includeFadeInOut: boolean;
     phaseRandomization: number;
+    rayLength: number; // [0.0, 1.0]
+    rayLengthRandomization: number; // [0.0, 1.0]    
+    thicknessRandomization: number; // [0.0, 1.0]
 }
 
 class Controls {
@@ -113,6 +116,9 @@ class Controls {
         includeFadeInOut: true,
         phaseRandomization: 0.1,
         backgroundColor: [0, 0, 0],
+        rayLength: 0.5,
+        rayLengthRandomization: 0.1,
+        thicknessRandomization: 0.1,
     }
 }
 

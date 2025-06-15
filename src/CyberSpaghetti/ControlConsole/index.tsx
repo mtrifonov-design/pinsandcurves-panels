@@ -247,15 +247,20 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.thickness} min={0} max={1} step={0.01} onChange={v => update({ thickness: v })} key={externalState+"th"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Feather</span>
-          <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
+          <span>Thickness Randomization</span>
+          <NumberInput initialValue={state.thicknessRandomization} min={0} max={1} step={0.01} onChange={v => update({ thicknessRandomization: v })} key={externalState+"th"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Shape</span>
-          <SingleSelectButtonGroup options={[
-            { label: 'Constant', value: 'constant' },
-            { label: 'Tapered', value: 'tapered' },
-          ]} value={state.shape} onChange={v => update({ shape: v as NewControls['shape'] })} />
+          <span>Ray Length</span>
+          <NumberInput initialValue={state.rayLength} min={0} max={1} step={0.01} onChange={v => update({ rayLength: v })} key={externalState+"th"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Ray Length Randomization</span>
+          <NumberInput initialValue={state.rayLengthRandomization} min={0} max={1} step={0.01} onChange={v => update({ rayLengthRandomization: v })} key={externalState+"th"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Feather</span>
+          <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
         </div>
         <div style={labelRowStyle}>
           <span>Perspective Skew</span>

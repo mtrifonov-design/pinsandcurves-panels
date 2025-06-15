@@ -42,7 +42,7 @@ export class ParticleSystem {
             const rayTime = offsetTime - cycle * this.CONFIG.rayLife;
             if (rayTime < 0 || rayTime > this.CONFIG.rayLife) continue; // Skip if rayTime is out of bounds
             const rayRelTime = rayTime / this.CONFIG.rayLife;
-            const rayLength = 0.5;
+            const rayLength = this.CONFIG.rayLength + this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization * randFromIndex(i + 3) * 2 - this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization; // Randomize ray length within the specified range
             const actualCycle =  Math.floor(offsetTime/ this.CONFIG.rayLife) % this.CONFIG.numCycles;
             const cycleIndex = actualCycle * this.CONFIG.numRays + i;
             const angleRel = randFromIndex(cycleIndex+1);
@@ -67,8 +67,12 @@ export class ParticleSystem {
                 Math.min(Math.max(rayRelTime * (1+rayLength) - rayLength,0),1),
                 Math.min(Math.max((rayRelTime) * (1+rayLength),0),1),
             ]
+
+            const rayThickness = this.CONFIG.thickness 
+            + this.CONFIG.thickness * this.CONFIG.thicknessRandomization * 2 * randFromIndex(i + 4) - this.CONFIG.thickness * this.CONFIG.thicknessRandomization; // Randomize thickness within the specified range
             //console.log('rayOffset', rayOffset);
             const ray = {
+                thickness: rayThickness,
                 startPoint: innerRadiusIntersection,
                 endPoint: outerRadiusIntersection,
                 offset: rayOffset,
