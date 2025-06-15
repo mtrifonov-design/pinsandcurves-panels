@@ -47,6 +47,11 @@ export interface DrawParams {
   count: number;                             // instance count (≥ 1)
   attributes: Record<string, Float32Array>;  // one entry per attr name
   dynamicData?: Float32Array;                // optional tex upload
+  blendMode?: {
+    func?: [number, number]; // [sfactor, dfactor] for gl.blendFunc
+    equation?: number;       // for gl.blendEquation
+    mode?: string;           // e.g. "add", "regular" (optional, preferred)
+  } | string; // allow passing just a string for convenience
 }
 
 /*======================================================================
@@ -227,6 +232,42 @@ function __drawobjectinstances__(typeName: string, params: DrawParams): void {
 
   const count = params.count | 0;
   if (count <= 0) return;
+
+  // --- Blending mode string support ---
+  let blendFunc: [number, number] | undefined;
+  let blendEquation: number | undefined;
+  let blendModeObj: any = params.blendMode;
+  if (typeof params.blendMode === "string") {
+    blendModeObj = { mode: params.blendMode };
+  }
+  if (blendModeObj) {
+    // Map string mode to blendFunc/equation
+    if (blendModeObj.mode) {
+      switch (blendModeObj.mode) {
+        case "add":
+        case "additive":
+          blendFunc = [gl.SRC_ALPHA, gl.ONE];
+          blendEquation = gl.FUNC_ADD;
+          break;
+        case "regular":
+        case "alpha":
+        default:
+          blendFunc = [gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA];
+          blendEquation = gl.FUNC_ADD;
+          break;
+      }
+    }
+    // Allow override by explicit func/equation
+    if (blendModeObj.func) blendFunc = blendModeObj.func;
+    if (blendModeObj.equation !== undefined) blendEquation = blendModeObj.equation;
+  } else {
+    // Fallback to default blend mode
+    blendFunc = [gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA];
+    blendEquation = gl.FUNC_ADD;
+  }
+  // Set blend mode before draw (no reading/restoring)
+  if (blendFunc) gl.blendFunc(blendFunc[0], blendFunc[1]);
+  if (blendEquation !== undefined) gl.blendEquation(blendEquation);
 
   const totalStride = type.stride;
   const buffer = new ArrayBuffer(count * totalStride);

@@ -43,16 +43,24 @@ export class ParticleSystem {
             if (rayTime < 0 || rayTime > this.CONFIG.rayLife) continue; // Skip if rayTime is out of bounds
             const rayRelTime = rayTime / this.CONFIG.rayLife;
             const rayLength = 0.5;
-            const angleRel = randFromIndex(i+1);
+            const actualCycle =  Math.floor(offsetTime/ this.CONFIG.rayLife) % this.CONFIG.numCycles;
+            const cycleIndex = actualCycle * this.CONFIG.numRays + i;
+            const angleRel = randFromIndex(cycleIndex+1);
             const angle = (this.CONFIG.startAngle + (this.CONFIG.endAngle - this.CONFIG.startAngle) * angleRel) * (Math.PI / 180); // Convert to radians
+            const center = [
+                this.CONFIG.centerX * 2 - 1, // Convert to WebGL coordinates
+                this.CONFIG.centerY * 2 - 1  // Convert to WebGL coordinates
+            ];
+            const centerX = center[0];
+            const centerY = center[1];
             //console.log(i,angle);
             const innerRadiusIntersection = [
-                this.CONFIG.centerX + this.CONFIG.innerRadius * Math.cos(angle),
-                this.CONFIG.centerY + this.CONFIG.innerRadius * Math.sin(angle)
+                centerX + this.CONFIG.innerRadius * Math.cos(angle),
+                centerY + this.CONFIG.innerRadius * Math.sin(angle)
             ];
             const outerRadiusIntersection = [
-                this.CONFIG.centerX + this.CONFIG.outerRadius * Math.cos(angle),
-                this.CONFIG.centerY + this.CONFIG.outerRadius * Math.sin(angle)
+                centerX + this.CONFIG.outerRadius * Math.cos(angle),
+                centerY + this.CONFIG.outerRadius * Math.sin(angle)
             ];
 
             const rayOffset = [
@@ -65,7 +73,7 @@ export class ParticleSystem {
                 endPoint: outerRadiusIntersection,
                 offset: rayOffset,
                 color: this.CONFIG.rayColors[i % this.CONFIG.rayColors.length],
-                phaseOffset: this.CONFIG.phaseRandomization * randFromIndex(i + 2),
+                phaseOffset: this.CONFIG.phaseRandomization * randFromIndex(cycleIndex +2 ),
             };
             //console.log('ray', ray.phaseOffset)
             this.rays.push(ray);

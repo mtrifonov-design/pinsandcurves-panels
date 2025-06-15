@@ -170,12 +170,15 @@ void main() {
   float phase = v_phaseOffset * 6.28318530718; // 2 * PI for full cycle
   int type = 0; // 0 = sine, 1 = zigzag, 2 = electric
 
-  // Compute the two segment centers in normalized space
-  float segA = mix(-1.0, 1.0, v_offsetStart); // from -1 to 1
-  float segB = mix(-1.0, 1.0, v_offsetEnd);   // from -1 to 1
+
   // Interpolate radii at the segment endpoints
   float rA_interp = mix(rA, rB, v_offsetStart);
   float rB_interp = mix(rA, rB, v_offsetEnd);
+
+  // Compute the two segment centers in normalized space
+  float segA = mix(-1.0+rA, 1.0-rB, v_offsetStart); // from -1 to 1
+  float segB = mix(-1.0+rA, 1.0-rB, v_offsetEnd);   // from -1 to 1
+
   // Apply distortion to the normalized coordinates, modulated by balance
   vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance);
   float d = sdUnevenCapsuleNorm(p_distorted, vec3(segA, 0.0, rA_interp), vec3(segB, 0.0, rB_interp));
@@ -299,6 +302,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
                 distortType: repeat(getDistortType(particleSystem.CONFIG.pattern),numRays,{type:"uint32"}), 
                 phaseOffset: new Float32Array(phaseOffset),
             },
+            blendMode: particleSystem.CONFIG.blendMode === "additive" ? "add" : "regular"
         }
 }
 

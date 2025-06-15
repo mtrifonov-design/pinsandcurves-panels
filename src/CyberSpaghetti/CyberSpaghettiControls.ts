@@ -112,6 +112,7 @@ class Controls {
         perspectiveSkew: 0.1,
         includeFadeInOut: true,
         phaseRandomization: 0.1,
+        backgroundColor: [0, 0, 0],
     }
 }
 

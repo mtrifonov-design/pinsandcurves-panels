@@ -98,6 +98,31 @@ export function CyberSpaghettiControlsInterior({
     marginBottom: 8,
   };
 
+  // --- Angle helpers ---
+  function getArcSpan(start: number, end: number): number {
+    // Returns the positive span in [0, 360), assumes start < end
+    let span = end - start;
+    if (span < 0) span += 360;
+    return span;
+  }
+  function getMidAngle(start: number, end: number): number {
+    // Returns the mid angle in [0, 360), assumes start < end
+    const span = getArcSpan(start, end);
+    let mid = (start + span / 2) % 360;
+    if (mid < 0) mid += 360;
+    return mid;
+  }
+  function getStartEndFromMidSpan(mid: number, span: number): [number, number] {
+    // Returns [start, end] given mid and span, both in [0, 360), ensures start < end
+    let start = (mid - span / 2) % 360;
+    let end = (mid + span / 2) % 360;
+    if (start < 0) start += 360;
+    if (end < 0) end += 360;
+    // Ensure start < end, if not, wrap end by +360
+    if (start >= end) end += 360;
+    return [start, end];
+  }
+
   return (
     <div className="hyperspeed-controls"
       style={{
@@ -128,6 +153,15 @@ export function CyberSpaghettiControlsInterior({
           </div>
         </div>
         <div style={groupedRowStyle}>
+          <span>Background Color</span>
+          <input
+            type="color"
+            value={rgbToHex(state.backgroundColor)}
+            onChange={e => update({ backgroundColor: hexToRgb(e.target.value) })}
+            style={{ width: 35, height: 35, background: 'none', border: 'none' }}
+          />
+        </div>
+        <div style={groupedRowStyle}>
           <span>Center</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
@@ -141,19 +175,28 @@ export function CyberSpaghettiControlsInterior({
         </div>
         <div style={labelRowStyle}>
           <span>Inner Radius</span>
-          <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
+          <NumberInput initialValue={state.innerRadius} min={0} max={2*Math.sqrt(2)} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
         </div>
         <div style={labelRowStyle}>
           <span>Outer Radius</span>
-          <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
+          <NumberInput initialValue={state.outerRadius} min={0} max={2*Math.sqrt(2)} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Start Angle</span>
-          <NumberInput initialValue={state.startAngle} min={0} max={360} step={1} onChange={v => update({ startAngle: v })} key={externalState+"sa"} />
+          <span>Mid Angle</span>
+          <NumberInput initialValue={getMidAngle(state.startAngle, state.endAngle)} min={0} max={360} step={1} onChange={v => {
+            const span = getArcSpan(state.startAngle, state.endAngle);
+            const [start, end] = getStartEndFromMidSpan(v, span);
+            update({ startAngle: start, endAngle: end });
+          }} key={externalState+"sa"} />
         </div>
         <div style={labelRowStyle}>
-          <span>End Angle</span>
-          <NumberInput initialValue={state.endAngle} min={0} max={360} step={1} onChange={v => update({ endAngle: v })} key={externalState+"ea"} />
+          <span>Arc Span</span>
+          <NumberInput initialValue={getArcSpan(state.startAngle, state.endAngle)} min={0} max={360} step={1} onChange={v => {
+            const mid = getMidAngle(state.startAngle, state.endAngle);
+            const [start, end] = getStartEndFromMidSpan(mid, v);
+            update({ startAngle: start, endAngle: end });
+          }}
+          key={externalState+"ea"} />
         </div>
       </CollapsibleSection>
       {/* --- Motion --- */}
