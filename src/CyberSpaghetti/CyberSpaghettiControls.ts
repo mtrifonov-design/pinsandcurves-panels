@@ -24,6 +24,8 @@ type ControlsData = {
     frequency: number; // [0.0, 1.0]
     pattern: 'zigzag' | 'sine' | 'jitter';
     perspectiveSkew: number; // [0, 1.0]
+    includeFadeInOut: boolean;
+    phaseRandomization: number;
 }
 
 class Controls {
@@ -108,6 +110,8 @@ class Controls {
         frequency: 0.5,
         pattern: 'sine',
         perspectiveSkew: 0.1,
+        includeFadeInOut: true,
+        phaseRandomization: 0.1,
     }
 }
 

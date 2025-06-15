@@ -16,6 +16,7 @@ in float amplitude; // amplitude of the distortion
 in float frequency; // frequency of the distortion
 in float perspectiveSkew; // perspective skew factor (0 = no skew, 1 = full skew)
 in int distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
+in float phaseOffset; // phase offset for the distortion
 out vec2 v_local;        // coord inside quad (-1..1)
 out vec3 v_color;
 out float v_thickness;   // thickness parameter
@@ -26,6 +27,7 @@ out float v_offsetEnd;
 out float v_amplitude; // amplitude of the distortion
 out float v_frequency; // frequency of the distortion
 out float v_perspectiveSkew; // perspective skew factor
+out float v_phaseOffset; // phase offset for the distortion
 flat out int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
 void main() {
   // Compute line direction and perpendicular
@@ -48,6 +50,7 @@ void main() {
   // Normalize so that v_local.x in [0,1] (relative to line), v_local.y in [-1,1] (relative to width)
   v_local = vec2((along / len) * 2. - 1., a_pos.y);
   v_length = len; // pass length to fragment shader
+  v_phaseOffset = phaseOffset; // pass phase offset to fragment shader
 
   v_color = fillColor;
   v_thickness = thickness;
@@ -75,11 +78,12 @@ in float v_offsetEnd;
 in float v_amplitude; // amplitude of the distortion
 in float v_frequency; // frequency of the distortion
 in float v_perspectiveSkew; // perspective skew factor
+in float v_phaseOffset; // phase offset for the distortion
 flat in int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
 out vec4 outColor;
 
 // Toggle bounding box display
-const bool showBoundingBox = true;
+const bool showBoundingBox = false;
 
 // Helper to compute radii based on balance
 void getCapsuleRadii(out float rA, out float rB, float balance) {
@@ -129,20 +133,20 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
     float t = (x + 1.0) * 0.5; // map x from [-1,1] to [0,1]
 
     // Modulate phase nonlinearly for perspective effect
-    float phaseT = freqModulate(1.-t,1.+(1.-balance) * 5.) + phase; // nonlinear phase adjustment based on balance; 
+    float phaseT = freqModulate(1.-t,1.+(1.-balance) * 5.); // nonlinear phase adjustment based on balance; 
     float ampMod = mix(t*t,1.,balance*balance); // x in [-1,1], so x*x ramps from 0 to 1 at ends
     float localAmp = amplitude * ampMod;
     float offset = 0.0;
     if (type == 0) {
         // Sine
-        offset = localAmp * sin(phaseT * frequency);
+        offset = localAmp * sin(phaseT * frequency + phase);
     } else if (type == 1) {
         // Zigzag (triangle wave)
-        float tri = abs(fract(phaseT * frequency / 3.14159265359) * 2.0 - 1.0) * 2.0 - 1.0;
+        float tri = abs(fract(phaseT * frequency / 3.14159265359 + phase) * 2.0 - 1.0) * 2.0 - 1.0;
         offset = localAmp * tri;
     } else if (type == 2) {
         // Electric (randomized jagged)
-        float s = sin(phaseT * frequency) * sin(3.7 * phaseT * frequency + 1.3) * sin(7.3 * phaseT * frequency + 2.1);
+        float s = sin(phaseT * frequency + phase) * sin(3.7 * phaseT * frequency + 1.3 + phase) * sin(7.3 * phaseT * frequency + 2.1 + phase);
         offset = localAmp * s;
     }
     return vec2(x, y + offset);
@@ -163,7 +167,7 @@ void main() {
   // Distortion parameters (could be uniforms or varyings in future)
   float amplitude = v_amplitude;
   float frequency = v_frequency * 50.;
-  float phase = 0.0;
+  float phase = v_phaseOffset * 6.28318530718; // 2 * PI for full cycle
   int type = 0; // 0 = sine, 1 = zigzag, 2 = electric
 
   // Compute the two segment centers in normalized space
@@ -217,6 +221,7 @@ const circleObject = {
                 { name: "frequency", size: 1 },
                 { name: "perspectiveSkew", size: 1 },
                 { name: "distortType", size: 1, type:"int" }, // 0 = sine, 1 = zigzag, 2 = electric
+                { name: "phaseOffset", size: 1 },
             ],
             vertexShader: circleVS,
             fragmentShader: circleFS,
@@ -236,24 +241,63 @@ function getDistortType(pattern: string): number {
     }
 }
 
+function repeat(val: number | number[], times: number, options : { type?: "float32" | "uint32" } = { type: "float32" }) {
+  const array = [];
+  if (typeof val === "number") {
+    array.push(...Array(times).fill(val));
+  } else if (Array.isArray(val)) {
+    for (let i = 0; i < times; i++) {
+      array.push(...val);
+    }
+  } else {
+    throw new Error("Unsupported value type for repeat: " + typeof val);
+  }
+  if (options.type === "uint32") {
+    return new Uint32Array(array);
+  }
+  if (options.type === "float32") {
+    return new Float32Array(array);
+  }
+}
+
 export function circleDraw(particleSystem: ParticleSystem) {
+  const numRays = particleSystem.CONFIG.numRays;
+
+  const offsetStart = [];
+  const offsetEnd = [];
+  const linePointA = [];
+  const linePointB = [];
+  const fillColor = [];
+  const phaseOffset = [];
+  for (let i = 0; i < numRays; i++) {
+    const ray = particleSystem.rays[i];
+    if (!ray) continue; // skip if ray is not defined
+    offsetStart.push(ray.offset[0]);
+    offsetEnd.push(ray.offset[1]);
+    linePointA.push(ray.startPoint[0], ray.startPoint[1]);
+    linePointB.push(ray.endPoint[0], ray.endPoint[1]);
+    fillColor.push(...ray.color.map(c => c / 255.)); // normalize RGB to [0,1]
+    phaseOffset.push(ray.phaseOffset);
+  }
+
   return {
-            count: 1, // number of instances
+            count: numRays, // number of instances
             attributes: {
                 /* instance 0 then 1 … */
-                offset: new Float32Array([0.,0.]),  
-                thickness: new Float32Array([particleSystem.CONFIG.thickness]),              
-                fillColor: new Float32Array([...particleSystem.CONFIG.rayColors[0].map(c => c/ 255.)]), // RGB normalized to [0,1]
-                feather: new Float32Array([particleSystem.CONFIG.feather]),
-                linePointA: new Float32Array([0., 0.]),
-                linePointB: new Float32Array([.5, .5]),
-                resolution: new Float32Array([1920, 1080]), // canvas resolution
-                offsetStart: new Float32Array([0.2]),
-                offsetEnd: new Float32Array([0.8]),
-                amplitude: new Float32Array([particleSystem.CONFIG.amplitude]),
-                frequency: new Float32Array([particleSystem.CONFIG.frequency]),
-                perspectiveSkew: new Float32Array([particleSystem.CONFIG.perspectiveSkew]),
-                distortType: new Uint32Array([getDistortType(particleSystem.CONFIG.pattern)]), // 0 = sine, 1 = zigzag, 2 = electric
+                offset: repeat(0,numRays * 2),  
+                thickness: repeat(particleSystem.CONFIG.thickness, numRays),             
+                fillColor: new Float32Array(fillColor), // RGB normalized to [0,1]
+                feather: repeat(particleSystem.CONFIG.feather, numRays),
+                linePointA: new Float32Array(linePointA),
+                linePointB: new Float32Array(linePointB),
+                resolution: repeat([1920,1080],numRays), // canvas resolution
+                offsetStart: new Float32Array(offsetStart),
+                offsetEnd: new Float32Array(offsetEnd),
+                amplitude: repeat(particleSystem.CONFIG.amplitude, numRays),
+                frequency: repeat(particleSystem.CONFIG.frequency, numRays),
+                perspectiveSkew: repeat(particleSystem.CONFIG.perspectiveSkew, numRays),
+                distortType: repeat(getDistortType(particleSystem.CONFIG.pattern),numRays,{type:"uint32"}), 
+                phaseOffset: new Float32Array(phaseOffset),
             },
         }
 }

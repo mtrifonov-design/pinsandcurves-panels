@@ -7,7 +7,8 @@ import type { Controls } from '../CyberSpaghettiControls';
 import TimelineProvider from '../../TimelineUtils/TimelineProvider';
 import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import './CollapsibleSection/CollapsibleSection.css';
-import hexToRgb from '../core/hexToRgb';
+import hexToRgb, { rgbToHex } from '../core/hexToRgb';
+import { useTimeline } from '../../TimelineUtils/TimelineProvider';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -27,6 +28,29 @@ export function CyberSpaghettiControlsInterior({
     const next = { ...state, ...patch };
     controls.setData(next);
   };
+
+    const timeline = useTimeline();
+
+    const determineFocusRange = (rayLife,numCycles, includeFadeInOut) => {
+      const cycles = numCycles === 1 ? 2 : numCycles + 2;
+      const c = cycles * rayLife;
+      if (includeFadeInOut || numCycles === 1) {
+        return [0, c];
+      } else {
+        return [rayLife, c - rayLife];
+      }
+    }
+
+    const updateLoop = (rayLife,numCycles) => {
+      timeline?.projectTools.updateFocusRange(determineFocusRange(rayLife,numCycles,state.includeFadeInOut),true);
+      if (numCycles === 1) {
+        update({
+          includeFadeInOut: true,
+        })
+      }
+    }
+
+
 
   // Color helpers for new rayColors (hex strings)
   const updateColor = (idx: number, value: number[]) => {
@@ -136,11 +160,22 @@ export function CyberSpaghettiControlsInterior({
       <CollapsibleSection title="Motion">
         <div style={labelRowStyle}>
           <span>Ray Life (frames)</span>
-          <NumberInput initialValue={state.rayLife} min={0} max={300} step={1} onChange={v => update({ rayLife: v })} key={externalState+"rl"} />
+          <NumberInput initialValue={state.rayLife} min={0} max={300} step={1} 
+          onChange={v => {updateLoop(v,state.numCycles); return update({ rayLife: v })}}
+          onCommit={v => {updateLoop(v,state.numCycles);return update({ rayLife: v })}} key={externalState+"rl"} 
+          />
         </div>
         <div style={labelRowStyle}>
           <span>Num Cycles</span>
-          <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} onChange={v => update({ numCycles: v })} key={externalState+"nc"} />
+          <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} 
+          onChange={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}}
+          onCommit={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}} key={externalState+"nc"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Include Fade In/Out</span>
+          <input type="checkbox" checked={state.includeFadeInOut} onChange={e => {
+            timeline?.projectTools.updateFocusRange(determineFocusRange(state.rayLife,state.numCycles,e.target.checked),true);
+            update({ includeFadeInOut: e.target.checked && state.numCycles !== 1 })}} />
         </div>
       </CollapsibleSection>
       {/* --- Rays - Appearance --- */}
@@ -157,7 +192,7 @@ export function CyberSpaghettiControlsInterior({
           <div style={colorBoxStyle}>
             {state.rayColors.map((color, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4, border: '2px solid var(--gray4)', borderRadius: 'var(--borderRadiusSmall)', padding: '2px 8px' }}>
-                <input type="color" value={color} onChange={e => updateColor(i, hexToRgb(e.target.value))} style={{ width: 35, height: 35, background: 'none', border: 'none' }} />
+                <input type="color" value={rgbToHex(color)} onChange={e => updateColor(i, hexToRgb(e.target.value))} style={{ width: 35, height: 35, background: 'none', border: 'none' }} />
                 <Icon iconName={"delete"} onClick={() => removeColor(i)} />
               </div>
             ))}
@@ -193,6 +228,10 @@ export function CyberSpaghettiControlsInterior({
         <div style={labelRowStyle}>
           <span>Frequency</span>
           <NumberInput initialValue={state.frequency} min={0} max={1} step={0.01} onChange={v => update({ frequency: v })} key={externalState+"fr"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Phase Randomization</span>
+          <NumberInput initialValue={state.phaseRandomization} min={0} max={1} step={0.01} onChange={v => update({ phaseRandomization: v })} key={externalState+"fr"} />
         </div>
         <div style={labelRowStyle}>
           <span>Pattern</span>
