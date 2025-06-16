@@ -29,6 +29,8 @@ type ControlsData = {
     rayLength: number; // [0.0, 1.0]
     rayLengthRandomization: number; // [0.0, 1.0]    
     thicknessRandomization: number; // [0.0, 1.0]
+    innerRadiusRandomization: number; // [0.0, 1.0]
+    outerRadiusRandomization: number; // [0.0, 1.0]
 }
 
 class Controls {
@@ -119,6 +121,8 @@ class Controls {
         rayLength: 0.5,
         rayLengthRandomization: 0.1,
         thicknessRandomization: 0.1,
+        innerRadiusRandomization: 0.1,
+        outerRadiusRandomization: 0.1,
     }
 }
 
