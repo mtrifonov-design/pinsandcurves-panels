@@ -66,8 +66,8 @@ export class ParticleSystem {
 
 
             const innerRadiusIntersection = [
-                centerX + this.CONFIG.innerRadius * Math.cos(angle),
-                centerY + this.CONFIG.innerRadius * Math.sin(angle)
+                centerX ,
+                centerY
             ];
             const outerRadiusIntersection = [
                 centerX + this.CONFIG.outerRadius * Math.cos(angle),

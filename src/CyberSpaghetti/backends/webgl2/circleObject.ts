@@ -2,7 +2,6 @@ import { ParticleSystem } from "../../core/ParticleSystem";
 
 const circleVS = `#version 300 es
 in vec2 a_pos;          // quad corner (-1..1)
-in vec2 offset;         // instance centre in clip-space
 in float radius;        // instance radius (clip-space)
 in vec3 fillColor;      // per-instance RGB
 in float thickness;    // per-instance thickness
@@ -29,27 +28,87 @@ out float v_frequency; // frequency of the distortion
 out float v_perspectiveSkew; // perspective skew factor
 out float v_phaseOffset; // phase offset for the distortion
 flat out int v_distortType; // distortion type: 0 = sine, 1 = zigzag, 2 = electric
+
+// ---------------------------------------------------------------------
+// Perspective matrix  (column-major, OpenGL clip conventions)
+//
+// fovDeg     – vertical field of view in degrees
+// aspect     – viewport width / height
+// zNear/zFar – clip planes (>0, zNear < zFar)
+// vpOffset   – vanishing-point offset in NDC units  (0,0 = centre)
+//
+// Returns a mat4 that you can multiply with view & model transforms.
+//
+// ---------------------------------------------------------------------
+mat4 makePerspective(float fovDeg,
+                     float aspect,
+                     float zNear,
+                     float zFar,
+                     vec2  vpOffset)
+{
+    float f = 1.0 / tan(radians(fovDeg) * 0.5);    // cot(fov/2)
+    float nf = 1.0 / (zNear - zFar);
+
+    // Column-major constructor: each group of four numbers is a column.
+    return mat4(
+        f / aspect, 0.0,        vpOffset.x,                0.0,
+        0.0,        f,          vpOffset.y,                0.0,
+        0.0,        0.0,  (zFar + zNear)*nf,  2.0*zFar*zNear*nf,
+        0.0,        0.0,       -1.0,                      0.0
+    );
+}
+
+
+
+mat4 lookAtMatrix(vec3 eye, vec3 center, vec3 up)
+{
+    // Forward (camera –> world)  — points from eye to target
+    vec3  f = normalize(center - eye);
+
+    // Side axis
+    vec3  s = normalize(cross(f, up));
+
+    // True up  (re-orthogonalised)
+    vec3  u = cross(s, f);
+
+    // Column-major constructor: each group of 4 values is ONE column
+    return mat4(
+        vec4(  s,           0.0),          // X-axis
+        vec4(  u,           0.0),          // Y-axis
+        vec4(-f,           0.0),           // −Z (camera looks down –Z)
+        vec4(-dot(s, eye),                 // translation
+             -dot(u, eye),
+              dot(f, eye),
+              1.0)
+    );
+}  
+
 void main() {
-  // Compute line direction and perpendicular
-  vec2 lA = linePointA;
-  vec2 lB = linePointB;
-  vec2 dir = lB - lA;
-  float len = length(dir);
-  vec2 dirN = dir / len;
-  vec2 perp = vec2(-dirN.y, dirN.x);
-  float halfWidth = 0.3; // extrusion amount
 
-  // Map a_pos.x in [-1,1] to [0,len] along the line
-  // Map a_pos.y in [-1,1] to [-halfWidth, halfWidth] perpendicular
-  float along = (a_pos.x * 0.5 + 0.5) * len;
-  float side = a_pos.y * halfWidth;
-  vec2 pos = lA + dirN * along + perp * side;
+  float aspect = resolution.x / resolution.y; // aspect ratio from instance attributes
+  float zFar = mix(-0.5, -10.5, perspectiveSkew);
+  float zNear = -0.5;
+  vec3 lA = normalize(vec3(linePointA,1.)) * zFar;
+  vec3 lB = normalize(vec3(linePointB,1.)) * zNear;
 
-  // Adjust v_local so that circles stay circles in fragment shader
-  // v_local.x in [0,len], v_local.y in [-halfWidth, halfWidth]
-  // Normalize so that v_local.x in [0,1] (relative to line), v_local.y in [-1,1] (relative to width)
-  v_local = vec2((along / len) * 2. - 1., a_pos.y);
-  v_length = len; // pass length to fragment shader
+  float t = (a_pos.x + 1.0) * 0.5; // [0,1] along the segment
+  vec3 lineDir = normalize(lB - lA);
+  vec3 originDir = normalize(lA - vec3(0.0, 0.0, 0.0));
+  // The plane is spanned by originDir and lineDir
+  vec3 extrusionDir = normalize(cross(originDir, lineDir));
+  vec3 center = mix(lA, lB, t);
+  float extrusion = 0.3;
+  vec4 eyePos = vec4(center + extrusionDir * (a_pos.y * extrusion), 1.0);
+
+  // --- correct projection ---
+  mat4 proj = makePerspective(45.0, aspect, 1., 100.0, vec2(0.));
+
+  // --- final clip coords ---
+  gl_Position = proj * eyePos;
+
+  v_local = vec2(a_pos.x, a_pos.y);
+
+  v_length = length(lB - lA); // pass length to fragment shader
   v_phaseOffset = phaseOffset; // pass phase offset to fragment shader
 
   v_color = fillColor;
@@ -61,9 +120,6 @@ void main() {
   v_frequency = frequency;
   v_perspectiveSkew = perspectiveSkew;
   v_distortType = distortType; // pass distortion type to fragment shader
-
-  float aspect = resolution.x / resolution.y; // aspect ratio
-  gl_Position = vec4(pos * vec2(1.0, aspect) + offset, 0.0, 1.0);
 }`;
 
 const circleFS = `#version 300 es
@@ -85,14 +141,7 @@ out vec4 outColor;
 // Toggle bounding box display
 const bool showBoundingBox = false;
 
-// Helper to compute radii based on balance
-void getCapsuleRadii(out float rA, out float rB, float balance) {
-    float rMin = 0.01;
-    float rMax = 0.3;
-    float rAvg = 0.5 * (rMin + rMax);
-    rA = mix(rMin, rAvg, balance);
-    rB = mix(rMax, rAvg, balance);
-}
+
 
 // Signed distance to normalized uneven capsule between two points with varying radii
 // Returns -1 at the innermost point, 0 at the edge
@@ -153,12 +202,9 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
 }
 
 void main() {
-  // Compute radii based on balance
-  float rA, rB;
+
   float v_balance = 1.-v_perspectiveSkew; // balance is 1 when skew is 0, 0 when skew is 1
-  getCapsuleRadii(rA, rB, v_balance);
-  rA = rA * v_thickness;
-  rB = rB * v_thickness;
+
 
   // Normalize x so circles stay circles regardless of v_length
   float aspect = v_length / 2.0;
@@ -166,22 +212,18 @@ void main() {
 
   // Distortion parameters (could be uniforms or varyings in future)
   float amplitude = v_amplitude;
+  float thickness = v_thickness;
   float frequency = v_frequency * 50.;
   float phase = v_phaseOffset * 6.28318530718; // 2 * PI for full cycle
   int type = 0; // 0 = sine, 1 = zigzag, 2 = electric
 
-
-  // Interpolate radii at the segment endpoints
-  float rA_interp = mix(rA, rB, v_offsetStart);
-  float rB_interp = mix(rA, rB, v_offsetEnd);
-
   // Compute the two segment centers in normalized space
-  float segA = mix(-1.0+rA, 1.0-rB, v_offsetStart); // from -1 to 1
-  float segB = mix(-1.0+rA, 1.0-rB, v_offsetEnd);   // from -1 to 1
+  float segA = mix(-1.0+thickness, 1.0-thickness, v_offsetStart); // from -1 to 1
+  float segB = mix(-1.0+thickness, 1.0-thickness, v_offsetEnd);   // from -1 to 1
 
   // Apply distortion to the normalized coordinates, modulated by balance
   vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance);
-  float d = sdUnevenCapsuleNorm(p_distorted, vec3(segA, 0.0, rA_interp), vec3(segB, 0.0, rB_interp));
+  float d = sdUnevenCapsuleNorm(p_distorted, vec3(segA, 0.0, thickness), vec3(segB, 0.0, thickness));
 
   // Draw bounding box if enabled
   if (showBoundingBox) {
@@ -204,20 +246,30 @@ void main() {
 
   // Feathered edge logic using normalized SDF and thresholded smoothstep
   float alpha = 1.0 - smoothstep(-sqrt(v_feather), 0.0, d);
-  if (alpha <= 0.0) discard;
+  // if (alpha <= 0.0) discard;
+  
+  // === UV debug output flag ===
+  const bool showUV = false; // Set to false to disable UV debug
+  if (showUV) {
+    // Perspective-correct UV debug output
+    vec2 uv = (v_local + 1.0) * 0.5;
+    outColor = vec4(uv, 0.0, 1.0);
+    return;
+  }
+  // === End UV debug ===
+  
   outColor = vec4(v_color, alpha);
 }`;
 
 const circleObject = {
             name: "circle",
             instanceAttributes: [
-                { name: "offset", size: 2 },
                 { name: "thickness", size: 1 },
                 { name: "feather", size: 1 },
                 { name: "linePointA", size: 2},
                 { name: "linePointB", size: 2},
                 { name: "fillColor", size: 3 },
-                { name: "resolution", size: 2 },
+                { name: "resolution", size: 2 }, 
                 { name: "offsetStart", size: 1 },
                 { name: "offsetEnd", size: 1 },
                 { name: "amplitude", size: 1 },
@@ -288,8 +340,6 @@ export function circleDraw(particleSystem: ParticleSystem) {
   return {
             count: numRays, // number of instances
             attributes: {
-                /* instance 0 then 1 … */
-                offset: repeat(0,numRays * 2),  
                 thickness: new Float32Array(thickness), // per-instance thickness          
                 fillColor: new Float32Array(fillColor), // RGB normalized to [0,1]
                 feather: repeat(particleSystem.CONFIG.feather, numRays),
