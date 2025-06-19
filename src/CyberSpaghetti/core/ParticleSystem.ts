@@ -98,6 +98,7 @@ export class ParticleSystem {
                 offset: rayOffset,
                 color: this.CONFIG.rayColors[i % this.CONFIG.rayColors.length],
                 phaseOffset: this.CONFIG.phaseRandomization * randFromIndex(cycleIndex +2 ),
+                relTime: rayRelTime,
             };
             //console.log('ray', ray.phaseOffset)
             this.rays.push(ray);

@@ -2,13 +2,13 @@ import { ParticleSystem } from "../../core/ParticleSystem";
 
 const circleVS = `#version 300 es
 in vec2 a_pos;          // quad corner (-1..1)
+in float relTime;
 in float radius;        // instance radius (clip-space)
 in vec3 fillColor;      // per-instance RGB
-in float thickness;    // per-instance thickness
 in vec2 resolution;     // instance resolution (not used, but required)
 in vec2 linePointA;     // start of the line
 in vec2 linePointB;     // end of the line
-in float feather;
+in vec3 stroke; // thickness and cap and feather
 in float offsetStart; // normalized [0,1] start of the capsule segment
 in float offsetEnd;   // normalized [0,1] end of the capsule segment
 in float amplitude; // amplitude of the distortion
@@ -23,6 +23,8 @@ out float v_feather;     // feather parameter
 out float v_length; // length of the line segment
 out float v_offsetStart;
 out float v_offsetEnd;
+out float v_relTime;
+out float v_strokeCap; // not used, but required for WebGL2
 out float v_amplitude; // amplitude of the distortion
 out float v_frequency; // frequency of the distortion
 out float v_perspectiveSkew; // perspective skew factor
@@ -97,7 +99,7 @@ void main() {
   // The plane is spanned by originDir and lineDir
   vec3 extrusionDir = normalize(cross(originDir, lineDir));
   vec3 center = mix(lA, lB, t); 
-  float extrusion = 0.3;
+  float extrusion = stroke.x * amplitude * 2.;
   vec4 eyePos = vec4(center + extrusionDir * (a_pos.y * extrusion), 1.0);
 
   // --- correct projection ---
@@ -112,13 +114,15 @@ void main() {
   v_phaseOffset = phaseOffset; // pass phase offset to fragment shader
 
   v_color = fillColor;
-  v_thickness = thickness;
-  v_feather = feather;
+  v_thickness = stroke.x;
+  v_feather = stroke.z;
   v_offsetStart = offsetStart;
   v_offsetEnd = offsetEnd;
-  v_amplitude = amplitude;
+  v_amplitude = amplitude * 0.5;
   v_frequency = frequency;
+  v_strokeCap = stroke.y; // not used, but required for WebGL2
   v_perspectiveSkew = perspectiveSkew;
+  v_relTime = relTime; // pass relative time to fragment shader
   v_distortType = distortType; // pass distortion type to fragment shader
 }`;
 
@@ -131,6 +135,8 @@ in float v_thickness; // thickness parameter
 in float v_feather; // feather parameter
 in float v_offsetStart;
 in float v_offsetEnd;
+in float v_strokeCap; // not used, but required for WebGL2
+in float v_relTime; // relative time for each ray
 in float v_amplitude; // amplitude of the distortion
 in float v_frequency; // frequency of the distortion
 in float v_perspectiveSkew; // perspective skew factor
@@ -175,7 +181,7 @@ float freqModulate(float x, float t ) {
 }
 
 // Distortion function for the ray
-vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type, float balance) {
+vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type, float balance, float time) {
     float x = p.x;
     float y = p.y;
     // Modulate amplitude by balance: balance=1 → full amplitude, balance=0 → amplitude ramps from 0 to full
@@ -188,10 +194,10 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
     float offset = 0.0;
     if (type == 0) {
         // Sine
-        offset = localAmp * sin(phaseT * frequency + phase);
+        offset = localAmp * sin(phaseT * frequency + phase + time * .5 * frequency);
     } else if (type == 1) {
         // Zigzag (triangle wave)
-        float tri = abs(fract(phaseT * frequency / 3.14159265359 + phase) * 2.0 - 1.0) * 2.0 - 1.0;
+        float tri = abs(fract(phaseT * frequency / 3.14159265359 + phase + time * .25 * frequency) * 2.0 - 1.0) * 2.0 - 1.0;
         offset = localAmp * tri;
     } else if (type == 2) {
         // Electric (randomized jagged)
@@ -199,6 +205,17 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
         offset = localAmp * s;
     }
     return vec2(x, y + offset);
+}
+
+float stroke(vec2 p, float offsetStart, float offsetEnd, float thickness, float cap) {
+  float y = abs(p.y);
+  float maxStrokeCap = 15.;
+  cap = cap * maxStrokeCap + .1;
+  float x = 2.*smoothstep(offsetStart, offsetEnd, p.x) -1.;
+  float n = cap;
+  float rY = pow((1.-pow(abs(x),n)),1./n) * thickness;
+  float d = (y - rY) / thickness;
+  return d;
 }
 
 void main() {
@@ -215,15 +232,11 @@ void main() {
   float thickness = v_thickness;
   float frequency = v_frequency * 100.;
   float phase = v_phaseOffset * 6.28318530718; // 2 * PI for full cycle
-  int type = 0; // 0 = sine, 1 = zigzag, 2 = electric
-
-  // Compute the two segment centers in normalized space
-  float segA = mix(-1.0+thickness, 1.0-thickness, v_offsetStart); // from -1 to 1
-  float segB = mix(-1.0+thickness, 1.0-thickness, v_offsetEnd);   // from -1 to 1
 
   // Apply distortion to the normalized coordinates, modulated by balance
-  vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance);
-  float d = sdUnevenCapsuleNorm(p_distorted, vec3(segA, 0.0, thickness), vec3(segB, 0.0, thickness));
+  vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance, v_relTime);
+  float width = v_offsetEnd - v_offsetStart;
+  float d = stroke(p_distorted,v_offsetStart, v_offsetEnd, 1. * width, v_strokeCap);
 
   // Draw bounding box if enabled
   if (showBoundingBox) {
@@ -245,7 +258,8 @@ void main() {
   }
 
   // Feathered edge logic using normalized SDF and thresholded smoothstep
-  float alpha = 1.0 - smoothstep(-sqrt(v_feather), 0.0, d);
+  float alpha = 1.0 - (smoothstep(-sqrt(v_feather), 0.0, d));
+  //float alpha = pow(baseAlpha,1.);
   // Apply smoothstep fade at start and end of v_local.x
   alpha *= smoothstep(-1., -.9, v_local.x) * smoothstep(1.0, 0.9, v_local.x);
   
@@ -267,8 +281,7 @@ void main() {
 const circleObject = {
             name: "circle",
             instanceAttributes: [
-                { name: "thickness", size: 1 },
-                { name: "feather", size: 1 },
+                { name: "stroke", size: 3 },
                 { name: "linePointA", size: 2},
                 { name: "linePointB", size: 2},
                 { name: "fillColor", size: 3 },
@@ -280,6 +293,7 @@ const circleObject = {
                 { name: "perspectiveSkew", size: 1 },
                 { name: "distortType", size: 1, type:"int" }, // 0 = sine, 1 = zigzag, 2 = electric
                 { name: "phaseOffset", size: 1 },
+                { name: "relTime", size: 1 },
             ],
             vertexShader: circleVS,
             fragmentShader: circleFS,
@@ -326,7 +340,9 @@ export function circleDraw(particleSystem: ParticleSystem) {
   const linePointA = [];
   const linePointB = [];
   const fillColor = [];
+  const stroke = [];
   const phaseOffset = [];
+  const relTime = [];
   const thickness = [];
   for (let i = 0; i < numRays; i++) {
     const ray = particleSystem.rays[i];
@@ -337,15 +353,14 @@ export function circleDraw(particleSystem: ParticleSystem) {
     linePointB.push(ray.endPoint[0], ray.endPoint[1]);
     fillColor.push(...ray.color.map(c => c / 255.)); // normalize RGB to [0,1]
     phaseOffset.push(ray.phaseOffset);
-    thickness.push(ray.thickness);
+    stroke.push(ray.thickness, particleSystem.CONFIG.strokeCap, particleSystem.CONFIG.feather);
+    relTime.push(ray.relTime);
   }
 
   return {
             count: numRays, // number of instances
-            attributes: {
-                thickness: new Float32Array(thickness), // per-instance thickness          
+            attributes: {        
                 fillColor: new Float32Array(fillColor), // RGB normalized to [0,1]
-                feather: repeat(particleSystem.CONFIG.feather, numRays),
                 linePointA: new Float32Array(linePointA),
                 linePointB: new Float32Array(linePointB),
                 resolution: repeat([1920,1080],numRays), // canvas resolution
@@ -356,6 +371,9 @@ export function circleDraw(particleSystem: ParticleSystem) {
                 perspectiveSkew: repeat(particleSystem.CONFIG.perspectiveSkew, numRays),
                 distortType: repeat(getDistortType(particleSystem.CONFIG.pattern),numRays,{type:"uint32"}), 
                 phaseOffset: new Float32Array(phaseOffset),
+                relTime: new Float32Array(relTime), // relative time for each ray
+                stroke: new Float32Array(stroke), // thickness and cap and feather
+                
             },
             blendMode: particleSystem.CONFIG.blendMode === "additive" ? "add" : "regular"
         }

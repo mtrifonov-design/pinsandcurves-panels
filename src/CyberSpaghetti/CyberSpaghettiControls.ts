@@ -18,8 +18,7 @@ type ControlsData = {
     // Rays - Appearance
     thickness: number; // [0.0, 1.0]
     feather: number; // [0.0, 1.0]
-    shape: 'constant' | 'tapered';
-    // Rays - Distortion
+
     amplitude: number; // [0.0, 1.0]
     frequency: number; // [0.0, 1.0]
     pattern: 'zigzag' | 'sine' | 'jitter';
@@ -31,6 +30,7 @@ type ControlsData = {
     thicknessRandomization: number; // [0.0, 1.0]
     innerRadiusRandomization: number; // [0.0, 1.0]
     outerRadiusRandomization: number; // [0.0, 1.0]
+    strokeCap: number; // [0.0, 1.0] - 0.0 = butt, 0.5 = round, 1.0 = square
 }
 
 class Controls {
@@ -123,6 +123,7 @@ class Controls {
         thicknessRandomization: 0.1,
         innerRadiusRandomization: 0.1,
         outerRadiusRandomization: 0.1,
+        strokeCap: 0.5,
     }
 }
 

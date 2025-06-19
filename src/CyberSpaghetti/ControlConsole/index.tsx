@@ -171,7 +171,7 @@ export function CyberSpaghettiControlsInterior({
         </div>
         <div style={labelRowStyle}>
           <span>Num Rays</span>
-          <NumberInput initialValue={state.numRays} min={0} max={500} step={1} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
+          <NumberInput initialValue={state.numRays} min={0} max={1000} step={5} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
         </div>
 
         <div style={labelRowStyle}>
@@ -270,6 +270,10 @@ export function CyberSpaghettiControlsInterior({
         <div style={labelRowStyle}>
           <span>Feather</span>
           <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Stroke End Thickness</span>
+          <NumberInput initialValue={state.strokeCap} min={0} max={1} step={0.01} onChange={v => update({ strokeCap: v })} key={externalState+"fe"} />
         </div>
         <div style={labelRowStyle}>
           <span>Perspective Skew</span>
