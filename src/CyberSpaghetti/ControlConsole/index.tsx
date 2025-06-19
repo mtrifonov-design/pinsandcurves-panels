@@ -9,6 +9,30 @@ import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
 import './CollapsibleSection/CollapsibleSection.css';
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import { useTimeline } from '../../TimelineUtils/TimelineProvider';
+import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';
+
+
+
+
+
+function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']>}) {
+  return <div style={{
+    padding: "1rem 1rem",
+    backgroundColor: "var(--gray1)",
+    border: "2px solid var(--gray4)",
+    color: "var(--gray7)",
+    borderRadius: "var(--borderRadiusSmall)",
+    cursor: "pointer",
+    display: "inline-block",
+    margin: "0.25rem 0",
+    transition: "background-color 0.2s, color 0.2s",
+  }}
+    onClick={() => {update(presetConfig); updateLoop?.(presetConfig.rayLife, presetConfig.numCycles,presetConfig.includeFadeInOut)}}
+  >
+    {text}
+  </div>
+
+}
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -41,8 +65,9 @@ export function CyberSpaghettiControlsInterior({
       }
     }
 
-    const updateLoop = (rayLife,numCycles) => {
-      timeline?.projectTools.updateFocusRange(determineFocusRange(rayLife,numCycles,state.includeFadeInOut),true);
+    const updateLoop = (rayLife,numCycles,includeFadeInOut?) => {
+      //console.log("Updating loop with rayLife:", rayLife, "numCycles:", numCycles, "includeFadeInOut:", includeFadeInOut, "timeline:", timeline);
+      timeline?.projectTools.updateFocusRange(determineFocusRange(rayLife,numCycles,includeFadeInOut !== undefined ? includeFadeInOut : state.includeFadeInOut),true);
       if (numCycles === 1) {
         update({
           includeFadeInOut: true,
@@ -138,20 +163,38 @@ export function CyberSpaghettiControlsInterior({
         scrollbarColor: 'var(--gray3) var(--gray1)',
       }}
     >
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
       <h2 style={{ color: 'var(--gray7)', fontWeight: "normal" }}>
-        Cyber Spaghetti (New Controls)
+        Cyber Spaghetti (Beta)
       </h2>
+        v.0.0.0
+      </div>
+
       <hr />
+      
+      <div style={{
+        display: "flex",
+        flexDirection: "row",
+        gap: "1rem",
+        alignItems: "center",
+        justifyContent: "flex-start",
+      }}>
+        Get started with a preset
+        <PresetButton text="Star Shimmer" presetConfig={star_shimmer} update={update} updateLoop={updateLoop}/>
+        <PresetButton text="Cartoon Speed Lines" presetConfig={speed_lines} update={update} updateLoop={updateLoop}/>
+        <PresetButton text="Flying Sparks" presetConfig={star_field} update={update} updateLoop={updateLoop}/>
+        <PresetButton text="Warp Speed" presetConfig={warp_speed} update={update} updateLoop={updateLoop}/>
+        <PresetButton text="Spaghetti" presetConfig={spaghetti} update={update} updateLoop={updateLoop}/>
+      </div>
+      
+      Customize to your liking below.
       {/* --- Composition --- */}
-      <CollapsibleSection title="Composition">
-        <div style={groupedRowStyle}>
-          <span>Canvas Size</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
-            <span style={{ margin: '0 0.5rem' }}>x</span>
-            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
-          </div>
-        </div>
+      <CollapsibleSection iconName="grid_guides" title="Composition">
         <div style={groupedRowStyle}>
           <span>Background Color</span>
           <input
@@ -162,7 +205,15 @@ export function CyberSpaghettiControlsInterior({
           />
         </div>
         <div style={groupedRowStyle}>
-          <span>Center</span>
+          <span>Canvas Size</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
+            <span style={{ margin: '0 0.5rem' }}>x</span>
+            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
+          </div>
+        </div>
+        <div style={groupedRowStyle}>
+          <span>Ray Origin</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
             <span style={{ margin: '0 0.5rem' }}>x</span>
@@ -170,8 +221,8 @@ export function CyberSpaghettiControlsInterior({
           </div>
         </div>
         <div style={labelRowStyle}>
-          <span>Num Rays</span>
-          <NumberInput initialValue={state.numRays} min={0} max={1000} step={5} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
+          <span>Number of Rays</span>
+          <NumberInput initialValue={state.numRays} min={0} max={10000} step={5} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
         </div>
 
         <div style={labelRowStyle}>
@@ -179,7 +230,7 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Outer Radius Randomization</span>
+          <span>🎲 Outer Radius Randomization</span>
           <NumberInput initialValue={state.outerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ outerRadiusRandomization: v })} key={externalState+"or"} />
         </div>
               <div style={labelRowStyle}>
@@ -187,10 +238,10 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Inner Radius Randomization</span>
+          <span>🎲 Inner Radius Randomization</span>
           <NumberInput initialValue={state.innerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ innerRadiusRandomization: v })} key={externalState+"ir"} />
         </div>
-        <div style={labelRowStyle}>
+        {/* <div style={labelRowStyle}>
           <span>Mid Angle</span>
           <NumberInput initialValue={getMidAngle(state.startAngle, state.endAngle)} min={0} max={360} step={1} onChange={v => {
             const span = getArcSpan(state.startAngle, state.endAngle);
@@ -206,19 +257,19 @@ export function CyberSpaghettiControlsInterior({
             update({ startAngle: start, endAngle: end });
           }}
           key={externalState+"ea"} />
-        </div>
+        </div> */}
       </CollapsibleSection>
       {/* --- Motion --- */}
-      <CollapsibleSection title="Motion">
+      <CollapsibleSection iconName="animation" title="Motion">
         <div style={labelRowStyle}>
-          <span>Ray Life (frames)</span>
+          <span>Ray Cycle Lifespan (frames)</span>
           <NumberInput initialValue={state.rayLife} min={0} max={300} step={1} 
           onChange={v => {updateLoop(v,state.numCycles); return update({ rayLife: v })}}
           onCommit={v => {updateLoop(v,state.numCycles);return update({ rayLife: v })}} key={externalState+"rl"} 
           />
         </div>
         <div style={labelRowStyle}>
-          <span>Num Cycles</span>
+          <span>Number of Cycles</span>
           <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} 
           onChange={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}}
           onCommit={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}} key={externalState+"nc"} />
@@ -231,7 +282,7 @@ export function CyberSpaghettiControlsInterior({
         </div>
       </CollapsibleSection>
       {/* --- Rays - Appearance --- */}
-      <CollapsibleSection title="Rays - Appearance">
+      <CollapsibleSection iconName="line_weight" title="Rays Appearance">
         <div style={labelRowStyle}>
           <span>Blend Mode</span>
           <SingleSelectButtonGroup options={[
@@ -252,11 +303,15 @@ export function CyberSpaghettiControlsInterior({
           </div>
         </div>
         <div style={labelRowStyle}>
-          <span>Thickness</span>
-          <NumberInput initialValue={state.thickness} min={0} max={1} step={0.01} onChange={v => update({ thickness: v })} key={externalState+"th"} />
+          <span>Stroke Middle Thickness</span>
+          <NumberInput initialValue={state.thickness} min={0} max={0.2} step={0.001} onChange={v => update({ thickness: v })} key={externalState+"th"} />
+        </div>
+          <div style={labelRowStyle}>
+          <span>Stroke Ends Thickness (Relative)</span>
+          <NumberInput initialValue={state.strokeCap} min={0} max={1} step={0.01} onChange={v => update({ strokeCap: v })} key={externalState+"fe"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Thickness Randomization</span>
+          <span>🎲 Thickness Randomization</span>
           <NumberInput initialValue={state.thicknessRandomization} min={0} max={1} step={0.01} onChange={v => update({ thicknessRandomization: v })} key={externalState+"th"} />
         </div>
         <div style={labelRowStyle}>
@@ -264,24 +319,28 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.rayLength} min={0} max={1} step={0.01} onChange={v => update({ rayLength: v })} key={externalState+"th"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Ray Length Randomization</span>
+          <span>🎲 Ray Length Randomization</span>
           <NumberInput initialValue={state.rayLengthRandomization} min={0} max={1} step={0.01} onChange={v => update({ rayLengthRandomization: v })} key={externalState+"th"} />
         </div>
         <div style={labelRowStyle}>
           <span>Feather</span>
           <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
         </div>
-        <div style={labelRowStyle}>
-          <span>Stroke End Thickness</span>
-          <NumberInput initialValue={state.strokeCap} min={0} max={1} step={0.01} onChange={v => update({ strokeCap: v })} key={externalState+"fe"} />
-        </div>
+
         <div style={labelRowStyle}>
           <span>Perspective Skew</span>
           <NumberInput initialValue={state.perspectiveSkew} min={0} max={1} step={0.01} onChange={v => update({ perspectiveSkew: v })} key={externalState+"ps"} />
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Rays - Distortion">
-
+      <CollapsibleSection iconName="waves" title="Distortion">
+        <div style={labelRowStyle}>
+          <span>Pattern</span>
+          <SingleSelectButtonGroup options={[
+            { label: 'Zigzag', value: 'zigzag' },
+            { label: 'Sine', value: 'sine' },
+            { label: 'Jitter', value: 'jitter' },
+          ]} value={state.pattern} onChange={v => update({ pattern: v as NewControls['pattern'] })} />
+        </div>
         <div style={labelRowStyle}>
           <span>Amplitude</span>
           <NumberInput initialValue={state.amplitude} min={0} max={1} step={0.01} onChange={v => update({ amplitude: v })} key={externalState+"am"} />
@@ -291,17 +350,10 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.frequency} min={0} max={1} step={0.01} onChange={v => update({ frequency: v })} key={externalState+"fr"} />
         </div>
         <div style={labelRowStyle}>
-          <span>Phase Randomization</span>
+          <span>🎲 Phase Randomization</span>
           <NumberInput initialValue={state.phaseRandomization} min={0} max={1} step={0.01} onChange={v => update({ phaseRandomization: v })} key={externalState+"fr"} />
         </div>
-        <div style={labelRowStyle}>
-          <span>Pattern</span>
-          <SingleSelectButtonGroup options={[
-            { label: 'Zigzag', value: 'zigzag' },
-            { label: 'Sine', value: 'sine' },
-            { label: 'Jitter', value: 'jitter' },
-          ]} value={state.pattern} onChange={v => update({ pattern: v as NewControls['pattern'] })} />
-        </div>
+
       </CollapsibleSection>
     </div>
   );

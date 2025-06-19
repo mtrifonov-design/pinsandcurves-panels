@@ -50,16 +50,15 @@ export class ParticleSystem {
             const rayTime = offsetTime - cycle * this.CONFIG.rayLife;
             if (rayTime < 0 || rayTime > this.CONFIG.rayLife) continue; // Skip if rayTime is out of bounds
             const rayRelTime = rayTime / this.CONFIG.rayLife;
-            const rayLength = Math.min(Math.max(this.CONFIG.rayLength + this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization * randFromIndex(i + 3) * 2 - this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization,0),1); // Randomize ray length within the specified range
-            //rayRelTime = mix(rayRelTime, rayRelTime*rayRelTime*rayRelTime, this.CONFIG.perspectiveSkew);  
-            
+
             const actualCycle =  Math.floor(offsetTime/ this.CONFIG.rayLife) % this.CONFIG.numCycles;
             const cycleIndex = actualCycle * this.CONFIG.numRays + i;
+            const rayLength = Math.min(Math.max(this.CONFIG.rayLength + this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization * randFromIndex(cycleIndex + 3) * 2 - this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization,0),1); // Randomize ray length within the specified range
             const angleRel = randFromIndex(cycleIndex+1);
             const angle = (this.CONFIG.startAngle + (this.CONFIG.endAngle - this.CONFIG.startAngle) * angleRel) * (Math.PI / 180); // Convert to radians
             const center = [
-                this.CONFIG.centerX * 2 - 1, // Convert to WebGL coordinates
-                this.CONFIG.centerY * 2 - 1  // Convert to WebGL coordinates
+                this.CONFIG.centerX * 2 - 1, 
+                this.CONFIG.centerY * 2 - 1 
             ];
             const centerX = center[0];
             const centerY = center[1];
@@ -78,8 +77,6 @@ export class ParticleSystem {
                 centerX + inner * Math.cos(angle),
                 centerY + inner * Math.sin(angle)
             ];
-
-
 
             const OVERSHOOT = 0.2;
             const rayOffset = [

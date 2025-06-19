@@ -99,7 +99,8 @@ void main() {
   // The plane is spanned by originDir and lineDir
   vec3 extrusionDir = normalize(cross(originDir, lineDir));
   vec3 center = mix(lA, lB, t); 
-  float extrusion = stroke.x * amplitude * 2.;
+
+  float extrusion = stroke.x * (1.+amplitude) * 2.;
   vec4 eyePos = vec4(center + extrusionDir * (a_pos.y * extrusion), 1.0);
 
   // --- correct projection ---
@@ -236,7 +237,7 @@ void main() {
   // Apply distortion to the normalized coordinates, modulated by balance
   vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance, v_relTime);
   float width = v_offsetEnd - v_offsetStart;
-  float d = stroke(p_distorted,v_offsetStart, v_offsetEnd, thickness / (amplitude * 2.), v_strokeCap);
+  float d = stroke(p_distorted,v_offsetStart, v_offsetEnd, thickness / ((1.+amplitude) * 2.), v_strokeCap);
 
   // Draw bounding box if enabled
   if (showBoundingBox) {

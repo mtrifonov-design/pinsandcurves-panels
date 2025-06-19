@@ -16,6 +16,8 @@ export function useGoatCounter(defaultEvent?: Record<string, any>) {
 
   // Function to record custom events
   const recordEvent = useCallback((event: Record<string, any>) => {
+    // check if we are on localhost, if so, do not send events
+    if (window.location.hostname === 'localhost') return;
     if (typeof window !== 'undefined' && window.goatcounter && typeof window.goatcounter.count === 'function') {
       window.goatcounter.count(event);
     }
