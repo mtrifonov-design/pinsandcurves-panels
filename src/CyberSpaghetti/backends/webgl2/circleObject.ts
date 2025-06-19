@@ -86,7 +86,7 @@ mat4 lookAtMatrix(vec3 eye, vec3 center, vec3 up)
 void main() {
 
   float aspect = resolution.x / resolution.y; // aspect ratio from instance attributes
-  float zFar = mix(-0.5, -10.5, perspectiveSkew);
+  float zFar = mix(-0.5, -10., perspectiveSkew);
   float zNear = -0.5;
   vec3 lA = normalize(vec3(linePointA,1.)) * zFar;
   vec3 lB = normalize(vec3(linePointB,1.)) * zNear;
@@ -96,12 +96,12 @@ void main() {
   vec3 originDir = normalize(lA - vec3(0.0, 0.0, 0.0));
   // The plane is spanned by originDir and lineDir
   vec3 extrusionDir = normalize(cross(originDir, lineDir));
-  vec3 center = mix(lA, lB, t);
+  vec3 center = mix(lA, lB, t); 
   float extrusion = 0.3;
   vec4 eyePos = vec4(center + extrusionDir * (a_pos.y * extrusion), 1.0);
 
   // --- correct projection ---
-  mat4 proj = makePerspective(45.0, aspect, 1., 100.0, vec2(0.));
+  mat4 proj = makePerspective(5.0, aspect, 3., 100.0, vec2(0.));
 
   // --- final clip coords ---
   gl_Position = proj * eyePos;
@@ -182,9 +182,9 @@ vec2 distortRay(vec2 p, float amplitude, float frequency, float phase, int type,
     float t = (x + 1.0) * 0.5; // map x from [-1,1] to [0,1]
 
     // Modulate phase nonlinearly for perspective effect
-    float phaseT = freqModulate(1.-t,1.+(1.-balance) * 5.); // nonlinear phase adjustment based on balance; 
-    float ampMod = mix(t*t,1.,balance*balance); // x in [-1,1], so x*x ramps from 0 to 1 at ends
-    float localAmp = amplitude * ampMod;
+    float phaseT = 1.-t; 
+    //float ampMod = mix(t*t,1.,balance*balance); // x in [-1,1], so x*x ramps from 0 to 1 at ends
+    float localAmp = amplitude; // * ampMod;
     float offset = 0.0;
     if (type == 0) {
         // Sine
@@ -213,7 +213,7 @@ void main() {
   // Distortion parameters (could be uniforms or varyings in future)
   float amplitude = v_amplitude;
   float thickness = v_thickness;
-  float frequency = v_frequency * 50.;
+  float frequency = v_frequency * 100.;
   float phase = v_phaseOffset * 6.28318530718; // 2 * PI for full cycle
   int type = 0; // 0 = sine, 1 = zigzag, 2 = electric
 
@@ -246,6 +246,9 @@ void main() {
 
   // Feathered edge logic using normalized SDF and thresholded smoothstep
   float alpha = 1.0 - smoothstep(-sqrt(v_feather), 0.0, d);
+  // Apply smoothstep fade at start and end of v_local.x
+  alpha *= smoothstep(-1., -.9, v_local.x) * smoothstep(1.0, 0.9, v_local.x);
+  
   // if (alpha <= 0.0) discard;
   
   // === UV debug output flag ===

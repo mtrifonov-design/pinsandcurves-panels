@@ -49,9 +49,9 @@ export class ParticleSystem {
             const cycle = Math.floor(offsetTime/ this.CONFIG.rayLife) % (this.CONFIG.numCycles + 1);
             const rayTime = offsetTime - cycle * this.CONFIG.rayLife;
             if (rayTime < 0 || rayTime > this.CONFIG.rayLife) continue; // Skip if rayTime is out of bounds
-            let rayRelTime = rayTime / this.CONFIG.rayLife;
-            const rayLength = this.CONFIG.rayLength + this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization * randFromIndex(i + 3) * 2 - this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization; // Randomize ray length within the specified range
-            rayRelTime = mix(rayRelTime, rayRelTime*rayRelTime*rayRelTime, this.CONFIG.perspectiveSkew);  
+            const rayRelTime = rayTime / this.CONFIG.rayLife;
+            const rayLength = Math.min(Math.max(this.CONFIG.rayLength + this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization * randFromIndex(i + 3) * 2 - this.CONFIG.rayLength * this.CONFIG.rayLengthRandomization,0),1); // Randomize ray length within the specified range
+            //rayRelTime = mix(rayRelTime, rayRelTime*rayRelTime*rayRelTime, this.CONFIG.perspectiveSkew);  
             
             const actualCycle =  Math.floor(offsetTime/ this.CONFIG.rayLife) % this.CONFIG.numCycles;
             const cycleIndex = actualCycle * this.CONFIG.numRays + i;
@@ -65,24 +65,28 @@ export class ParticleSystem {
             const centerY = center[1];
 
 
-            const innerRadiusIntersection = [
-                centerX ,
-                centerY
-            ];
+            const innerOffset = this.CONFIG.innerRadiusRandomization * randFromIndex(cycleIndex + 5) * this.CONFIG.innerRadius; // Randomize inner radius offset
+            const outerOffset = this.CONFIG.outerRadiusRandomization * randFromIndex(cycleIndex + 6) * 0.5; // Randomize outer radius offset
+
+            const outer = (this.CONFIG.outerRadius * Math.sqrt(2) + outerOffset);
+            const inner = outer * Math.max(this.CONFIG.innerRadius-innerOffset,0);
             const outerRadiusIntersection = [
-                centerX + this.CONFIG.outerRadius * Math.cos(angle),
-                centerY + this.CONFIG.outerRadius * Math.sin(angle)
+                centerX +  outer* Math.cos(angle),
+                centerY + outer * Math.sin(angle)
+            ];
+            const innerRadiusIntersection = [
+                centerX + inner * Math.cos(angle),
+                centerY + inner * Math.sin(angle)
             ];
 
-            const innerOffset = this.CONFIG.innerRadiusRandomization * randFromIndex(cycleIndex + 5) * 0.5; // Randomize inner radius offset
-            const outerOffset = 1 - this.CONFIG.outerRadiusRandomization * randFromIndex(cycleIndex + 6) * 0.5; // Randomize outer radius offset
 
-            const perspectiveStrength = mix(1, rayRelTime, this.CONFIG.perspectiveSkew);
+
+            const OVERSHOOT = 0.2;
             const rayOffset = [
-                mix(innerOffset,outerOffset,Math.min(Math.max(rayRelTime * (1+rayLength*perspectiveStrength) - rayLength*perspectiveStrength,0),1)),
-                mix(innerOffset,outerOffset,Math.min(Math.max((rayRelTime) * (1+rayLength*perspectiveStrength),0),1)),
+                rayRelTime * (1+rayLength+OVERSHOOT) - rayLength - OVERSHOOT / 2,
+                rayRelTime * (1+rayLength+OVERSHOOT) - OVERSHOOT / 2,
             ]
-
+            //console.log('rayOffset', rayOffset);
 
             const rayThickness = this.CONFIG.thickness 
             + this.CONFIG.thickness * this.CONFIG.thicknessRandomization * 2 * randFromIndex(cycleIndex + 4) - this.CONFIG.thickness * this.CONFIG.thicknessRandomization; // Randomize thickness within the specified range

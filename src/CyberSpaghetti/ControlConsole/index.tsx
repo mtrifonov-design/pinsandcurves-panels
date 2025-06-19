@@ -173,21 +173,22 @@ export function CyberSpaghettiControlsInterior({
           <span>Num Rays</span>
           <NumberInput initialValue={state.numRays} min={0} max={500} step={1} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
         </div>
-        <div style={labelRowStyle}>
-          <span>Inner Radius</span>
-          <NumberInput initialValue={state.innerRadius} min={0} max={2*Math.sqrt(2)} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
-        </div>
-        <div style={labelRowStyle}>
-          <span>Inner Radius Randomization</span>
-          <NumberInput initialValue={state.innerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ innerRadiusRandomization: v })} key={externalState+"ir"} />
-        </div>
+
         <div style={labelRowStyle}>
           <span>Outer Radius</span>
-          <NumberInput initialValue={state.outerRadius} min={0} max={2*Math.sqrt(2)} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
+          <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
         </div>
         <div style={labelRowStyle}>
           <span>Outer Radius Randomization</span>
           <NumberInput initialValue={state.outerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ outerRadiusRandomization: v })} key={externalState+"or"} />
+        </div>
+              <div style={labelRowStyle}>
+          <span>Inner Radius</span>
+          <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
+        </div>
+        <div style={labelRowStyle}>
+          <span>Inner Radius Randomization</span>
+          <NumberInput initialValue={state.innerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ innerRadiusRandomization: v })} key={externalState+"ir"} />
         </div>
         <div style={labelRowStyle}>
           <span>Mid Angle</span>
