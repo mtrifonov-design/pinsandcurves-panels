@@ -116,8 +116,8 @@ void main() {
   v_color = fillColor;
   v_thickness = stroke.x;
   v_feather = stroke.z;
-  v_offsetStart = offsetStart;
-  v_offsetEnd = offsetEnd;
+  v_offsetStart = offsetStart * 2. - 1.; // normalize to [-1,1]
+  v_offsetEnd = offsetEnd * 2. - 1.; // normalize to [-1,1]
   v_amplitude = amplitude * 0.5;
   v_frequency = frequency;
   v_strokeCap = stroke.y; // not used, but required for WebGL2
@@ -236,7 +236,7 @@ void main() {
   // Apply distortion to the normalized coordinates, modulated by balance
   vec2 p_distorted = distortRay(p, amplitude, frequency, phase, v_distortType, v_balance, v_relTime);
   float width = v_offsetEnd - v_offsetStart;
-  float d = stroke(p_distorted,v_offsetStart, v_offsetEnd, 1. * width, v_strokeCap);
+  float d = stroke(p_distorted,v_offsetStart, v_offsetEnd, thickness / (amplitude * 2.), v_strokeCap);
 
   // Draw bounding box if enabled
   if (showBoundingBox) {
@@ -363,7 +363,7 @@ export function circleDraw(particleSystem: ParticleSystem) {
                 fillColor: new Float32Array(fillColor), // RGB normalized to [0,1]
                 linePointA: new Float32Array(linePointA),
                 linePointB: new Float32Array(linePointB),
-                resolution: repeat([1920,1080],numRays), // canvas resolution
+                resolution: repeat([particleSystem.CONFIG.canvasWidth,particleSystem.CONFIG.canvasHeight],numRays), // canvas resolution
                 offsetStart: new Float32Array(offsetStart),
                 offsetEnd: new Float32Array(offsetEnd),
                 amplitude: repeat(particleSystem.CONFIG.amplitude, numRays),

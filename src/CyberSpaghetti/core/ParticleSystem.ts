@@ -86,8 +86,6 @@ export class ParticleSystem {
                 rayRelTime * (1+rayLength+OVERSHOOT) - rayLength - OVERSHOOT / 2,
                 rayRelTime * (1+rayLength+OVERSHOOT) - OVERSHOOT / 2,
             ]
-            //console.log('rayOffset', rayOffset);
-
             const rayThickness = this.CONFIG.thickness 
             + this.CONFIG.thickness * this.CONFIG.thicknessRandomization * 2 * randFromIndex(cycleIndex + 4) - this.CONFIG.thickness * this.CONFIG.thicknessRandomization; // Randomize thickness within the specified range
             //console.log('rayOffset', rayOffset);
