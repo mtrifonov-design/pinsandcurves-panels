@@ -207,39 +207,39 @@ export function CyberSpaghettiControlsInterior({
         <div style={groupedRowStyle}>
           <span>Canvas Size</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} key={externalState+"cw"} />
+            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })}  />
             <span style={{ margin: '0 0.5rem' }}>x</span>
-            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} key={externalState+"ch"} />
+            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })}/>
           </div>
         </div>
         <div style={groupedRowStyle}>
           <span>Ray Origin</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} key={externalState+"cx"} />
+            <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })}  />
             <span style={{ margin: '0 0.5rem' }}>x</span>
-            <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })} key={externalState+"cy"} />
+            <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })}  />
           </div>
         </div>
         <div style={labelRowStyle}>
           <span>Number of Rays</span>
-          <NumberInput initialValue={state.numRays} min={0} max={10000} step={5} onChange={v => update({ numRays: v })} key={externalState+"nr"} />
+          <NumberInput initialValue={state.numRays} min={0} max={10000} step={5} onChange={v => update({ numRays: v })}  />
         </div>
 
         <div style={labelRowStyle}>
           <span>Outer Radius</span>
-          <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} key={externalState+"or"} />
+          <NumberInput initialValue={state.outerRadius} min={0} max={1} step={0.01} onChange={v => update({ outerRadius: v })} />
         </div>
         <div style={labelRowStyle}>
           <span>🎲 Outer Radius Randomization</span>
-          <NumberInput initialValue={state.outerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ outerRadiusRandomization: v })} key={externalState+"or"} />
+          <NumberInput initialValue={state.outerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ outerRadiusRandomization: v })}  />
         </div>
               <div style={labelRowStyle}>
           <span>Inner Radius</span>
-          <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })} key={externalState+"ir"} />
+          <NumberInput initialValue={state.innerRadius} min={0} max={1} step={0.01} onChange={v => update({ innerRadius: v })}  />
         </div>
         <div style={labelRowStyle}>
           <span>🎲 Inner Radius Randomization</span>
-          <NumberInput initialValue={state.innerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ innerRadiusRandomization: v })} key={externalState+"ir"} />
+          <NumberInput initialValue={state.innerRadiusRandomization} min={0} max={1} step={0.01} onChange={v => update({ innerRadiusRandomization: v })}  />
         </div>
         {/* <div style={labelRowStyle}>
           <span>Mid Angle</span>
@@ -265,14 +265,14 @@ export function CyberSpaghettiControlsInterior({
           <span>Ray Cycle Lifespan (frames)</span>
           <NumberInput initialValue={state.rayLife} min={0} max={300} step={1} 
           onChange={v => {updateLoop(v,state.numCycles); return update({ rayLife: v })}}
-          onCommit={v => {updateLoop(v,state.numCycles);return update({ rayLife: v })}} key={externalState+"rl"} 
+          onCommit={v => {updateLoop(v,state.numCycles);return update({ rayLife: v })}} 
           />
         </div>
         <div style={labelRowStyle}>
           <span>Number of Cycles</span>
           <NumberInput initialValue={state.numCycles} min={1} max={10} step={1} 
           onChange={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}}
-          onCommit={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}} key={externalState+"nc"} />
+          onCommit={v => {updateLoop(state.rayLife,v); return update({ numCycles: v })}}  />
         </div>
         <div style={labelRowStyle}>
           <span>Include Fade In/Out</span>
@@ -304,32 +304,32 @@ export function CyberSpaghettiControlsInterior({
         </div>
         <div style={labelRowStyle}>
           <span>Stroke Middle Thickness</span>
-          <NumberInput initialValue={state.thickness} min={0} max={0.2} step={0.001} onChange={v => update({ thickness: v })} key={externalState+"th"} />
+          <NumberInput initialValue={state.thickness} min={0} max={0.2} step={0.001} onChange={v => update({ thickness: v })} />
         </div>
           <div style={labelRowStyle}>
           <span>Stroke Ends Thickness (Relative)</span>
-          <NumberInput initialValue={state.strokeCap} min={0} max={1} step={0.01} onChange={v => update({ strokeCap: v })} key={externalState+"fe"} />
+          <NumberInput initialValue={state.strokeCap} min={0} max={1} step={0.01} onChange={v => update({ strokeCap: v })} />
         </div>
         <div style={labelRowStyle}>
           <span>🎲 Thickness Randomization</span>
-          <NumberInput initialValue={state.thicknessRandomization} min={0} max={1} step={0.01} onChange={v => update({ thicknessRandomization: v })} key={externalState+"th"} />
+          <NumberInput initialValue={state.thicknessRandomization} min={0} max={1} step={0.01} onChange={v => update({ thicknessRandomization: v })} />
         </div>
         <div style={labelRowStyle}>
           <span>Ray Length</span>
-          <NumberInput initialValue={state.rayLength} min={0} max={1} step={0.01} onChange={v => update({ rayLength: v })} key={externalState+"th"} />
+          <NumberInput initialValue={state.rayLength} min={0} max={1} step={0.01} onChange={v => update({ rayLength: v })} />
         </div>
         <div style={labelRowStyle}>
           <span>🎲 Ray Length Randomization</span>
-          <NumberInput initialValue={state.rayLengthRandomization} min={0} max={1} step={0.01} onChange={v => update({ rayLengthRandomization: v })} key={externalState+"th"} />
+          <NumberInput initialValue={state.rayLengthRandomization} min={0} max={1} step={0.01} onChange={v => update({ rayLengthRandomization: v })} />
         </div>
         <div style={labelRowStyle}>
           <span>Feather</span>
-          <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} key={externalState+"fe"} />
+          <NumberInput initialValue={state.feather} min={0} max={1} step={0.01} onChange={v => update({ feather: v })} />
         </div>
 
         <div style={labelRowStyle}>
           <span>Perspective Skew</span>
-          <NumberInput initialValue={state.perspectiveSkew} min={0} max={1} step={0.01} onChange={v => update({ perspectiveSkew: v })} key={externalState+"ps"} />
+          <NumberInput initialValue={state.perspectiveSkew} min={0} max={1} step={0.01} onChange={v => update({ perspectiveSkew: v })} />
         </div>
       </CollapsibleSection>
       <CollapsibleSection iconName="waves" title="Distortion">
@@ -343,15 +343,15 @@ export function CyberSpaghettiControlsInterior({
         </div>
         <div style={labelRowStyle}>
           <span>Amplitude</span>
-          <NumberInput initialValue={state.amplitude} min={0} max={1} step={0.01} onChange={v => update({ amplitude: v })} key={externalState+"am"} />
+          <NumberInput initialValue={state.amplitude} min={0} max={1} step={0.01} onChange={v => update({ amplitude: v })}  />
         </div>
         <div style={labelRowStyle}>
           <span>Frequency</span>
-          <NumberInput initialValue={state.frequency} min={0} max={1} step={0.01} onChange={v => update({ frequency: v })} key={externalState+"fr"} />
+          <NumberInput initialValue={state.frequency} min={0} max={1} step={0.01} onChange={v => update({ frequency: v })}  />
         </div>
         <div style={labelRowStyle}>
           <span>🎲 Phase Randomization</span>
-          <NumberInput initialValue={state.phaseRandomization} min={0} max={1} step={0.01} onChange={v => update({ phaseRandomization: v })} key={externalState+"fr"} />
+          <NumberInput initialValue={state.phaseRandomization} min={0} max={1} step={0.01} onChange={v => update({ phaseRandomization: v })}  />
         </div>
 
       </CollapsibleSection>
