@@ -7,6 +7,7 @@ import AssetResolver from "./AssetResolver";
 import HTMLPreviewContent from "./HTMLPreviewContent";
 import TimelineProvider from "../TimelineUtils/TimelineProvider";
 import useTimelineRelay from "./useTimelineRelay";
+import { useUnit } from "../CK_Adapter/CK_UnitProvider";
 
 
 class TextController {
@@ -67,6 +68,19 @@ function HTMLPreview() {
     const { initialized: initializedAssets, assets } = useAssets(
         requestedAssets,
     );
+
+    console.log("Assets", assets, requestedAssets, initializedAssets);
+    useUnit(
+        u => "VERTEX_PAYLOAD" in u.payload,
+        (u,w) => {
+            //payloadRef.current = u.payload.VERTEX_PAYLOAD;
+            w.thread("default").worker(u.sender, {
+                VERTEX_PAYLOAD_response: true,
+            })
+            //setVertexId(u.payload.VERTEX_PAYLOAD.vertexId);
+            w.dispatch();
+        }
+    )
 
     useTimelineRelay();
 

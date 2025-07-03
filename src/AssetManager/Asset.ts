@@ -107,10 +107,12 @@ export class Asset {
                 workload.dispatch();
             }
         );
+        console.log("Subscribing to asset", assetId, subscriptionId,c);
         await c.instance(instance).call("subscribeToExistingAsset", {
             asset_id: assetId,
             subscription_id: subscriptionId,
         });
+        console.log("Instance Call Successful");
         return a;
     }
 }

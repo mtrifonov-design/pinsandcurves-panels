@@ -38,7 +38,7 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/code" element={<CodeEditor />} />
           {/* <Route path="/copilot" element={<Copilot />} /> */}
           {/* <Route path="/assets" element={<AssetManager />} /> */}
-          {/* <Route path="/htmlpreview" element={<HTMLPreview />} /> */}
+          <Route path="/htmlpreview" element={<HTMLPreview />} />
           <Route path="/cyberspaghetti" element={<CyberSpaghetti />} />
           <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />
           <Route path="/liquidlissajous" element={<LiquidLissajous />} />

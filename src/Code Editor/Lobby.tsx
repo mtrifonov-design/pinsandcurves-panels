@@ -2,6 +2,7 @@
 import { Button, Logo } from "@mtrifonov-design/pinsandcurves-design";
 import CONFIG from "../Config";
 import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pinsandcurves-external';
+import { useCK } from "../CK_Adapter/CK_Provider";
 
 const pb = new ProjectDataStructure.ProjectBuilder();
 pb.setTimelineData(900,30,0);
@@ -16,6 +17,7 @@ function Lobby(p: {
     setAssetId: (assetId: string) => void;
     vertexId: string | undefined;
 }) {
+    const { FreeWorkload } = useCK();
     const files = Object.entries(p.index.data).filter(([id,file]: any) => file.type === "js" || file.type === "html");
   return (
     <div style={{
@@ -87,106 +89,144 @@ function Lobby(p: {
                 text="javascript"
                 iconName="javascript"
                 onClick={() => {
-                    globalThis.CK_ADAPTER.pushWorkload({
-                        default: [{
-                            type: "worker",
-                            receiver: {
-                                instance_id: "ASSET_SERVER",
-                                modality: "wasmjs",
-                                resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-                            },
-                            payload: {
-                                createAsset: {
-                                    asset: {
-                                        data: `//console.log("Hello World")`,
-                                        metadata: { type: "js", name: "test.js",
-                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
-                                         },
-                                        on_update: {
-                                            type: "simple",
-                                        }
-                                    },
+                    const w = FreeWorkload();
+                    w.thread("default").worker({
+                        instance_id: "ASSET_SERVER",
+                        modality: "wasmjs",
+                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+                    }, {
+                        createAsset: {
+                            asset: {
+                                data: `//console.log("Hello World")`,
+                                metadata: { type: "js", name: "test.js",
+                                    preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                 },
+                                on_update: {
+                                    type: "simple",
                                 },
+                                id: "test.js",
                             },
+
                         },
-                        {
-                            type: "worker",
-                            receiver: {
-                                instance_id: "ui",
-                                modality: "ui",
-                                resource_id: `ui`,
-                            },
-                            payload: {
-                                setVertexPayload: {
-                                    vertexId: p.vertexId,
-                                    payload: {
-                                        assetMetadata: { type: "js", name: "test.js",
-                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
-                                         },
-                                    }
-                                }
-                            },
-                        }
-                    ],
+                        
                     });
-                }}
+                    w.thread("ui").worker({
+                        instance_id: "ui",
+                        modality: "ui",
+                        resource_id: `ui`,
+                    }, {
+                        setVertexPayload: {
+                            vertexId: p.vertexId,
+                            payload: {
+                                assetMetadata: { type: "js", name: "test.js",
+                                    preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                 },
+                            }
+                        }
+                    });
+                    w.dispatch();
+                }}                    
             />
             <Button 
                 text="html"
                 iconName="html"
                 onClick={() => {
-                    globalThis.CK_ADAPTER.pushWorkload({
-                        default: [{
-                            type: "worker",
-                            receiver: {
-                                instance_id: "ASSET_SERVER",
-                                modality: "wasmjs",
-                                resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
-                            },
-                            payload: {
-                                createAsset: {
-                                    asset: {
-                                        data: `
-                                            <html>
-                                                <head>
-                                                    <title>Test</title>
-                                                </head>
-                                                <body>
-                                                    <h1>Hello World</h1>
-                                                    <script src="{{test.js}}"></script>
-                                                </body>
-                                            </html>
-                                        `,
+                    const w = FreeWorkload();
+                    w.thread("default").worker({
+                        instance_id: "ASSET_SERVER",
+                        modality: "wasmjs",
+                        resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+                    }, {
+                        createAsset: {
+                            asset: {
+                                data: `
+<html>
+    <head>
+        <title>Test</title>
+    </head>
+    <body>
+        <h1>Hello World</h1>
+        <script src="{{test.js}}"></script>
+    </body>
+</html>
+                                `,
                                         metadata: { type: "html", name: "index.html",
                                             preferredEditorAddress: CONFIG.SELF_HOST+"code",
                                          },
-                                        on_update: {
-                                            type: "simple",
-                                        }
-                                    },
+                                on_update: {
+                                    type: "simple",
                                 },
+                                id: "index.html",
                             },
                         },
-                        {
-                            type: "worker",
-                            receiver: {
-                                instance_id: "ui",
-                                modality: "ui",
-                                resource_id: `ui`,
-                            },
-                            payload: {
-                                setVertexPayload: {
-                                    vertexId: p.vertexId,
-                                    payload: {
-                                        assetMetadata: { type: "html", name: "index.html",
-                                            preferredEditorAddress: CONFIG.SELF_HOST+"code",
-                                         },
-                                    }
-                                }
-                            },
-                        }
-                    ],
                     });
+                    w.thread("ui").worker({
+                        instance_id: "ui",
+                        modality: "ui",
+                        resource_id: `ui`,
+                    }, {
+                        setVertexPayload: {
+                            vertexId: p.vertexId,
+                            payload: {
+                                assetMetadata: { type: "html", name: "index.html",
+                                    preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                                 },
+                            }
+                        }
+                    });
+                    w.dispatch();
+                    // globalThis.CK_ADAPTER.pushWorkload({
+                    //     default: [{
+                    //         type: "worker",
+                    //         receiver: {
+                    //             instance_id: "ASSET_SERVER",
+                    //             modality: "wasmjs",
+                    //             resource_id: `${CONFIG.PAC_BACKGROUND_SERVICES}AssetServerV2`,
+                    //         },
+                    //         payload: {
+                    //             createAsset: {
+                    //                 asset: {
+                    //                     data: `
+                    //                         <html>
+                    //                             <head>
+                    //                                 <title>Test</title>
+                    //                             </head>
+                    //                             <body>
+                    //                                 <h1>Hello World</h1>
+                    //                                 <script src="{{test.js}}"></script>
+                    //                             </body>
+                    //                         </html>
+                    //                     `,
+                    //                     metadata: { type: "html", name: "index.html",
+                    //                         preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                    //                      },
+                    //                     on_update: {
+                    //                         type: "simple",
+                    //                     }
+                    //                 },
+                    //             },
+                    //         },
+                    //     },
+                    //     {
+                    //         type: "worker",
+                    //         receiver: {
+                    //             instance_id: "ui",
+                    //             modality: "ui",
+                    //             resource_id: `ui`,
+                    //         },
+                    //         payload: {
+                    //             setVertexPayload: {
+                    //                 vertexId: p.vertexId,
+                    //                 payload: {
+                    //                     assetMetadata: { type: "html", name: "index.html",
+                    //                         preferredEditorAddress: CONFIG.SELF_HOST+"code",
+                    //                      },
+                    //                 }
+                    //             }
+                    //         },
+                    //     }
+                    // ],
+                    // });
                 }}
             />
         </div>

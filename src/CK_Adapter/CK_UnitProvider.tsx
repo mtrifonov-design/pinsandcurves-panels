@@ -24,6 +24,7 @@ class UnitManager {
                 return;
             }
         }
+        throw new Error("No unit processor found for unit: " + JSON.stringify(unit));
     }
 }
 

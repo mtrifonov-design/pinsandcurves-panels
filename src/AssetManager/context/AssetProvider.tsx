@@ -37,6 +37,7 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
     const vertexId = unit.payload.payload.vertexId;
     const c = new CK_Circuit(registerUnitProcessor, workload);
     await subscriptionManager.init(vertexId, c);
+    await c.instance(globalThis.CK_INSTANCE).call("VERTEX_PAYLOAD", unit.payload.payload);
     c.complete();
   });
 

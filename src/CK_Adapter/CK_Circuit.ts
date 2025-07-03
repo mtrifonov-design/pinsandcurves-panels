@@ -11,7 +11,9 @@ class CK_Circuit {
 
     registeredRoutes: Record<string, () => void> = {};
     registerRoute(route: string, instance: CK_Instance, callback: (u: CK_Unit) => void) {
+        console.log(this.registeredRoutes)
         if (!(route in this.registeredRoutes)) {
+            console.log("Registering route:", route, "for instance:", instance);
             const responseRoute = `${route}_response`;
             this.registeredRoutes[route] = this.registerUnitProcessor(
                 (unit) => unit.type === "worker" 
@@ -55,6 +57,7 @@ class CK_Circuit_Instance {
     }
 
     async call(route: string, payload: unknown) {
+        console.log("Calling route:", route, "with payload:", payload, this.instance);
         this.circuit.workload.thread("default").worker(this.instance, {
             [route]: payload,
         });

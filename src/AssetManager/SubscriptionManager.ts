@@ -73,6 +73,7 @@ export class SubscriptionManager {
 
     private async syncAssets(c: CK_Circuit) {
         if (!this.initialized) return;
+        console.log("Syncing assets", this.assets, this.assetRegistry);
         const unusedAssets = Object.keys(this.assets).filter(
             (id) => !Object.keys(this.assetRegistry).includes(id)
         );
@@ -83,6 +84,7 @@ export class SubscriptionManager {
         const newAssets = Object.keys(this.assetRegistry).filter(
             (id) => !this.assets[id]
         );
+        console.log("New assets to subscribe", newAssets);
         for (let i = 0; i < newAssets.length; i++) {
             const id = newAssets[i];
             const controller = this.assetRegistry[id];
@@ -95,6 +97,7 @@ export class SubscriptionManager {
                 this.notifySubscribers.bind(this),
                 this.FreeWorkload
             );
+            console.log("Subscribed to new asset", id, asset);
             this.assets[id] = asset;
         }
     }

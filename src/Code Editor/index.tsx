@@ -1,14 +1,12 @@
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FullscreenLoader from "../FullscreenLoader/FullscreenLoader";
-import { useUnit } from "../hooks";
-import CONFIG from "../Config";
 import Lobby from "./Lobby";
 import { useAssets } from "../AssetManager/hooks/useAssets";
 import { AssetProvider } from "../AssetManager/context/AssetProvider";
 import { useIndex } from "../AssetManager/hooks/useIndex";
-import ReturnBar from "./ReturnBar";
 //import { useInit } from "../AssetManager/context/AssetProvider";
 import { CanvasCodeEditor } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
+import { useUnit } from "../CK_Adapter/CK_UnitProvider";
 
 class TextController {
 
@@ -59,21 +57,28 @@ function CodeEditor() {
 
     const [vertexId, setVertexId] = useState<string | undefined>(undefined);
 
-    const payload = useInit();
-    useEffect(() => {
-        //console.log("Payload", payload);
-        if (payload && payload.vertexId !== undefined) {
-            const { vertexId } = payload;
-            setVertexId(vertexId);
+    const payloadRef = useRef<any>(null);
+    useUnit(
+        u => "VERTEX_PAYLOAD" in u.payload,
+        (u,w) => {
+            payloadRef.current = u.payload.VERTEX_PAYLOAD;
+            w.thread("default").worker(u.sender, {
+                VERTEX_PAYLOAD_response: true,
+            })
+            setVertexId(u.payload.VERTEX_PAYLOAD.vertexId);
+            w.dispatch();
         }
+    )
+
+    console.log(index, initializedIndex, assets, initializedAssets, assetId, vertexId);
+    const payload = payloadRef.current;
+    useEffect(() => {
         if (payload && payload.assetMetadata !== undefined && initializedIndex) {
             const { name, type } = payload.assetMetadata;
-
+            console.log(index.data);
             const assetId = Object.entries(index.data).find(([id, assetMetadata]) => {
                 return assetMetadata.name === name && assetMetadata.type === type;
             })?.[0];
-            //console.log("Asset ID", assetId);
-            
             setAssetId(assetId);
         }
     }, [payload, initializedIndex]);
