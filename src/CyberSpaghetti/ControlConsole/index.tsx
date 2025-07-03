@@ -176,15 +176,17 @@ export function CyberSpaghettiControlsInterior({
       </div>
 
       <hr />
-      
+
+      Get started with a preset
       <div style={{
         display: "flex",
         flexDirection: "row",
         gap: "1rem",
         alignItems: "center",
         justifyContent: "flex-start",
+        flexWrap: "wrap",
       }}>
-        Get started with a preset
+
         <PresetButton text="Star Shimmer" presetConfig={star_shimmer} update={update} updateLoop={updateLoop}/>
         <PresetButton text="Cartoon Speed Lines" presetConfig={speed_lines} update={update} updateLoop={updateLoop}/>
         <PresetButton text="Flying Sparks" presetConfig={star_field} update={update} updateLoop={updateLoop}/>
