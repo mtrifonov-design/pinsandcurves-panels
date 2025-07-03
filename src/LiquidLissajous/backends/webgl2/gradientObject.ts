@@ -114,6 +114,13 @@ void main() {
     oklBlended.yz *= factor;
     outCol = oklabToSRGB(oklBlended);
   }
+
+  // effects
+  // 1. noise - generate a random noise value
+  float noise = fract(sin(dot(v_uv * vec2(v_width, v_height), vec2(12.9898, 78.233))) * 43758.5453);
+  // 2. apply noise to the output color
+  outCol = mix(outCol, vec3(0.5, 0.5, 0.5), noise * 0.5); // mix with gray based on noise
+
   outColor = vec4(outCol, 1.0);
 }`;
 

@@ -1,12 +1,11 @@
-import { NumberInput, Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
+import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 import React, { useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import type { Controls } from '../CyberSpaghettiControls';
 import TimelineProvider from '../../TimelineUtils/TimelineProvider';
-import CollapsibleSection from './CollapsibleSection/CollapsibleSection';
-import './CollapsibleSection/CollapsibleSection.css';
+
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import { useTimeline } from '../../TimelineUtils/TimelineProvider';
 import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';

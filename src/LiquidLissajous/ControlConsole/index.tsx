@@ -6,6 +6,7 @@ import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../LiquidLissajousControls';
 import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
+import { CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -47,8 +48,7 @@ export function CyberSpaghettiControlsInterior({
     update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
-  // Advanced menu toggle state
-  const [showAdvanced, setShowAdvanced] = useState(false);
+
 
   return (
     <div className="hyperspeed-controls"
@@ -82,7 +82,7 @@ export function CyberSpaghettiControlsInterior({
       </div>
       <hr></hr>
 
-
+        <CollapsibleSection title="General" iconName="settings">
       <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -108,6 +108,28 @@ export function CyberSpaghettiControlsInterior({
           />
         </div>
       </label>
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        loop length (in frames) &nbsp;
+        <NumberInput
+          initialValue={state.loopLifecycle}
+          min={30}
+          max={900}
+          step={1}
+          onChange={c => {
+            update({ loopLifecycle: c })}}
+          onCommit={(c) => {
+            timeline?.projectTools.updateFocusRange([0, c],true);
+            update({ loopLifecycle: c });
+          }}
+        />
+      </label>
+      </CollapsibleSection>
+      <CollapsibleSection title="Colors" iconName="palette">
       {/* Global limits */}
       <label style={{
         display: 'flex',
@@ -162,50 +184,11 @@ export function CyberSpaghettiControlsInterior({
         ))}
         <Button text={"+ add colour"} onClick={addColor} />
       </fieldset>
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        justifyContent: 'space-between',
-      }}>
-        loop length (in frames) &nbsp;
-        <NumberInput
-          initialValue={state.loopLifecycle}
-          min={30}
-          max={900}
-          step={1}
-          onChange={c => {
-            update({ loopLifecycle: c })}}
-          onCommit={(c) => {
-            timeline?.projectTools.updateFocusRange([0, c],true);
-            update({ loopLifecycle: c });
-          }}
-        />
-      </label>
+      </CollapsibleSection>
+      
       {/* Advanced Section Toggle Button */}
-      <div style={{ marginTop: 12, marginBottom: 0 }}>
-        <Button
-          iconName={showAdvanced ? 'expand_less' : 'expand_more'}
-          text={showAdvanced ? 'Hide advanced' : 'Show advanced'}
-          onClick={() => setShowAdvanced(v => !v)}
-          bgColor={showAdvanced ? 'var(--gray4)' : 'var(--gray2)'}
-          color={showAdvanced ? 'white' : 'var(--gray6)'}
-        />
-      </div>
       {/* Advanced Section */}
-      {showAdvanced && (
-        <fieldset
-          style={{
-            borderColor: 'var(--gray4)',
-            borderRadius: 'var(--borderRadiusSmall)',
-            marginTop: 16,
-            padding: '0.5rem 1rem 1rem 1rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '1rem',
-          }}
-        >
-          <legend>advanced</legend>
+      <CollapsibleSection title="Lissajous Figure" iconName="all_inclusive">
           {/* Show Lissajous Figure Toggle */}
           <div style={{}}>
             <Button
@@ -240,7 +223,7 @@ export function CyberSpaghettiControlsInterior({
           </div> */}
 
           <div>
-            <div style={{ marginBottom: 4, fontSize: 13 }}>offset</div>
+            <div style={{ marginBottom: 4 }}>offset</div>
             <SingleSelectButtonGroup<number>
               options={[
                 { label: 'π/8', value: Math.PI / 8 },
@@ -256,7 +239,7 @@ export function CyberSpaghettiControlsInterior({
           </div>
           {/* Ratio selection */}
           <div>
-            <div style={{ marginBottom: 4, fontSize: 13 }}>ratio</div>
+            <div style={{ marginBottom: 4 }}>ratio</div>
             <SingleSelectButtonGroup<string>
               options={[
                 { label: '1:1', value: '1/1' },
@@ -275,8 +258,10 @@ export function CyberSpaghettiControlsInterior({
               }}
             />
           </div>
-        </fieldset>
-      )}
+      </CollapsibleSection>
+      <CollapsibleSection title="Effects" iconName="star">
+      asdf
+      </CollapsibleSection>
     </div>
   );
 }
