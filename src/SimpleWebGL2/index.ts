@@ -52,6 +52,17 @@ export interface DrawParams {
     equation?: number;       // for gl.blendEquation
     mode?: string;           // e.g. "add", "regular" (optional, preferred)
   } | string; // allow passing just a string for convenience
+  textures?: Record<string,string>
+}
+
+export type TexData = Uint8Array | Float32Array;
+export interface TextureSpec {
+  name: string;
+  width: number;
+  height: number;
+  filter?: 'nearest' | 'linear';
+  wrap?: 'clamp' | 'repeat';
+  initial?: TexData;
 }
 
 /*======================================================================
@@ -82,6 +93,8 @@ const objectTypes: Record<string, ObjectType> = Object.create(null);
 export const SimpleWebGL2 = {
   __init__,
   __defineobject__,
+  __createtexture__,
+  __updatetexture__,
   __end__init__,
   __begin__,
   __drawobjectinstances__,
@@ -224,11 +237,62 @@ function __begin__(): void {
   gl.clear(gl.COLOR_BUFFER_BIT);
 }
 
+interface TexRec {
+  tex: WebGLTexture;
+  width: number;
+  height: number;
+}
+
+const textures: Record<string, TexRec> = {};
+
+function __createtexture__(spec: TextureSpec): void {
+  if (!gl) throw new Error("Call __init__ first");
+  if (textures[spec.name]) {
+    throw new Error(`Texture "${spec.name}" already exists`);
+  }
+  const fmt = gl.R8;
+  const type = gl.UNSIGNED_BYTE;
+  const base = gl.RED;
+
+  const tex = gl.createTexture()!;
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, spec.filter === "nearest" ? gl.NEAREST : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, spec.filter === "nearest" ? gl.NEAREST : gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, spec.wrap === "clamp" ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, spec.wrap === "clamp" ? gl.CLAMP_TO_EDGE : gl.REPEAT);
+  gl.texImage2D(
+    gl.TEXTURE_2D, 0, fmt,
+    spec.width, spec.height, 0,
+    base, type, spec.initial || null,
+  );
+  textures[spec.name] = {
+    tex,
+    width: spec.width,
+    height: spec.height,
+  };
+}
+
+function __updatetexture__(name: string, data: TexData): void {
+  if (!gl) throw new Error("Call __init__ first");
+  const t = textures[name];
+  if (!t) throw new Error(`Texture "${name}" not found`);
+  gl.bindTexture(gl.TEXTURE_2D, t.tex);
+  gl.texSubImage2D(
+    gl.TEXTURE_2D, 0, 0, 0,
+    t.width, t.height,
+    gl.RED, gl.UNSIGNED_BYTE,
+    data,
+  );
+}
+
+
 /*---------------------- __drawobjectinstances__ ----------------------*/
 function __drawobjectinstances__(typeName: string, params: DrawParams): void {
   if (!gl) throw new Error("Call __init__ first");
   const type = objectTypes[typeName];
   if (!type) throw new Error(`Unknown object type "${typeName}"`);
+
+
 
   const count = params.count | 0;
   if (count <= 0) return;
@@ -303,9 +367,12 @@ function __drawobjectinstances__(typeName: string, params: DrawParams): void {
   gl.bindBuffer(gl.ARRAY_BUFFER, type.instVBO);
   gl.bufferData(gl.ARRAY_BUFFER, buffer, gl.DYNAMIC_DRAW);
 
+  gl.useProgram(type.program);
+  let texUnit = 0;
+
   // Optional texture update
   if (type.dynTex && params.dynamicData) {
-    gl.activeTexture(gl.TEXTURE0);
+    gl.activeTexture(gl.TEXTURE0 + texUnit);
     gl.bindTexture(gl.TEXTURE_2D, type.dynTex);
     gl.texSubImage2D(
       gl.TEXTURE_2D,
@@ -319,9 +386,30 @@ function __drawobjectinstances__(typeName: string, params: DrawParams): void {
       params.dynamicData,
     );
   }
+    if (type.dynUniformLoc) {
+      gl.uniform1i(type.dynUniformLoc, texUnit)
+      texUnit++;
+    };
 
-  gl.useProgram(type.program);
-  if (type.dynUniformLoc) gl.uniform1i(type.dynUniformLoc, 0);
+
+  if (params && params.textures) {
+    for (const [uName, texName] of Object.entries(params.textures)) {
+      const rec = textures[texName];
+      if (!rec) throw new Error(`Texture "${texName}" not found for unit "${uName}"`);
+      gl.activeTexture(gl.TEXTURE0 + texUnit);
+      gl.bindTexture(gl.TEXTURE_2D, rec.tex);
+      const loc = gl.getUniformLocation(type.program, uName);
+      if (loc === null) {
+        throw new Error(`Uniform "${uName}" not found in program for type "${typeName}"`);
+      }
+      gl.uniform1i(loc, texUnit);
+      texUnit++;
+    }
+
+  }
+
+
+
   gl.bindVertexArray(type.vao);
   gl.drawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, count);
   gl.bindVertexArray(null);

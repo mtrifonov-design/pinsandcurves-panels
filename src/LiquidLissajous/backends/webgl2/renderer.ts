@@ -5,6 +5,19 @@ import gradientObject, { gradientDraw } from './gradientObject.js';
 import circleObject, { circleDraw } from './circleObject.js';
 import pathObject, { pathDraw } from './pathObject.js';
 
+function makeTileableNoise(size = 64, float = false) {
+  const N = size * size;
+  if (float) {
+    const d = new Float32Array(N);
+    for (let i=0;i<N;++i) d[i] = Math.random();
+    return d;
+  } else {
+    const d = new Uint8Array(N);
+    crypto.getRandomValues(d);          // fast & good entropy
+    return d;
+  }
+}
+
 
 export class WebGL2Renderer {
     constructor(canvas, particleSystem) {
@@ -14,6 +27,14 @@ export class WebGL2Renderer {
         SimpleWebGL2.__defineobject__(circleObject);
         SimpleWebGL2.__defineobject__(pathObject);
         SimpleWebGL2.__defineobject__(gradientObject);
+        SimpleWebGL2.__createtexture__({
+            name: "noiseTex",
+            width: 256,
+            height: 256,
+            wrap: "repeat",
+            filter: "linear",
+            initial: makeTileableNoise(256),
+        })
         SimpleWebGL2.__end__init__();
     }
 

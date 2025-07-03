@@ -260,7 +260,38 @@ export function CyberSpaghettiControlsInterior({
           </div>
       </CollapsibleSection>
       <CollapsibleSection title="Effects" iconName="star">
-      asdf
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        noise intensity &nbsp;
+        <NumberInput
+          initialValue={state.noiseIntensity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ noiseIntensity: c })}}
+        />
+      </label>
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        warp intensity &nbsp;
+        <NumberInput
+          initialValue={state.warpIntensity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ warpIntensity: c })}}
+        />
+      </label>
       </CollapsibleSection>
     </div>
   );

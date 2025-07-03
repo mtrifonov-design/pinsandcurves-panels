@@ -12,6 +12,8 @@ type ControlsData = {
     height: number;
     figureScaleX: number;
     figureScaleY: number;
+    noiseIntensity: number;
+    warpIntensity: number;
 }
 
 class Controls {
@@ -92,6 +94,8 @@ class Controls {
         height: 1080,
         figureScaleX: 0.2,
         figureScaleY: 0.3,
+        noiseIntensity: 0.1,
+        warpIntensity: 0.1,
     }
 }
 

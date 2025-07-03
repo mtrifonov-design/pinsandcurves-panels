@@ -8,24 +8,37 @@ in  vec2 a_pos;
 in float particleCount;  // number of particles
 in float width;         // width of the texture
 in float height;        // height of the texture
+in float time;
+in float noise_intensity;
+in float warp_intensity;
+out float v_noise_intensity;
+out float v_warp_intensity;
 out vec2 v_uv;
 out float v_particleCount;
 out float v_width;       // pass to FS
 out float v_height;      // pass to FS
+out float v_time;
 void main() {
   v_uv = a_pos;          // 0‥1
 v_particleCount = particleCount;   // pass to FS    
   gl_Position = vec4(a_pos, 0.0, 1.0);
     v_width = width;      // pass to FS
     v_height = height;    // pass to FS
+    v_noise_intensity = noise_intensity; 
+    v_warp_intensity = warp_intensity;
+    v_time = time;
 }`;
 
 const voroFS = `#version 300 es
 precision highp float;
 uniform sampler2D u_dyn;
+uniform sampler2D u_noise;
 in  float v_width;        // width of the texture
 in float v_height;       // height of the texture
+in  float v_time;         // time, not used
 in  vec2 v_uv;
+in  float v_noise_intensity; 
+in  float v_warp_intensity;
 in  float v_particleCount; // number of particles
 out vec4 outColor;
 
@@ -82,24 +95,85 @@ vec3 oklabToSRGB(vec3 o) {
 }
 // --- End OKLab helpers ---
 
+float hash21(vec2 p){
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+// 2-D value noise, smooth interpolation (1 tex-fetch worth of ALU)
+float valueNoise(vec2 p){
+    vec2  i = floor(p);
+    vec2  f = fract(p);
+    // Hermite cubic (smoothstep) fade
+    f = f * f * (3.0 - 2.0 * f);
+
+    float a = hash21(i);
+    float b = hash21(i + vec2(1.0, 0.0));
+    float c = hash21(i + vec2(0.0, 1.0));
+    float d = hash21(i + vec2(1.0, 1.0));
+
+    float u = mix(a, b, f.x);
+    float v = mix(c, d, f.x);
+    return mix(u, v, f.y);            // 0‥1 smoothly varying
+}
+
+vec2 curlNoise(vec2 p){
+    float e = 0.001;
+    // valueNoise(): smooth 0‥1 noise (use the earlier function)
+    float n1 = valueNoise(p + vec2(0.0,  e));
+    float n2 = valueNoise(p - vec2(0.0,  e));
+    float n3 = valueNoise(p + vec2(  e, 0.0));
+    float n4 = valueNoise(p - vec2(  e, 0.0));
+    return 2.0 * vec2(n2 - n1, n3 - n4);   // divergence-free field
+}
+
 void main() {
   vec3 oklAccum = vec3(0.0);
   float satAccum = 0.0;
   float total = 0.0;
   int PCOUNT = int(v_particleCount); // number of particles
   float sigma = 0.228; // Gaussian width in normalized units, matches WGSL
-  float inv2sigma2 = 1.0 / (2.0 * sigma * sigma);
+  float inv2sigma2 = 1.0 / (2. * sigma * sigma);
 
   for (int i = 0; i < PCOUNT; ++i) {
     int base = i * STRIDE;
     vec2 center = vec2(fetch(base), fetch(base + 1)); // [0,1] normalized
     vec3 color = vec3(fetch(base + 2), fetch(base + 3), fetch(base + 4));
-    float dist2 = distanceSquared(v_uv, center);
+
+    int nextIndex = (i + 1 < PCOUNT) ? (i + 1) : 0;       // wrap last→first
+    int nextBase  = nextIndex * STRIDE;
+    vec2 nextCenter = vec2(fetch(nextBase), fetch(nextBase + 1));
+        vec2 dir = normalize(nextCenter - center);            // forward axis
+    // guard against zero-length when PCOUNT==1
+    if (all(equal(dir, vec2(0.0)))) dir = vec2(1.0, 0.0);
+    vec2 perp = vec2(-dir.y, dir.x);  
+    vec2  d      = (v_uv - center);
+    vec2  uvRot  = vec2(dot(d, dir), dot(d, perp));       // particle-aligned
+
+    vec2 uv = uvRot;
+    vec2 evolution = 1. * vec2(sin(v_time * 2. * 3.14), cos(v_time * 2. * 3.14));
+
+    for(int k=0;k<3;k++){                 // 3 iterations ≈ fluid-like
+        vec2 flow = curlNoise(uv * 1. + evolution) * (30. * v_warp_intensity);
+        uv += flow;                       // walk through the vector field
+    }
+    vec2 uvD = uv; // displace UVs with noise
+
+    float dist2 = distanceSquared(uvD, center);
     float w = exp(-dist2 * inv2sigma2);
     vec3 okl = srgbToOKLab(color);
     float sat = length(okl.yz); // OKLab saturation
     oklAccum += okl * w;
     satAccum += sat * w;
+
+
+    float offsetTime = float(i) / float(PCOUNT);
+    uvRot  = uvRot * (5. - 4. * v_noise_intensity) + (1. + 10. * v_noise_intensity) * vec2(v_time);
+    float noise = texture(u_noise, uvRot).r;
+    float noiseBand = 0.2 * v_noise_intensity;
+    w = mix(w * (1.-noiseBand), w * (1. + noiseBand), noise); // mix with gray based on noise
+
     total += w;
   }
   vec3 outCol = vec3(0.0);
@@ -114,12 +188,6 @@ void main() {
     oklBlended.yz *= factor;
     outCol = oklabToSRGB(oklBlended);
   }
-
-  // effects
-  // 1. noise - generate a random noise value
-  float noise = fract(sin(dot(v_uv * vec2(v_width, v_height), vec2(12.9898, 78.233))) * 43758.5453);
-  // 2. apply noise to the output color
-  outCol = mix(outCol, vec3(0.5, 0.5, 0.5), noise * 0.5); // mix with gray based on noise
 
   outColor = vec4(outCol, 1.0);
 }`;
@@ -141,6 +209,18 @@ const gradientObject = {
     },
     {
         name: "height",
+        size: 1,
+    },
+    {
+        name: "time",
+        size: 1,
+    },
+    {
+        name: "noise_intensity",
+        size: 1,
+    },
+    {
+        name: "warp_intensity",
         size: 1,
     }
     ],
@@ -175,6 +255,9 @@ function gradientDraw(particleSystem: ParticleSystem) {
 
     const widthArr = new Float32Array([particleSystem.WIDTH]);
     const heightArr = new Float32Array([particleSystem.HEIGHT]);
+    const timeArr = new Float32Array([particleSystem.REL_TIME]);
+    const noiseIntensityArr = new Float32Array([particleSystem.NOISE_INTENSITY]);
+    const warpIntensityArr = new Float32Array([particleSystem.WARP_INTENSITY]);
 
     return {
         count: 1,
@@ -182,8 +265,14 @@ function gradientDraw(particleSystem: ParticleSystem) {
             particleCount: new Float32Array([P]),  // number of particles
             width: widthArr,                       // width of the texture
             height: heightArr,                     // height of the texture
+            time: timeArr,                         // current time
+            noise_intensity: noiseIntensityArr,    // noise intensity
+            warp_intensity: warpIntensityArr,      // warp intensity
         },               // no per-instance data
         dynamicData: dynData,
+        textures: {
+            u_noise: "noiseTex"
+        }
     }
 }
 
