@@ -95,38 +95,83 @@ vec3 oklabToSRGB(vec3 o) {
 }
 // --- End OKLab helpers ---
 
-float hash21(vec2 p){
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
+
+
+
+
+// -- NEW: vector hash that gives a pseudo-random gradient -------------
+vec3 hash3(vec3 p) {
+    // same idea, just stir the components differently
+    p = fract(p * vec3(0.1031, 0.11369, 0.13787));
+    p += dot(p, p.yzx + 33.33);
+    return fract((p.xxy + p.yzz) * p.zyx) * 2.0 - 1.0;  // → [-1,1]^3
 }
 
-// 2-D value noise, smooth interpolation (1 tex-fetch worth of ALU)
-float valueNoise(vec2 p){
-    vec2  i = floor(p);
-    vec2  f = fract(p);
-    // Hermite cubic (smoothstep) fade
-    f = f * f * (3.0 - 2.0 * f);
+float noisePeriodicZ( in vec4 x )
+{
+    float R = x.w;                 // repeat length in Z
+    x.z = x.z * R;
 
-    float a = hash21(i);
-    float b = hash21(i + vec2(1.0, 0.0));
-    float c = hash21(i + vec2(0.0, 1.0));
-    float d = hash21(i + vec2(1.0, 1.0));
+    // grid cell and in-cell position
+    vec3 p = floor(x.xyz);
+    vec3 w = fract(x.xyz);
 
-    float u = mix(a, b, f.x);
-    float v = mix(c, d, f.x);
-    return mix(u, v, f.y);            // 0‥1 smoothly varying
+    // quintic smoothstep
+    vec3 u = w*w*w*(w*(w*6.0 - 15.0) + 10.0);
+
+    // ----- WRAP THE Z INDEX -----
+    float pz0 = mod(p.z, R);             // “bottom” layer     (0 … R-ε)
+    if (pz0 < 0.0) pz0 += R;             // keep it positive
+    float pz1 = mod(pz0 + 1.0, R);       // “top” layer (wrapped)
+    // --------------------------------
+
+    // gradient vectors – Z wrapped, X/Y unwrapped
+    vec3 ga = hash3(vec3(p.x  , p.y  , pz0));
+    vec3 gb = hash3(vec3(p.x+1., p.y  , pz0));
+    vec3 gc = hash3(vec3(p.x  , p.y+1., pz0));
+    vec3 gd = hash3(vec3(p.x+1., p.y+1., pz0));
+    vec3 ge = hash3(vec3(p.x  , p.y  , pz1));
+    vec3 gf = hash3(vec3(p.x+1., p.y  , pz1));
+    vec3 gg = hash3(vec3(p.x  , p.y+1., pz1));
+    vec3 gh = hash3(vec3(p.x+1., p.y+1., pz1));
+
+    // projections
+    float va = dot( ga, w - vec3(0.0,0.0,0.0) );
+    float vb = dot( gb, w - vec3(1.0,0.0,0.0) );
+    float vc = dot( gc, w - vec3(0.0,1.0,0.0) );
+    float vd = dot( gd, w - vec3(1.0,1.0,0.0) );
+    float ve = dot( ge, w - vec3(0.0,0.0,1.0) );
+    float vf = dot( gf, w - vec3(1.0,0.0,1.0) );
+    float vg = dot( gg, w - vec3(0.0,1.0,1.0) );
+    float vh = dot( gh, w - vec3(1.0,1.0,1.0) );
+
+    // trilinear blend
+    return va +
+           u.x*(vb - va) +
+           u.y*(vc - va) +
+           u.z*(ve - va) +
+           u.x*u.y*(va - vb - vc + vd) +
+           u.y*u.z*(va - vc - ve + vg) +
+           u.z*u.x*(va - vb - ve + vf) +
+           u.x*u.y*u.z*(-va + vb + vc - vd + ve - vf - vg + vh);
 }
 
-vec2 curlNoise(vec2 p){
+float valueNoise(vec2 v, float scale, float time, float speed){
+    return noisePeriodicZ(vec4(v * scale, time, speed)); // 2D noise with time and speed
+}
+
+
+
+vec2 curlNoise(vec2 p, float scale, float time, float speed) {
     float e = 0.001;
     // valueNoise(): smooth 0‥1 noise (use the earlier function)
-    float n1 = valueNoise(p + vec2(0.0,  e));
-    float n2 = valueNoise(p - vec2(0.0,  e));
-    float n3 = valueNoise(p + vec2(  e, 0.0));
-    float n4 = valueNoise(p - vec2(  e, 0.0));
+    float n1 = valueNoise(p + vec2(0.0,  e), scale, time, speed);
+    float n2 = valueNoise(p - vec2(0.0,  e), scale, time, speed);
+    float n3 = valueNoise(p + vec2(  e, 0.0), scale, time, speed);
+    float n4 = valueNoise(p - vec2(  e, 0.0), scale, time, speed);
     return 2.0 * vec2(n2 - n1, n3 - n4);   // divergence-free field
 }
+
 
 void main() {
   vec3 oklAccum = vec3(0.0);
@@ -151,13 +196,16 @@ void main() {
     vec2  d      = (v_uv - center);
     vec2  uvRot  = vec2(dot(d, dir), dot(d, perp));       // particle-aligned
 
-    vec2 uv = uvRot;
-    vec2 evolution = 1. * vec2(sin(v_time * 2. * 3.14), cos(v_time * 2. * 3.14));
+    vec2 uv = v_uv;
+    //vec2 evolution = .5 * vec2(sin(v_time * 2. * 3.14), cos(v_time * 2. * 3.14));
 
-    for(int k=0;k<3;k++){                 // 3 iterations ≈ fluid-like
-        vec2 flow = curlNoise(uv * 1. + evolution) * (30. * v_warp_intensity);
-        uv += flow;                       // walk through the vector field
-    }
+    float curlScale = (1.-v_warp_intensity) * 10.;
+    vec2 flow = curlNoise(uv, curlScale, v_time, 100. * v_warp_intensity);
+    uv += flow;                       
+    // for(int k=0;k<1;k++){                 // 3 iterations ≈ fluid-like
+    //     vec2 flow = curlNoise(uv * 1. + evolution) * (10. * v_warp_intensity);
+    //     uv += flow;                       // walk through the vector field
+    // }
     vec2 uvD = uv; // displace UVs with noise
 
     float dist2 = distanceSquared(uvD, center);
@@ -189,7 +237,9 @@ void main() {
     outCol = oklabToSRGB(oklBlended);
   }
 
+  //outColor = vec4(vec3(20.*curlNoise(v_uv*10.),0.), 1.0);
   outColor = vec4(outCol, 1.0);
+  //outColor = vec4(vec3(noisePeriodicZ(vec4(v_uv * 10.,v_time,20.))), 1.0);
 }`;
 
 
