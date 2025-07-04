@@ -260,6 +260,7 @@ export function CyberSpaghettiControlsInterior({
           </div>
       </CollapsibleSection>
       <CollapsibleSection title="Effects" iconName="star">
+      <>
       <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -282,16 +283,81 @@ export function CyberSpaghettiControlsInterior({
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        warp intensity &nbsp;
+        noise scale &nbsp;
         <NumberInput
-          initialValue={state.warpIntensity}
+          initialValue={state.noiseScale}
           min={0}
           max={1}
           step={0.01}
           onChange={c => {
-            update({ warpIntensity: c })}}
+            update({ noiseScale: c })}}
         />
       </label>
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        noise speed &nbsp;
+        <NumberInput
+          initialValue={state.noiseSpeed}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ noiseSpeed: c })}}
+        />
+      </label>
+                  <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        warp intensity &nbsp;
+        <NumberInput
+          initialValue={state.fluidWarpIntensity}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ fluidWarpIntensity: c })}}
+        />
+      </label>
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        warp scale &nbsp;
+        <NumberInput
+          initialValue={state.fluidWarpScale}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ fluidWarpScale: c })}}
+        />
+      </label>
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        warp speed &nbsp;
+        <NumberInput
+          initialValue={state.fluidWarpSpeed}
+          min={0}
+          max={1}
+          step={0.01}
+          onChange={c => {
+            update({ fluidWarpSpeed: c })}}
+        />
+      </label>
+      </>
       </CollapsibleSection>
     </div>
   );

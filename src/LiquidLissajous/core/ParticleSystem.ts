@@ -34,8 +34,7 @@ export class ParticleSystem {
     PARTICLES: any[] = []; // Placeholder for particles, if needed
     LISSAJOUS_PATH: [number, number][] = []; // Placeholder for Lissajous path points
     REL_TIME: number = 0; // Relative time in the loop
-    NOISE_INTENSITY: number = 0.1; // Noise intensity
-    WARP_INTENSITY: number = 0.1; // Warp intensity
+    CONFIG: ControlsData = Controls.defaultControls; // Current configuration
 
     constructor() {
         this.buffer = new Float32Array(ParticleSystem.HARD_MAX * 5);
@@ -83,8 +82,7 @@ export class ParticleSystem {
         this.FIGURE_SCALE_X = config.figureScaleX;
         this.FIGURE_SCALE_Y = config.figureScaleY;
         this.REL_TIME = (this.time % this.LOOP_LIFECYCLE) / this.LOOP_LIFECYCLE;
-        this.NOISE_INTENSITY = config.noiseIntensity;
-        this.WARP_INTENSITY = config.warpIntensity;
+        this.CONFIG = config;
 
         // Interpolate PARTICLE_COUNT color stops in HSL (hue) space
         function rgbToHsl([r, g, b]: number[]): [number, number, number] {

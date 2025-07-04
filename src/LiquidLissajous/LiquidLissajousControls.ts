@@ -13,7 +13,14 @@ type ControlsData = {
     figureScaleX: number;
     figureScaleY: number;
     noiseIntensity: number;
-    warpIntensity: number;
+    noiseEnabled: boolean;
+    noiseScale: number;
+    noiseSpeed: number;
+    fluidWarpEnabled: boolean;
+    fluidWarpIntensity: number;
+    fluidWarpScale: number;
+    fluidWarpSpeed: number;
+
 }
 
 class Controls {
@@ -94,8 +101,14 @@ class Controls {
         height: 1080,
         figureScaleX: 0.2,
         figureScaleY: 0.3,
+        noiseEnabled: true,
+        noiseScale: 0.1,
         noiseIntensity: 0.1,
-        warpIntensity: 0.1,
+        noiseSpeed: 0.1,
+        fluidWarpEnabled: true,
+        fluidWarpIntensity: 0.1,
+        fluidWarpScale: 0.1,
+        fluidWarpSpeed: 0.1,
     }
 }
 
