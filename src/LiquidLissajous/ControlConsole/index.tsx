@@ -259,7 +259,7 @@ export function CyberSpaghettiControlsInterior({
             />
           </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Effects" iconName="star">
+      {/* <CollapsibleSection title="Effects" iconName="star">
       <>
       <label style={{
         display: 'flex',
@@ -358,7 +358,7 @@ export function CyberSpaghettiControlsInterior({
         />
       </label>
       </>
-      </CollapsibleSection>
+      </CollapsibleSection> */}
     </div>
   );
 }
