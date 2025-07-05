@@ -90,7 +90,12 @@ export function CyberSpaghettiControlsInterior({
         justifyContent: 'space-between',
       }}>
         canvas size &nbsp;
-        <div>
+        <div style={{
+          display: 'flex',
+          gap: '0.5rem',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
           <NumberInput
             initialValue={state.width}
             min={100}
@@ -98,7 +103,8 @@ export function CyberSpaghettiControlsInterior({
             step={10}
             onChange={c => update({ width: c })}
           />
-          <span style={{ margin: '0 0.5rem' }}>x</span>
+          <span>x</span>
+
           <NumberInput
             initialValue={state.height}
             min={100}
