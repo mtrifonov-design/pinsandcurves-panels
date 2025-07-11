@@ -10,9 +10,9 @@ import { matrix, ones, inv, multiply } from 'mathjs';
 function rbf(v1: number[], v2: number[]): number {
     // Radial basis function for distance
     const r = Math.sqrt(v1.reduce((sum, val, i) => sum + (val - v2[i]) ** 2, 0));
-    const e = 2.8;
-    //return Math.exp(-((r * e)**2));
-    return Math.sqrt(1 + (r*e) ** 2);
+    const e = 3.3;
+    return Math.exp(-((r * e)**2));
+    //return Math.sqrt(1 + (r*e) ** 2);
 }
 
 export class ParticleSystem {
@@ -87,20 +87,24 @@ export class ParticleSystem {
         const rVector = matrix(ones(particleLength, 1));
         const gVector = matrix(ones(particleLength, 1));
         const bVector = matrix(ones(particleLength, 1));
+        const aVector = matrix(ones(particleLength, 1));
         for (let i = 0; i < particleLength; ++i) {
             const v = this.PARTICLES[i];
             rVector.set([i, 0], v.r);
             gVector.set([i, 0], v.g);
             bVector.set([i, 0], v.b);
+            aVector.set([i,0], 1);
         }
         const rWeights = multiply(inverse, rVector);
         const gWeights = multiply(inverse, gVector);
         const bWeights = multiply(inverse, bVector);
-        const colorMatrix = matrix(ones(particleLength, 3));
+        const aWeights = multiply(inverse, aVector);
+        const colorMatrix = matrix(ones(particleLength, 4));
         for (let i = 0; i < particleLength; ++i) {
             colorMatrix.set([i, 0], rWeights.get([i, 0]));
             colorMatrix.set([i, 1], gWeights.get([i, 0]));
             colorMatrix.set([i, 2], bWeights.get([i, 0]));
+            colorMatrix.set([i, 3], aWeights.get([i, 0])); // Alpha not used
         }
 
         return colorMatrix;
@@ -167,7 +171,7 @@ export class ParticleSystem {
             x *= this.FIGURE_SCALE_X * 2;
             y *= this.FIGURE_SCALE_Y * 2;
             z *= 1;
-            console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
+             //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
             this.PARTICLES[i] = {
                 x, y , z, 
@@ -182,6 +186,7 @@ export class ParticleSystem {
             this.PARTICLES[i].rWeight = colorWeights.get([i, 0]);
             this.PARTICLES[i].gWeight = colorWeights.get([i, 1]);
             this.PARTICLES[i].bWeight = colorWeights.get([i, 2]);
+            this.PARTICLES[i].aWeight = colorWeights.get([i, 3]); 
         }
        
         console.log(this.PARTICLES);

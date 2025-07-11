@@ -1,7 +1,7 @@
 import { ParticleSystem } from "../../core/ParticleSystem";
 import { resolveLygia } from "./resolveLygia";
 
-const FLOATS_PER_PARTICLE = 6;          // x,y,r,g,b
+const FLOATS_PER_PARTICLE = 7;          // x,y,z,r,g,b,a
 
 // minimal FS quad – no per-instance attributes
 const voroVS = `#version 300 es
@@ -53,63 +53,81 @@ float fetch(int index) {             // helper to fetch RED float
   return texelFetch(u_dyn, ivec2(index, 0), 0).r;
 }
 
-// Helper for squared distance (cheaper than length)
-float distanceSquared(vec2 a, vec2 b) {
-    a = a + vec2(1.);
-    b = b + vec2(1.);
-    a = a * vec2(0.5); // * vec2(v_width, v_height); 
-    b = b * vec2(0.5); // * vec2(v_width, v_height); 
-    vec2 d = a - b;
-    return dot(d, d);
-}
+// // Helper for squared distance (cheaper than length)
+// float distanceSquared(vec2 a, vec2 b) {
+//     a = a + vec2(1.);
+//     b = b + vec2(1.);
+//     a = a * vec2(0.5); // * vec2(v_width, v_height); 
+//     b = b * vec2(0.5); // * vec2(v_width, v_height); 
+//     vec2 d = a - b;
+//     return dot(d, d);
+// }
 
-// --- sRGB <-> OKLab conversion functions (from WGSL, ported to GLSL) ---
-vec3 toLinear(vec3 c) {
-    return pow(c, vec3(2.2));
-}
-vec3 toSRGB(vec3 c) {
-    return pow(clamp(c, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
-}
-vec3 srgbToOKLab(vec3 c) {
-    vec3 l = toLinear(c);
-    vec3 lms = vec3(
-        0.4122214708 * l.x + 0.5363325363 * l.y + 0.0514459929 * l.z,
-        0.2119034982 * l.x + 0.6806995451 * l.y + 0.1073969566 * l.z,
-        0.0883024619 * l.x + 0.2817188376 * l.y + 0.6299787005 * l.z
-    );
-    vec3 cbrt = pow(lms, vec3(1.0 / 3.0));
-    return vec3(
-        0.2104542553 * cbrt.x + 0.7936177850 * cbrt.y - 0.0040720468 * cbrt.z,
-        1.9779984951 * cbrt.x - 2.4285922050 * cbrt.y + 0.4505937099 * cbrt.z,
-        0.0259040371 * cbrt.x + 0.7827717662 * cbrt.y - 0.8086757660 * cbrt.z
-    );
-}
-vec3 oklabToSRGB(vec3 o) {
-    float l_ = o.x + 0.3963377774 * o.y + 0.2158037573 * o.z;
-    float m_ = o.x - 0.1055613458 * o.y - 0.0638541728 * o.z;
-    float s_ = o.x - 0.0894841775 * o.y - 1.2914855480 * o.z;
-    float l3 = l_ * l_ * l_;
-    float m3 = m_ * m_ * m_;
-    float s3 = s_ * s_ * s_;
-    vec3 rgb = vec3(
-        4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3,
-       -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3,
-       -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s3
-    );
-    return toSRGB(rgb);
-}
+// // --- sRGB <-> OKLab conversion functions (from WGSL, ported to GLSL) ---
+// vec3 toLinear(vec3 c) {
+//     return pow(c, vec3(2.2));
+// }
+// vec3 toSRGB(vec3 c) {
+//     return pow(clamp(c, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
+// }
+// vec3 srgbToOKLab(vec3 c) {
+//     vec3 l = toLinear(c);
+//     vec3 lms = vec3(
+//         0.4122214708 * l.x + 0.5363325363 * l.y + 0.0514459929 * l.z,
+//         0.2119034982 * l.x + 0.6806995451 * l.y + 0.1073969566 * l.z,
+//         0.0883024619 * l.x + 0.2817188376 * l.y + 0.6299787005 * l.z
+//     );
+//     vec3 cbrt = pow(lms, vec3(1.0 / 3.0));
+//     return vec3(
+//         0.2104542553 * cbrt.x + 0.7936177850 * cbrt.y - 0.0040720468 * cbrt.z,
+//         1.9779984951 * cbrt.x - 2.4285922050 * cbrt.y + 0.4505937099 * cbrt.z,
+//         0.0259040371 * cbrt.x + 0.7827717662 * cbrt.y - 0.8086757660 * cbrt.z
+//     );
+// }
+// vec3 oklabToSRGB(vec3 o) {
+//     float l_ = o.x + 0.3963377774 * o.y + 0.2158037573 * o.z;
+//     float m_ = o.x - 0.1055613458 * o.y - 0.0638541728 * o.z;
+//     float s_ = o.x - 0.0894841775 * o.y - 1.2914855480 * o.z;
+//     float l3 = l_ * l_ * l_;
+//     float m3 = m_ * m_ * m_;
+//     float s3 = s_ * s_ * s_;
+//     vec3 rgb = vec3(
+//         4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3,
+//        -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3,
+//        -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s3
+//     );
+//     return toSRGB(rgb);
+// }
 
 float rbf(vec3 p, vec3 q, float e) {
     float d = sqrt(dot(p - q, p - q));
-    //return exp( -(d*e) * (d*e) );
-    return sqrt(1. + (d*e) * (d*e));
+    return exp( -(d*e) * (d*e) );
+    //return sqrt(1. + (d*e) * (d*e));
 }
 
 
-float rbf_alt(vec3 p, vec3 q, float e) {
-    float d = sqrt(dot(p - q, p - q));
-    return exp( -(d*e) * (d*e) );
-    //return sqrt(1. + (d*e) * (d*e));
+vec4 getColor(vec3 p) {
+    float r = 0.0;
+    float g = 0.0;
+    float b = 0.0;
+    float a = 0.0;
+    int PCOUNT = int(v_particleCount); // number of particles
+    for (int i = 0; i < PCOUNT; ++i) {
+        int base = i * STRIDE;
+        vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
+
+        float rW = fetch(base + 3); // red weight
+        float gW = fetch(base + 4); // green weight
+        float bW = fetch(base + 5); // blue weight
+        float aW = fetch(base + 6); // alpha weight, not used
+
+        float e = 3.3;
+        r += rW * rbf(p, center, e);
+        g += gW * rbf(p, center, e);
+        b += bW * rbf(p, center, e);
+        a += aW * rbf(p, center, e);
+    }
+    return vec4(r,g,b,a);
 }
 
 void main() {
@@ -117,46 +135,22 @@ void main() {
     vec2 uv = v_uv;
     int PCOUNT = int(v_particleCount); // number of particles
 
-    // depth pass
-    float totalDepth = 0.0;
-    for (int i = 0; i < PCOUNT; ++i) {
-        int base = i * STRIDE;
-        vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
-        float xy_distance = sqrt(dot(center.xy - uv, center.xy - uv));
-        float depth = center.z;
-        float weight = rbf_alt(vec3(uv, 1.0), vec3(center.xy, 1.0), 3.);
-        totalDepth += depth * weight;
-    }
-
-    float depth = totalDepth / float(PCOUNT);
     float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
 
-
-    vec3 p = vec3(uv, depthField); 
     float r = 0.0;
     float g = 0.0;
     float b = 0.0;
+    float a = 0.0;
+    vec4 accColor = vec4(0.0);
+    int ITERATIONS = 30;
+    for (int i = 0; (i < ITERATIONS && accColor.a < 5.999); ++i) {
+        float d = (float(i) / float(ITERATIONS)) * 2.0 - 1.;
+        vec3 p = vec3(uv, d);
+        vec4 color = getColor(p);
+        accColor += (1.0 - accColor.a) * color; // accumulate color with alpha blending
+    }
 
-
-  for (int i = 0; i < PCOUNT; ++i) {
-    int base = i * STRIDE;
-    vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
-
-    float rW = fetch(base + 3); // red weight
-    float gW = fetch(base + 4); // green weight
-    float bW = fetch(base + 5); // blue weight
-
-    float e = 2.8;
-    r += rW * rbf(p, center, e);
-    g += gW * rbf(p, center, e);
-    b += bW * rbf(p, center, e);
-  }
-
-    // fetch texture from depth field
-
-
-
-  outColor = vec4(r,g,b, 1.0);
+    outColor = accColor;
 }`);
 
 console.log(voroFS);
@@ -217,6 +211,7 @@ function gradientDraw(particleSystem: ParticleSystem) {
         dynData[off + 3] = p.rWeight;
         dynData[off + 4] = p.gWeight;
         dynData[off + 5] = p.bWeight;
+        dynData[off + 6] = p.aWeight; 
     });
 
     const widthArr = new Float32Array([particleSystem.WIDTH]);
@@ -237,9 +232,6 @@ function gradientDraw(particleSystem: ParticleSystem) {
             fluidWarp: warpIntensityArr,      // warp intensity
         },               // no per-instance data
         dynamicData: dynData,
-        textures: {
-            u_depth_field: "depth_field", // depth field texture
-        }
     }
 }
 
