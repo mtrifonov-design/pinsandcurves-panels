@@ -3,6 +3,7 @@ import { ParticleSystem } from '../../core/ParticleSystem.js';
 import { SimpleWebGL2 } from '../../../SimpleWebGL2/index.js';
 import gradientObject, { gradientDraw } from './gradientObject.js';
 import circleObject, { circleDraw } from './circleObject.js';
+import { computeDepthFieldTexture } from '../../core/DepthField.js';
 import pathObject, { pathDraw } from './pathObject.js';
 
 function makeTileableNoise(size = 64, float = false) {
@@ -28,13 +29,16 @@ export class WebGL2Renderer {
         SimpleWebGL2.__defineobject__(pathObject);
         SimpleWebGL2.__defineobject__(gradientObject);
         SimpleWebGL2.__createtexture__({
-            name: "noiseTex",
-            width: 256,
-            height: 256,
+            name: "depth_field",
+            width: 8,
+            height: 8,
+            initial: computeDepthFieldTexture(this.particleSys, 8, 5),
             wrap: "repeat",
             filter: "linear",
-            initial: makeTileableNoise(256),
+            
         })
+        const depthFieldTexture = computeDepthFieldTexture(this.particleSys, 16, 5);
+        console.log("Depth field texture computed", depthFieldTexture);
         SimpleWebGL2.__end__init__();
     }
 
@@ -49,6 +53,9 @@ export class WebGL2Renderer {
     draw() {
         SimpleWebGL2.__begin__();
         SimpleWebGL2.__drawobjectinstances__("voronoiBG", gradientDraw(this.particleSys));
+
+        
+        SimpleWebGL2.__updatetexture__("depth_field", computeDepthFieldTexture(this.particleSys, 8, 5));
         if (this.particleSys.SHOW_LISSAJOUS_FIGURE) {
             SimpleWebGL2.__drawobjectinstances__("path", pathDraw(this.particleSys));
             SimpleWebGL2.__drawobjectinstances__("circle",circleDraw(this.particleSys));

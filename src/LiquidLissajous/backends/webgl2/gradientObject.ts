@@ -1,7 +1,7 @@
 import { ParticleSystem } from "../../core/ParticleSystem";
 import { resolveLygia } from "./resolveLygia";
 
-const FLOATS_PER_PARTICLE = 5;          // x,y,r,g,b
+const FLOATS_PER_PARTICLE = 6;          // x,y,r,g,b
 
 // minimal FS quad – no per-instance attributes
 const voroVS = `#version 300 es
@@ -34,7 +34,7 @@ v_particleCount = particleCount;   // pass to FS
 const voroFS = resolveLygia(`#version 300 es
 precision highp float;
 uniform sampler2D u_dyn;
-uniform sampler2D u_noise;
+uniform sampler2D u_depth_field;
 in  float v_width;        // width of the texture
 in float v_height;       // height of the texture
 in  float v_time;         // time, not used
@@ -98,84 +98,65 @@ vec3 oklabToSRGB(vec3 o) {
     );
     return toSRGB(rgb);
 }
-// --- End OKLab helpers ---
+
+float rbf(vec3 p, vec3 q, float e) {
+    float d = sqrt(dot(p - q, p - q));
+    //return exp( -(d*e) * (d*e) );
+    return sqrt(1. + (d*e) * (d*e));
+}
 
 
-// float valueNoise(vec2 p, float scale, float time, float speed) {
-//     return pnoise(vec3(p * scale, time * speed), vec3(1000., 1000., speed));
-// }
-
-// vec2 curlNoise(vec2 p, float scale, float time, float speed) {
-//     float e = 0.0001;
-//     // valueNoise(): smooth 0‥1 noise (use the earlier function)
-//     float n1 = valueNoise(p + vec2(0.0,  e), scale, time, speed);
-//     float n2 = valueNoise(p - vec2(0.0,  e), scale, time, speed);
-//     float n3 = valueNoise(p + vec2(  e, 0.0), scale, time, speed);
-//     float n4 = valueNoise(p - vec2(  e, 0.0), scale, time, speed);
-//     return 2.0 * vec2(n2 - n1, n3 - n4);   // divergence-free field
-// }
+float rbf_alt(vec3 p, vec3 q, float e) {
+    float d = sqrt(dot(p - q, p - q));
+    return exp( -(d*e) * (d*e) );
+    //return sqrt(1. + (d*e) * (d*e));
+}
 
 void main() {
 
-    // warp 
-
     vec2 uv = v_uv;
+    int PCOUNT = int(v_particleCount); // number of particles
 
-    // float warp_intensity = v_fluidWarp.x; // warp intensity
-    // float warp_scale = v_fluidWarp.y;
-    // float warp_speed = v_fluidWarp.z;
-    // float curlScale = 1.2+(1.-warp_scale) * 2.;
-    
-    // for (int i = 0; i < 5; ++i) { // apply flow twice for more effect
-    //     vec2 flow = curlNoise(uv, curlScale, v_time, 100. * warp_speed);
-    //     float scale = mix(90.,100., warp_scale);
-    //     uv += flow * warp_intensity * 200. * warp_scale;   
-    // }
+    // depth pass
+    float totalDepth = 0.0;
+    for (int i = 0; i < PCOUNT; ++i) {
+        int base = i * STRIDE;
+        vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
+        float xy_distance = sqrt(dot(center.xy - uv, center.xy - uv));
+        float depth = center.z;
+        float weight = rbf_alt(vec3(uv, 1.0), vec3(center.xy, 1.0), 3.);
+        totalDepth += depth * weight;
+    }
 
-  vec3 oklAccum = vec3(0.0);
-  float satAccum = 0.0;
-  float total = 0.0;
-  int PCOUNT = int(v_particleCount); // number of particles
-  float sigma = 0.228; // Gaussian width in normalized units, matches WGSL
-  float inv2sigma2 = 1.0 / (2. * sigma * sigma);
+    float depth = totalDepth / float(PCOUNT);
+    float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
+
+
+    vec3 p = vec3(uv, depthField); 
+    float r = 0.0;
+    float g = 0.0;
+    float b = 0.0;
+
 
   for (int i = 0; i < PCOUNT; ++i) {
     int base = i * STRIDE;
-    vec2 center = vec2(fetch(base), fetch(base + 1)); // [0,1] normalized
-    vec3 color = vec3(fetch(base + 2), fetch(base + 3), fetch(base + 4));
+    vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
 
-    int nextIndex = (i + 1 < PCOUNT) ? (i + 1) : 0;       // wrap last→first
-    int nextBase  = nextIndex * STRIDE;
-    vec2 nextCenter = vec2(fetch(nextBase), fetch(nextBase + 1));
-        vec2 dir = normalize(nextCenter - center);            // forward axis
-    // guard against zero-length when PCOUNT==1
-    if (all(equal(dir, vec2(0.0)))) dir = vec2(1.0, 0.0);
-    vec2 perp = vec2(-dir.y, dir.x);  
-    vec2  d      = (uv - center);
-    vec2  uvRot  = vec2(dot(d, dir), dot(d, perp));       // particle-aligned         
-    vec2 uvD = uv; // displace UVs with noise
+    float rW = fetch(base + 3); // red weight
+    float gW = fetch(base + 4); // green weight
+    float bW = fetch(base + 5); // blue weight
 
-    float dist2 = distanceSquared(uvD, center);
-    float w = exp(-dist2 * inv2sigma2);
-    vec3 okl = srgbToOKLab(color);
-    float sat = length(okl.yz); // OKLab saturation
-    oklAccum += okl * w;
-    satAccum += sat * w;
-    total += w;
+    float e = 2.8;
+    r += rW * rbf(p, center, e);
+    g += gW * rbf(p, center, e);
+    b += bW * rbf(p, center, e);
   }
-  vec3 outCol = vec3(0.0);
-  if (total > 0.0) {
-    vec3 oklBlended = oklAccum / total;
-    float satBlended = length(oklBlended.yz);
-    float satTarget = satAccum / total;
-    float factor = (satBlended > 0.0) ? (satTarget / satBlended) : 1.0;
-    // Clamp factor to avoid extreme values
-    factor = clamp(factor, 0.1, 1.3);
-    // Apply correction to a and b (oklBlended.yz)
-    oklBlended.yz *= factor;
-    outCol = oklabToSRGB(oklBlended);
-  }
-  outColor = vec4(outCol, 1.0);
+
+    // fetch texture from depth field
+
+
+
+  outColor = vec4(r,g,b, 1.0);
 }`);
 
 console.log(voroFS);
@@ -215,6 +196,7 @@ const gradientObject = {
     vertexShader: voroVS,
     fragmentShader: voroFS,
     dynamicData: { width: texWidth, height: 1 },
+
 }
 
 
@@ -222,23 +204,19 @@ const gradientObject = {
 
 function gradientDraw(particleSystem: ParticleSystem) {
     // Store particle positions in normalized [0,1] coordinates
-    const particles = particleSystem.PARTICLES.map(p => {
-        return {
-            ...p,
-            x: (p.x / particleSystem.WIDTH) * 2 -1, // map to 0..1
-            y: (p.y / particleSystem.HEIGHT) * 2 -1, // map to 0..1
-        }
-    })
+    const particles = particleSystem.PARTICLES;
     const P = particles.length;
     // pack x,y,r,g,b into a 1-row R32F texture
     const dynData = new Float32Array(texWidth);
+
     particles.forEach((p, i) => {
         const off = i * FLOATS_PER_PARTICLE;
         dynData[off + 0] = p.x;
         dynData[off + 1] = p.y;
-        dynData[off + 2] = p.r;
-        dynData[off + 3] = p.g;
-        dynData[off + 4] = p.b;
+        dynData[off + 2] = p.z; // red
+        dynData[off + 3] = p.rWeight;
+        dynData[off + 4] = p.gWeight;
+        dynData[off + 5] = p.bWeight;
     });
 
     const widthArr = new Float32Array([particleSystem.WIDTH]);
@@ -259,6 +237,9 @@ function gradientDraw(particleSystem: ParticleSystem) {
             fluidWarp: warpIntensityArr,      // warp intensity
         },               // no per-instance data
         dynamicData: dynData,
+        textures: {
+            u_depth_field: "depth_field", // depth field texture
+        }
     }
 }
 

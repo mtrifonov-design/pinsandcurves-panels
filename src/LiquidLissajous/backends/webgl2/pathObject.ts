@@ -66,13 +66,8 @@ export function pathDraw(particleSystem: ParticleSystemWithPath) {
   const thickness = 0.005; // in clip-space units, adjust as needed
   for (let i = 0; i < path.length - 1; i++) {
     // Map to clip space (-1..1)
-    const [x,y] = path[i];
-    const [xp1,yp1] = path[i + 1];
-
-    const x0 = x / particleSystem.WIDTH * 2 - 1;
-    const y0 = y / particleSystem.HEIGHT * 2 - 1;
-    const x1 = xp1 / particleSystem.WIDTH * 2 - 1;
-    const y1 = yp1 / particleSystem.HEIGHT * 2 - 1;
+    const [x0,y0] = path[i];
+    const [x1,y1] = path[i + 1];
     startArr.push(x0, y0);
     endArr.push(x1, y1);
     colorArr.push(1, 1, 1); // white stroke

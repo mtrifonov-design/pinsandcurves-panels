@@ -3,22 +3,27 @@
 
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import { Controls, ControlsData } from '../LiquidLissajousControls.js';
-import { colorConvert } from './colors.js';
+import { colorConvert, rgbToHsl, hslToRgb } from './colors.js';
+import { matrix, ones, inv, multiply } from 'mathjs';
 
-function easeInOutCubic(x: number): number {
-return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+
+function rbf(v1: number[], v2: number[]): number {
+    // Radial basis function for distance
+    const r = Math.sqrt(v1.reduce((sum, val, i) => sum + (val - v2[i]) ** 2, 0));
+    const e = 2.8;
+    //return Math.exp(-((r * e)**2));
+    return Math.sqrt(1 + (r*e) ** 2);
 }
 
 export class ParticleSystem {
     static HARD_MAX = 200;
-    buffer: Float32Array;
     time: number;
     CENTER_X: number = 0.5;
     CENTER_Y: number = 0.5;
     BACKGROUND_COLOR: number[] = [0, 0, 0];
     PARTICLE_RADIUS: number = 300;
     PARTICLE_SPEED: number = 0.01;
-    PARTICLE_COLORS: number[][] = [[1,0,0],[0,1,0],[0,0,1]];
+    PARTICLE_COLORS: number[][] = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
     PARTICLE_COUNT: number = 3;
     LOOP_LIFECYCLE: number = 60;
     SHOW_LISSAJOUS_FIGURE: boolean = false;
@@ -42,11 +47,11 @@ export class ParticleSystem {
     }
 
     // Lissajous curve computation
-    lissajousXY(t: number, params: { 
-        ax: number, bx: number, ay: number, by: number, 
-        deltaX: number, deltaY: number, 
-        centerX: number, centerY: number, 
-        scaleX: number, scaleY: number 
+    lissajousXY(t: number, params: {
+        ax: number, bx: number, ay: number, by: number,
+        deltaX: number, deltaY: number,
+        centerX: number, centerY: number,
+        scaleX: number, scaleY: number
     }): [number, number] {
         // x = centerX + scaleX * sin(ax * t + deltaX)
         // y = centerY + scaleY * sin(ay * t + deltaY)
@@ -57,13 +62,55 @@ export class ParticleSystem {
         return [x, y];
     }
 
+    lissajousKnot(t: number, params: {
+        a: number, a_delta: number,
+        b: number, b_delta: number,
+        c: number,
+    }) {
+        const x = Math.cos(params.a * t + params.a_delta);
+        const y = Math.cos(params.b * t + params.b_delta);
+        const z = Math.cos(params.c * t);
+        return [x, y, z]
+    }
+
+    constructColorWeights() {
+        const particleLength = this.PARTICLES.length;
+        const m = matrix(ones(particleLength,particleLength));
+        for (let i = 0; i < particleLength; ++i) {
+            for (let j = 0; j < particleLength; ++j) {
+                const v1 = this.PARTICLES[i];
+                const v2 = this.PARTICLES[j];
+                m.set([i, j], rbf([v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z]));
+            }
+        }        
+        const inverse = inv(m);
+        const rVector = matrix(ones(particleLength, 1));
+        const gVector = matrix(ones(particleLength, 1));
+        const bVector = matrix(ones(particleLength, 1));
+        for (let i = 0; i < particleLength; ++i) {
+            const v = this.PARTICLES[i];
+            rVector.set([i, 0], v.r);
+            gVector.set([i, 0], v.g);
+            bVector.set([i, 0], v.b);
+        }
+        const rWeights = multiply(inverse, rVector);
+        const gWeights = multiply(inverse, gVector);
+        const bWeights = multiply(inverse, bVector);
+        const colorMatrix = matrix(ones(particleLength, 3));
+        for (let i = 0; i < particleLength; ++i) {
+            colorMatrix.set([i, 0], rWeights.get([i, 0]));
+            colorMatrix.set([i, 1], gWeights.get([i, 0]));
+            colorMatrix.set([i, 2], bWeights.get([i, 0]));
+        }
+
+        return colorMatrix;
+    }
+
     update(config: ControlsData, timeline: TimelineController) {
         this.time = timeline.getProject().timelineData.playheadPosition;
-        // Create a closed color loop (add first color to end)
+
         const baseColors = config.particleColors.map(colorConvert);
-        // Compute subdivisions between each color
         const subdivisions = Math.floor(config.mixingIntensity * 5);
-        // If more than one color, treat as a loop (closed)
         let colorLoopCount = 0;
         if (baseColors.length > 1) {
             colorLoopCount = baseColors.length * (subdivisions + 1);
@@ -71,8 +118,8 @@ export class ParticleSystem {
         } else {
             this.PARTICLE_COUNT = baseColors.length;
         }
-        this.LOOP_LIFECYCLE = config.loopLifecycle;
 
+        this.LOOP_LIFECYCLE = config.loopLifecycle;
         this.WIDTH = config.width;
         this.HEIGHT = config.height;
         this.RATIO_A = config.ratioA;
@@ -83,49 +130,6 @@ export class ParticleSystem {
         this.FIGURE_SCALE_Y = config.figureScaleY;
         this.REL_TIME = (this.time % this.LOOP_LIFECYCLE) / this.LOOP_LIFECYCLE;
         this.CONFIG = config;
-
-        // Interpolate PARTICLE_COUNT color stops in HSL (hue) space
-        function rgbToHsl([r, g, b]: number[]): [number, number, number] {
-            r = Math.max(0, Math.min(1, r));
-            g = Math.max(0, Math.min(1, g));
-            b = Math.max(0, Math.min(1, b));
-            const max = Math.max(r, g, b), min = Math.min(r, g, b);
-            let h = 0, s = 0;
-            const l = (max + min) / 2;
-            if (max !== min) {
-                const d = max - min;
-                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-                switch (max) {
-                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-                    case g: h = (b - r) / d + 2; break;
-                    case b: h = (r - g) / d + 4; break;
-                }
-                h /= 6;
-            }
-            return [h, s, l];
-        }
-        function hslToRgb([h, s, l]: [number, number, number]): [number, number, number] {
-            let r, g, b;
-            if (s === 0) {
-                r = g = b = l;
-            } else {
-                const hue2rgb = (p: number, q: number, t: number) => {
-                    if (t < 0) t += 1;
-                    if (t > 1) t -= 1;
-                    if (t < 1/6) return p + (q - p) * 6 * t;
-                    if (t < 1/2) return q;
-                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-                    return p;
-                };
-                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-                const p = 2 * l - q;
-                r = hue2rgb(p, q, h + 1/3);
-                g = hue2rgb(p, q, h);
-                b = hue2rgb(p, q, h - 1/3);
-            }
-            return [r, g, b];
-        }
-        // Build color stops
         const colorStops: number[][] = [];
         if (baseColors.length > 1) {
             for (let i = 0; i < baseColors.length; ++i) {
@@ -149,51 +153,38 @@ export class ParticleSystem {
 
         // Default Lissajous parameters for a classic figure
         const lissajousParams = {
-            ax: this.RATIO_A, bx: 0, 
-            ay: this.RATIO_B, by: 0, // frequencies
-            deltaX: this.OFFSET, deltaY: 0, // phase offsets
-            centerX: this.CENTER_X * this.WIDTH,
-            centerY: this.CENTER_Y * this.HEIGHT,
-            scaleX: this.WIDTH * this.FIGURE_SCALE_X, // aspect ratio
-            scaleY: this.HEIGHT * this.FIGURE_SCALE_Y // aspect ratio
+            t: this.REL_TIME * 2 * Math.PI,
+            a: 2, a_delta: 0.1,
+            b: 5, b_delta: 0.7,
+            c: 3
         };
 
-        let ptr = 0;
-        function noise1D(x: number): number {
-            const s = Math.sin(x * 127.1 + 311.7) * 43758.5453;
-            return s - Math.floor(s);
-        }
         this.PARTICLES = [];
         for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
-            let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE 
-            t += (i  / this.PARTICLE_COUNT) * 2 * Math.PI;
-            const noiseStrength = 0.0;
-            const normalStrength = 0.0;
-            const noiseVal = noise1D(i);
-            t += noiseVal * noiseStrength;
-            let [x, y] = this.lissajousXY(t, lissajousParams);
-            const dt = 0.0001;
-            const [x2, y2] = this.lissajousXY(t + dt, lissajousParams);
-            const dx = x2 - x;
-            const dy = y2 - y;
-            const len = Math.sqrt(dx*dx + dy*dy) || 1.0;
-            const nx = -dy / len;
-            const ny = dx / len;
-            const normalOffset = (noise1D(i + 1000) - 0.5) * 2 * normalStrength;
-            x += nx * normalOffset;
-            y += ny * normalOffset;
-            // x = (x/1920) * this.WIDTH;
-            // y = (y/1080) * this.HEIGHT;
+            let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE
+            t += (i / this.PARTICLE_COUNT) * 2 * Math.PI;
+            let [x, y, z] = this.lissajousKnot(t, lissajousParams);
+            x *= this.FIGURE_SCALE_X * 2;
+            y *= this.FIGURE_SCALE_Y * 2;
+            z *= 1;
+            console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
-            this.buffer[ptr++] = x;
-            this.buffer[ptr++] = y;
-            this.buffer[ptr++] = color[0];
-            this.buffer[ptr++] = color[1];
-            this.buffer[ptr++] = color[2];
-            this.PARTICLES[i] = { x, y, r: color[0],
-                g: color[1], b: color[2]
-             }; // Store particle data if needed
+            this.PARTICLES[i] = {
+                x, y , z, 
+                r: color[0],
+                g: color[1], 
+                b: color[2]
+            }; 
         }
+
+        const colorWeights = this.constructColorWeights();
+        for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
+            this.PARTICLES[i].rWeight = colorWeights.get([i, 0]);
+            this.PARTICLES[i].gWeight = colorWeights.get([i, 1]);
+            this.PARTICLES[i].bWeight = colorWeights.get([i, 2]);
+        }
+       
+        console.log(this.PARTICLES);
 
         // Generate Lissajous polyline for overlay
         const N = 256; // number of points in the polyline
@@ -201,7 +192,9 @@ export class ParticleSystem {
         this.LISSAJOUS_PATH = [];
         for (let i = 0; i < N; ++i) {
             const t = (i / (N - 1)) * 2 * Math.PI;
-            const [x, y] = this.lissajousXY(t, lissajousParams);
+            let [x, y] = this.lissajousKnot(t, lissajousParams);
+            x *= this.FIGURE_SCALE_X * 2;
+            y *= this.FIGURE_SCALE_Y * 2;
             this.lissajousLineBuffer[i * 2 + 0] = x;
             this.lissajousLineBuffer[i * 2 + 1] = y;
             this.LISSAJOUS_PATH[i] = [x, y]; // Store path points if needed
