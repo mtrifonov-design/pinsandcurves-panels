@@ -7,6 +7,7 @@ import { computeDepthFieldTexture } from '../../core/DepthField.js';
 import pathObject, { pathDraw } from './pathObject.js';
 import { initTriMesh } from './TriMesh.js';
 import obstacleProblem from '../../core/ObstacleProblem.js';
+import depthObject, { depthDraw } from './depthObject.js';
 
 function makeTileableNoise(size = 64, float = false) {
   const N = size * size;
@@ -30,6 +31,7 @@ export class WebGL2Renderer {
         SimpleWebGL2.__defineobject__(circleObject);
         SimpleWebGL2.__defineobject__(pathObject);
         SimpleWebGL2.__defineobject__(gradientObject);
+        SimpleWebGL2.__defineobject__(depthObject);
         SimpleWebGL2.__createtexture__({
             name: "depth_field",
             width: 8,
@@ -87,70 +89,73 @@ export class WebGL2Renderer {
     }
 
     draw() {
-        // const gl = SimpleWebGL2.__getgl__();
+        const gl = SimpleWebGL2.__getgl__();
 
-        // // /* ---------- PASS 1: gradient → texture --------------------------- */
-        // gl.bindFramebuffer(gl.FRAMEBUFFER, this.rtFBO);
-        // gl.viewport(0, 0, this.RTV_W, this.RTV_H);
+        // /* ---------- PASS 1: gradient → texture --------------------------- */
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.rtFBO);
+        gl.viewport(0, 0, this.RTV_W, this.RTV_H);
 
-        // SimpleWebGL2.__begin__();                            // clears FBO
+        SimpleWebGL2.__begin__();                            // clears FBO
+        SimpleWebGL2.__drawobjectinstances__("depthObj", depthDraw(this.particleSys));
+        
         // SimpleWebGL2.__drawobjectinstances__(
         //     'voronoiBG',
         //     gradientDraw(this.particleSys)
         // );
-        // SimpleWebGL2.__end__();  
+        SimpleWebGL2.__end__();  
 
-        // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        // gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 
 
         SimpleWebGL2.__begin__();
-        // SimpleWebGL2.__drawobjectinstances__("voronoiBG", gradientDraw(this.particleSys));
+        SimpleWebGL2.__drawobjectinstances__("voronoiBG", gradientDraw(this.particleSys));
 
         
         // SimpleWebGL2.__updatetexture__("depth_field", computeDepthFieldTexture(this.particleSys, 8, 5));
 
 
-        const inputPoints = [
-        ]
+        // const inputPoints = [
+        // ]
 
         // this.particleSys.PARTICLES.forEach(particle => {
         //     const { x, y, z } = particle;
         //     inputPoints.push({ x: x, y: y, psi: z-1 });
         // })
-        inputPoints.push({ x: -2.1, y: -2.1, psi: -2, dir: true });
-        inputPoints.push({ x: 2.1, y: -2.1, psi: -2, dir: true });
-        inputPoints.push({ x: 2.1, y: 2.1, psi: -2, dir: true });
-        inputPoints.push({ x: -2.1, y: 2.1, psi: -2, dir: true });
+        // inputPoints.push({ x: -2.1, y: -2.1, psi: -2, dir: true });
+        // inputPoints.push({ x: 2.1, y: -2.1, psi: -2, dir: true });
+        // inputPoints.push({ x: 2.1, y: 2.1, psi: -2, dir: true });
+        // inputPoints.push({ x: -2.1, y: 2.1, psi: -2, dir: true });
 
-        const stepSize = 0.3;
-        for (let x = -0.9; x <= 0.9; x += stepSize) {
-            for (let y = -0.9; y <= 0.9; y += stepSize) {
-                // find all particles in particle system within a certain distance
-                const distance = Math.sqrt(stepSize * stepSize + stepSize * stepSize); // 0.1 is the step size
-                const particlesInRange = this.particleSys.PARTICLES.filter(p => {
-                    const dx = p.x - x;
-                    const dy = p.y - y;
-                    return Math.sqrt(dx * dx + dy * dy) < distance;
-                });
-                // pick the one with the highest z value
-                let highestValue = -2;
+        // const stepSize = 0.3;
+        // for (let x = -0.9; x <= 0.9; x += stepSize) {
+        //     for (let y = -0.9; y <= 0.9; y += stepSize) {
+        //         // find all particles in particle system within a certain distance
+        //         const distance = Math.sqrt(stepSize * stepSize + stepSize * stepSize); // 0.1 is the step size
+        //         const particlesInRange = this.particleSys.PARTICLES.filter(p => {
+        //             const dx = p.x - x;
+        //             const dy = p.y - y;
+        //             return Math.sqrt(dx * dx + dy * dy) < distance;
+        //         });
+        //         // pick the one with the highest z value
+        //         let highestValue = -2;
 
-                if (particlesInRange.length > 0) {
-                    const highestParticle = particlesInRange.reduce((max, p) => p.z > max.z ? p : max);
-                    highestValue = highestParticle.z - 1; 
-                } 
+        //         if (particlesInRange.length > 0) {
+        //             const highestParticle = particlesInRange.reduce((max, p) => p.z > max.z ? p : max);
+        //             highestValue = highestParticle.z - 1; 
+        //         } 
 
-                inputPoints.push({ x: x, y: y, psi: highestValue }); // default psi value
-            }
-        }
+        //         inputPoints.push({ x: x, y: y, psi: highestValue }); // default psi value
+        //     }
+        // }
 
-        const outputPoints = obstacleProblem({nodes:inputPoints, force:-3});
-        const points = outputPoints.map(p => ({ x: p.x, y: p.y, z: p.height + 1 })); // convert to clip-space
+        // const outputPoints = obstacleProblem({nodes:inputPoints, force:-3});
+        // const points = outputPoints.map(p => ({ x: p.x, y: p.y, z: p.height + 1 })); // convert to clip-space
 
-        this.triMesh.upload(points); // clip-space coordinates
-        this.triMesh.draw();
-
+        // this.triMesh.upload(points); // clip-space coordinates
+        // this.triMesh.draw();
+        //SimpleWebGL2.__drawobjectinstances__("depthObj", depthDraw(this.particleSys));
+        
         if (this.particleSys.SHOW_LISSAJOUS_FIGURE) {
             SimpleWebGL2.__drawobjectinstances__("path", pathDraw(this.particleSys));
             SimpleWebGL2.__drawobjectinstances__("circle",circleDraw(this.particleSys));

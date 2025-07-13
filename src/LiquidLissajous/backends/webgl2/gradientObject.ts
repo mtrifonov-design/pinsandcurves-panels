@@ -213,7 +213,7 @@ void main() {
     vec2 uv = v_uv;
     int PCOUNT = int(v_particleCount); // number of particles
 
-    float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
+    float depthField = texture(u_depth_field, v_uv).r;
     vec3 bgColor = v_backgroundColor; // background color
 
     vec4 accColor = vec4(bgColor,1.);
@@ -252,6 +252,7 @@ void main() {
 
     //outColor = vec4(vec3(getColor(vec3(uv, v_slice * 2. - 1.)).a), 1.);
     //outColor = vec4(getColor(vec3(uv, v_slice * 2. - 1.)).rgb, 1.);
+    outColor = vec4(vec3(depthField), 1.0); 
 
 }`);
 
@@ -351,6 +352,10 @@ function gradientDraw(particleSystem: ParticleSystem) {
             backgroundColor: backgroundColorArr, // background color
         },               // no per-instance data
         dynamicData: dynData,
+        textures: {
+            u_depth_field: "exampleTexture"
+
+        }
     }
 }
 
