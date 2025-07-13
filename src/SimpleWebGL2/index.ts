@@ -99,11 +99,26 @@ export const SimpleWebGL2 = {
   __begin__,
   __drawobjectinstances__,
   __end__,
+  __getgl__: __getgl__,
+  __adopttexture__: __adopttexture__,
 };
 
 /*======================================================================
   4.  Implementation
   =====================================================================*/
+
+function __adopttexture__(name: string,
+                           tex: WebGLTexture,
+                           width: number,
+                           height: number): void {
+  textures[name] = { tex, width, height };
+}
+
+function __getgl__(): WebGL2RenderingContext {
+  if (!gl) throw new Error("Call __init__ first");
+  return gl;
+}
+
 
 /*----------------------------- __init__ ------------------------------*/
 function __init__(canvas: HTMLCanvasElement): void {
