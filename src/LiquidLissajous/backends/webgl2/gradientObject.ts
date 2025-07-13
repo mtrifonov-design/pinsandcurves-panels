@@ -10,15 +10,25 @@ in float particleCount;  // number of particles
 in float width;         // width of the texture
 in float height;        // height of the texture
 in float time;
+in vec3 backgroundColor;
+
+in float slice;
+in float e_factor;
+
 in vec3 noise;
 in vec3 fluidWarp;
 out vec3 v_noise;
 out vec3 v_fluidWarp;
 out vec2 v_uv;
 out float v_particleCount;
+out vec3 v_backgroundColor; // pass to FS
 out float v_width;       // pass to FS
 out float v_height;      // pass to FS
 out float v_time;
+
+out float v_slice;
+out float v_e_factor;
+
 void main() {
   v_uv = a_pos;          // 0‥1
 v_particleCount = particleCount;   // pass to FS    
@@ -29,6 +39,10 @@ v_particleCount = particleCount;   // pass to FS
     v_fluidWarp = fluidWarp;
 
     v_time = time;
+    v_backgroundColor = backgroundColor; // pass to FS
+
+    v_slice = slice;      
+    v_e_factor = e_factor; 
 }`;
 
 const voroFS = resolveLygia(`#version 300 es
@@ -39,13 +53,18 @@ in  float v_width;        // width of the texture
 in float v_height;       // height of the texture
 in  float v_time;         // time, not used
 in  vec2 v_uv;
+in vec3 v_backgroundColor; // background color
 in vec3 v_noise;
 in vec3 v_fluidWarp;
 in  float v_particleCount; // number of particles
 out vec4 outColor;
 
+in float v_slice;        
+in float v_e_factor;     
+
 // #include "lygia/generative/psrdnoise.glsl"
 // #include "lygia/generative/pnoise.glsl"
+#include "lygia/color/space/oklab2rgb.glsl"
 
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
@@ -101,8 +120,18 @@ float fetch(int index) {             // helper to fetch RED float
 
 float rbf(vec3 p, vec3 q, float e) {
     float d = sqrt(dot(p - q, p - q));
+    //return exp( -(d*e) * (d*e) );
+    //return sqrt(1. + (d*e) * (d*e));
+    return 1. / sqrt(1. + (d*e) * (d*e));
+   // return 0.05 / (d * d + 0.05);
+}
+
+float rbfSharp(vec3 p, vec3 q, float e) {
+    float d = sqrt(dot(p - q, p - q));
     return exp( -(d*e) * (d*e) );
     //return sqrt(1. + (d*e) * (d*e));
+    //return 1. / sqrt(1. + (d*e) * (d*e));
+   // return 0.05 / (d * d + 0.05);
 }
 
 
@@ -121,13 +150,62 @@ vec4 getColor(vec3 p) {
         float bW = fetch(base + 5); // blue weight
         float aW = fetch(base + 6); // alpha weight, not used
 
-        float e = 3.3;
+        float e = 1.;
+        float eSharp = 100.;
         r += rW * rbf(p, center, e);
         g += gW * rbf(p, center, e);
         b += bW * rbf(p, center, e);
-        a += aW * rbf(p, center, e);
+        a += aW * rbfSharp(p, center, .5);
     }
-    return vec4(r,g,b,a);
+
+    float minDistance = 0.;
+    vec3 minDistanceColor = vec3(0.0);
+
+
+    float wTotal = 0.0;
+    float u_r = 0.0;
+    float u_g = 0.0;
+    float u_b = 0.0;
+
+    bool needsNormalization = true;
+    for (int i = 0; i < PCOUNT; ++i) {
+
+
+        int base = i * STRIDE;
+        vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2));
+        float distance = sqrt(dot(p - center, p - center));
+        if (i == 0 || distance < minDistance) {
+            minDistance = distance;
+            minDistanceColor = vec3(fetch(base + 3), fetch(base + 4), fetch(base + 5));
+        }
+
+        if (distance < 0.01) {
+            u_r = fetch(base + 3);
+            u_g = fetch(base + 4);
+            u_b = fetch(base + 5);
+            needsNormalization = false; 
+            break;
+        } else {
+            float w = 1. / pow(distance, 3.);
+            wTotal += w;
+            u_r += fetch(base + 3) * w;
+            u_g += fetch(base + 4) * w;
+            u_b += fetch(base + 5) * w;
+        }
+    }
+    
+    if (needsNormalization && wTotal > 0.0) {
+        u_r /= wTotal;
+        u_g /= wTotal;
+        u_b /= wTotal;
+    }
+
+
+    vec3 okLabColor = vec3(r, g, b);
+    //return vec4(okLabColor, a); 
+    //return vec4(r,g,b,a);
+    //return vec4(minDistanceColor, a); // return color of the closest particle
+    return vec4(u_r, u_g, u_b, a); // return average color weighted by distance
 }
 
 void main() {
@@ -136,21 +214,45 @@ void main() {
     int PCOUNT = int(v_particleCount); // number of particles
 
     float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
+    vec3 bgColor = v_backgroundColor; // background color
 
-    float r = 0.0;
-    float g = 0.0;
-    float b = 0.0;
-    float a = 0.0;
-    vec4 accColor = vec4(0.0);
-    int ITERATIONS = 30;
-    for (int i = 0; (i < ITERATIONS && accColor.a < 5.999); ++i) {
-        float d = (float(i) / float(ITERATIONS)) * 2.0 - 1.;
-        vec3 p = vec3(uv, d);
-        vec4 color = getColor(p);
-        accColor += (1.0 - accColor.a) * color; // accumulate color with alpha blending
+    vec4 accColor = vec4(bgColor,1.);
+    int ITERATIONS = 16;
+    float stepSize = (1.0 / float(ITERATIONS)) * 2.;
+    float transmittance = 1.;
+    float sigma = 1.1;
+
+    for (int i = 0; i < ITERATIONS && transmittance > 0.01; ++i) {
+        float depth = (float(i)+ 0.5) * stepSize;
+        vec3 p = vec3(uv, 1. - depth);
+        vec4 col = getColor(p);
+        float alpha = col.a;
+
+        float density = alpha * .5;
+        float segmentAlpha = 1. - exp(-sigma * density * stepSize);
+
+        vec3 colorContribution = col.rgb * segmentAlpha * transmittance;
+        accColor.rgb += colorContribution;
+
+        accColor.a += segmentAlpha * transmittance;
+
+        transmittance *= (1.0 - segmentAlpha);
+
     }
 
+    // alpha blend outcolor on top of background color
+    
+    //outColor = vec4(bgColor, 1.0);
+    //outColor = (1.0 - accColor.a / 2.) * outColor + accColor;
     outColor = accColor;
+    //outColor = oklab2rgb(outColor);
+
+    //outColor = vec4(accColor.xyz, 1.0); 
+    //outColor = vec4(accColor.xyz / stepsTaken, 1.);
+
+    //outColor = vec4(vec3(getColor(vec3(uv, v_slice * 2. - 1.)).a), 1.);
+    //outColor = vec4(getColor(vec3(uv, v_slice * 2. - 1.)).rgb, 1.);
+
 }`);
 
 console.log(voroFS);
@@ -185,6 +287,18 @@ const gradientObject = {
     {
         name: "fluidWarp",
         size: 3,
+    },
+    {
+        name: "slice",
+        size: 1,
+    },
+    {
+        name: "e_factor",
+        size: 1,
+    },
+    {
+        name: "backgroundColor",
+        size: 3,
     }
     ],
     vertexShader: voroVS,
@@ -208,12 +322,14 @@ function gradientDraw(particleSystem: ParticleSystem) {
         dynData[off + 0] = p.x;
         dynData[off + 1] = p.y;
         dynData[off + 2] = p.z; // red
-        dynData[off + 3] = p.rWeight;
-        dynData[off + 4] = p.gWeight;
-        dynData[off + 5] = p.bWeight;
+        dynData[off + 3] = p.r;
+        dynData[off + 4] = p.g;
+        dynData[off + 5] = p.b;
         dynData[off + 6] = p.aWeight; 
     });
 
+    const backgroundColorArr = new Float32Array([particleSystem.BACKGROUND_COLOR[0], 
+        particleSystem.BACKGROUND_COLOR[1], particleSystem.BACKGROUND_COLOR[2]]);
     const widthArr = new Float32Array([particleSystem.WIDTH]);
     const heightArr = new Float32Array([particleSystem.HEIGHT]);
     const timeArr = new Float32Array([particleSystem.REL_TIME]);
@@ -230,6 +346,9 @@ function gradientDraw(particleSystem: ParticleSystem) {
             time: timeArr,                         // current time
             noise: noiseIntensityArr,    // noise intensity
             fluidWarp: warpIntensityArr,      // warp intensity
+            slice: new Float32Array([particleSystem.CONFIG.mixingIntensity]), // current slice
+            e_factor: new Float32Array([1]), // e factor for
+            backgroundColor: backgroundColorArr, // background color
         },               // no per-instance data
         dynamicData: dynData,
     }

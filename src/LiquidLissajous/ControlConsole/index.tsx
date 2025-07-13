@@ -42,6 +42,10 @@ export function CyberSpaghettiControlsInterior({
     update({ particleColors: colors });
   };
 
+    const updateBackgroundColor = (value: string) => {
+    update({ backgroundColor: hexToRgb(value) });
+  };
+
   const addColor = () => update({ particleColors: [...state.particleColors, [255, 255, 255]] });
   const removeColor = (idx: number) => {
     if (state.particleColors.length === 1) return;
@@ -152,6 +156,29 @@ export function CyberSpaghettiControlsInterior({
           onChange={c => update({ mixingIntensity: c })}
         />
       </label>
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        background color &nbsp;
+                  <input
+              type="color"
+              value={rgbToHex(state.backgroundColor)}
+              onChange={e => updateBackgroundColor(e.target.value)}
+              style={{
+                border: "none",
+                backgroundColor: "var(--gray3)",
+                borderRadius: "var(--borderRadiusSmall)",
+                width: "35px",
+                height: "35px",
+              }}
+            />
+      </label>
+
+
+
       {/* Colours */}
       <fieldset
         style={{

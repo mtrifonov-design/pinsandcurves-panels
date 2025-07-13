@@ -3,6 +3,7 @@ type ControlsData = {
     particleCount: number;
     mixingIntensity: number;
     particleColors: [number, number, number][];
+    backgroundColor: [number, number, number];
     loopLifecycle: number,
     showLissajousFigure: boolean;
     ratioA: number;
@@ -91,6 +92,7 @@ class Controls {
             [0,255, 0],
             [0, 0, 255],
         ],
+        backgroundColor: [0, 0, 0],
         loopLifecycle: 300,
         mixingIntensity: 0.3,
         showLissajousFigure: false,

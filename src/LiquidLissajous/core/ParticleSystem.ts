@@ -1,5 +1,6 @@
 // ParticleSystem for Liquid Lissajous
 // Each particle: position (vec2), color (vec3)
+import { rgb_to_oklab } from './oklab.js';
 
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import { Controls, ControlsData } from '../LiquidLissajousControls.js';
@@ -7,12 +8,18 @@ import { colorConvert, rgbToHsl, hslToRgb } from './colors.js';
 import { matrix, ones, inv, multiply } from 'mathjs';
 
 
-function rbf(v1: number[], v2: number[]): number {
+function rbf(v1: number[], v2: number[],e): number {
     // Radial basis function for distance
     const r = Math.sqrt(v1.reduce((sum, val, i) => sum + (val - v2[i]) ** 2, 0));
-    const e = 3.3;
+    //const e = 5;
+    return 1 / Math.sqrt(1 + (r*e) ** 2);
+}
+
+function rbfSharp(v1: number[], v2: number[]): number {
+    // Radial basis function for distance
+    const r = Math.sqrt(v1.reduce((sum, val, i) => sum + (val - v2[i]) ** 2, 0));
+    const e = .5;
     return Math.exp(-((r * e)**2));
-    //return Math.sqrt(1 + (r*e) ** 2);
 }
 
 export class ParticleSystem {
@@ -76,29 +83,44 @@ export class ParticleSystem {
     constructColorWeights() {
         const particleLength = this.PARTICLES.length;
         const m = matrix(ones(particleLength,particleLength));
+        const mSharp = matrix(ones(particleLength,particleLength));
         for (let i = 0; i < particleLength; ++i) {
             for (let j = 0; j < particleLength; ++j) {
                 const v1 = this.PARTICLES[i];
                 const v2 = this.PARTICLES[j];
-                m.set([i, j], rbf([v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z]));
+                const e = 1.;
+                const eSharp= 100;
+                m.set([i, j], rbf([v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z], e));
+                mSharp.set([i, j], rbfSharp([v1.x, v1.y, v1.z], [v2.x, v2.y, v2.z]));
             }
         }        
+        //console.log("Constructed matrix m", m);
         const inverse = inv(m);
+        const inverseSharp = inv(mSharp);
         const rVector = matrix(ones(particleLength, 1));
         const gVector = matrix(ones(particleLength, 1));
         const bVector = matrix(ones(particleLength, 1));
         const aVector = matrix(ones(particleLength, 1));
         for (let i = 0; i < particleLength; ++i) {
             const v = this.PARTICLES[i];
-            rVector.set([i, 0], v.r);
-            gVector.set([i, 0], v.g);
-            bVector.set([i, 0], v.b);
+            // to oklab
+            const { L , a, b}  = rgb_to_oklab({
+                r: v.r * 255,
+                g: v.g * 255,
+                b: v.b * 255
+            });
+
+            const [ Lbg, abg, bbg ] = this.BACKGROUND_COLOR;
+
+            rVector.set([i, 0], L - Lbg);
+            gVector.set([i, 0], a - abg);
+            bVector.set([i, 0], b - bbg);
             aVector.set([i,0], 1);
         }
         const rWeights = multiply(inverse, rVector);
         const gWeights = multiply(inverse, gVector);
         const bWeights = multiply(inverse, bVector);
-        const aWeights = multiply(inverse, aVector);
+        const aWeights = multiply(inverseSharp, aVector);
         const colorMatrix = matrix(ones(particleLength, 4));
         for (let i = 0; i < particleLength; ++i) {
             colorMatrix.set([i, 0], rWeights.get([i, 0]));
@@ -114,7 +136,7 @@ export class ParticleSystem {
         this.time = timeline.getProject().timelineData.playheadPosition;
 
         const baseColors = config.particleColors.map(colorConvert);
-        const subdivisions = Math.floor(config.mixingIntensity * 5);
+        const subdivisions = 0 // Math.floor(config.mixingIntensity * 5);
         let colorLoopCount = 0;
         if (baseColors.length > 1) {
             colorLoopCount = baseColors.length * (subdivisions + 1);
@@ -158,9 +180,9 @@ export class ParticleSystem {
         // Default Lissajous parameters for a classic figure
         const lissajousParams = {
             t: this.REL_TIME * 2 * Math.PI,
-            a: 2, a_delta: 0.1,
-            b: 5, b_delta: 0.7,
-            c: 3
+            a: config.ratioA, a_delta: config.offset,
+            b: config.ratioB, b_delta: 0.7,
+            c: 1
         };
 
         this.PARTICLES = [];
@@ -173,13 +195,23 @@ export class ParticleSystem {
             z *= 1;
              //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
+            //const { L, a, b } = rgbToOklab({ r: color[0] * 255, g: color[1] * 255, b: color[2] * 255 });
             this.PARTICLES[i] = {
                 x, y , z, 
                 r: color[0],
                 g: color[1], 
-                b: color[2]
+                b: color[2],
             }; 
         }
+
+                const bgcolor = rgb_to_oklab({
+            r: config.backgroundColor[0],
+            g: config.backgroundColor[1],
+            b: config.backgroundColor[2]
+        });
+        this.BACKGROUND_COLOR = [bgcolor.L, bgcolor.a, bgcolor.b];
+        console.log("Background color in Oklab:", this.BACKGROUND_COLOR);
+       
 
         const colorWeights = this.constructColorWeights();
         for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
@@ -188,8 +220,7 @@ export class ParticleSystem {
             this.PARTICLES[i].bWeight = colorWeights.get([i, 2]);
             this.PARTICLES[i].aWeight = colorWeights.get([i, 3]); 
         }
-       
-        console.log(this.PARTICLES);
+
 
         // Generate Lissajous polyline for overlay
         const N = 256; // number of points in the polyline
