@@ -143,7 +143,7 @@ export const range = {
 
 // gamma and gamma_inv from https://observablehq.com/@fil/oklab-color-space
 // See: https://imagej.nih.gov/ij/developer/source/ij/process/ColorSpaceConverter.java.html
-function gamma(x: number) {
+export function gamma(x: number) {
   return x >= 0.0031308 ? 1.055 * Math.pow(x, 1 / 2.4) - 0.055 : 12.92 * x
 }
 

@@ -95,7 +95,7 @@ export class WebGL2Renderer {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.rtFBO);
         gl.viewport(0, 0, this.RTV_W, this.RTV_H);
 
-        SimpleWebGL2.__begin__();                            // clears FBO
+        //SimpleWebGL2.__begin__();                            // clears FBO
         SimpleWebGL2.__drawobjectinstances__("depthObj", depthDraw(this.particleSys));
         
         // SimpleWebGL2.__drawobjectinstances__(

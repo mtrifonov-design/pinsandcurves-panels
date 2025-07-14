@@ -65,6 +65,7 @@ in float v_e_factor;
 // #include "lygia/generative/psrdnoise.glsl"
 // #include "lygia/generative/pnoise.glsl"
 #include "lygia/color/space/oklab2rgb.glsl"
+#include "lygia/filter/gaussianBlur/2D.glsl"
 
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
@@ -186,7 +187,7 @@ vec4 getColor(vec3 p) {
             needsNormalization = false; 
             break;
         } else {
-            float w = 1. / pow(distance, 3.);
+            float w = 1. / pow(distance, 2. + v_slice * 2.);
             wTotal += w;
             u_r += fetch(base + 3) * w;
             u_g += fetch(base + 4) * w;
@@ -205,7 +206,7 @@ vec4 getColor(vec3 p) {
     //return vec4(okLabColor, a); 
     //return vec4(r,g,b,a);
     //return vec4(minDistanceColor, a); // return color of the closest particle
-    return vec4(u_r, u_g, u_b, a); // return average color weighted by distance
+    return vec4(u_r, u_g, u_b, 1.); // return average color weighted by distance
 }
 
 void main() {
@@ -213,7 +214,20 @@ void main() {
     vec2 uv = v_uv;
     int PCOUNT = int(v_particleCount); // number of particles
 
-    float depthField = texture(u_depth_field, v_uv).r;
+    // Compute texel size (pixel direction in UV space)
+    vec2 pixelDirection = vec2(0.05);
+
+    // Pick kernel size (must be small if running on WebGL1)
+    const int kernelSize = 9;
+
+    // Blur the red channel of the depth texture using gaussian blur
+    vec4 blurred = gaussianBlur2D(u_depth_field, (uv + 1.0) / 2.0, pixelDirection, kernelSize);
+
+
+
+    //float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
+    float depthField = blurred.r; // use the blurred depth field
+    
     vec3 bgColor = v_backgroundColor; // background color
 
     vec4 accColor = vec4(bgColor,1.);
@@ -222,29 +236,33 @@ void main() {
     float transmittance = 1.;
     float sigma = 1.1;
 
-    for (int i = 0; i < ITERATIONS && transmittance > 0.01; ++i) {
-        float depth = (float(i)+ 0.5) * stepSize;
-        vec3 p = vec3(uv, 1. - depth);
-        vec4 col = getColor(p);
-        float alpha = col.a;
+    // for (int i = 0; i < ITERATIONS && transmittance > 0.01; ++i) {
+    //     float depth = (float(i)+ 0.5) * stepSize;
+    //     vec3 p = vec3(uv, 1. - depth);
+    //     vec4 col = getColor(p);
+    //     float alpha = col.a;
 
-        float density = alpha * .5;
-        float segmentAlpha = 1. - exp(-sigma * density * stepSize);
+    //     float density = alpha * .5;
+    //     float segmentAlpha = 1. - exp(-sigma * density * stepSize);
 
-        vec3 colorContribution = col.rgb * segmentAlpha * transmittance;
-        accColor.rgb += colorContribution;
+    //     vec3 colorContribution = col.rgb * segmentAlpha * transmittance;
+    //     accColor.rgb += colorContribution;
 
-        accColor.a += segmentAlpha * transmittance;
+    //     accColor.a += segmentAlpha * transmittance;
 
-        transmittance *= (1.0 - segmentAlpha);
+    //     transmittance *= (1.0 - segmentAlpha);
 
-    }
+    // }
 
+    float d =depthField * 2. - 1.;
+    outColor = getColor(vec3(v_uv, d)); 
+
+    //outColor = getColor(vec3(v_uv, 1.)); 
     // alpha blend outcolor on top of background color
     
     //outColor = vec4(bgColor, 1.0);
     //outColor = (1.0 - accColor.a / 2.) * outColor + accColor;
-    outColor = accColor;
+    // outColor = accColor;
     //outColor = oklab2rgb(outColor);
 
     //outColor = vec4(accColor.xyz, 1.0); 
@@ -252,7 +270,8 @@ void main() {
 
     //outColor = vec4(vec3(getColor(vec3(uv, v_slice * 2. - 1.)).a), 1.);
     //outColor = vec4(getColor(vec3(uv, v_slice * 2. - 1.)).rgb, 1.);
-    outColor = vec4(vec3(depthField), 1.0); 
+    //outColor = vec4(vec3(depthField), 1.0); 
+    outColor = oklab2rgb(outColor);
 
 }`);
 

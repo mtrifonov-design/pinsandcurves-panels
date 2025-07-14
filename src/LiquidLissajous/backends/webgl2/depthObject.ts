@@ -30,7 +30,7 @@ out float v_height;      // pass to FS
 // out float v_e_factor;
 
 void main() {
-  v_uv = a_pos * 0.5 + 0.5;          // 0‥1
+  v_uv = a_pos;          // 0‥1
 v_particleCount = particleCount;   // pass to FS    
   gl_Position = vec4(a_pos, 0.0, 1.0);
     v_width = width;      // pass to FS
@@ -64,12 +64,19 @@ in float v_e_factor;
 
 // #include "lygia/generative/psrdnoise.glsl"
 // #include "lygia/generative/pnoise.glsl"
-#include "lygia/color/space/oklab2rgb.glsl"
+//#include "lygia/filter/gaussianBlur/2D.glsl"
 
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
 float fetch(int index) {             // helper to fetch RED float
   return texelFetch(u_dyn, ivec2(index, 0), 0).r;
+}
+
+
+float fallof(float distance) {
+
+    return 1.0 / (1.0 + exp(4.0 * distance - 5.));
+
 }
 
 vec4 getColor(vec2 p) {
@@ -82,8 +89,9 @@ vec4 getColor(vec2 p) {
         float height = (fetch(base + 2) + 1.) / 2.; 
 
         float distance = length(p - center);
-        float a = 3.;
-        float dLocal = height * 1. / (sqrt(1. + (distance * a) * (distance * a)));
+        float a = 2.5;
+        //float dLocal = height * 1. / (sqrt(1. + (distance * a) * (distance * a)));
+        float dLocal = height * fallof(distance); // Gaussian falloff
         if (dLocal > d) {
             d = dLocal;
         }

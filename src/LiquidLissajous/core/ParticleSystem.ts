@@ -1,6 +1,6 @@
 // ParticleSystem for Liquid Lissajous
 // Each particle: position (vec2), color (vec3)
-import { rgb_to_oklab } from './oklab.js';
+import { rgb_to_oklab, gamma } from './oklab.js';
 
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import { Controls, ControlsData } from '../LiquidLissajousControls.js';
@@ -195,12 +195,15 @@ export class ParticleSystem {
             z *= 1;
              //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
-            //const { L, a, b } = rgbToOklab({ r: color[0] * 255, g: color[1] * 255, b: color[2] * 255 });
+            const { L, a, b } = rgb_to_oklab({ 
+                r: gamma(color[0]) * 255, 
+                g: gamma(color[1]) * 255, 
+                b: gamma(color[2]) * 255 });
             this.PARTICLES[i] = {
                 x, y , z, 
-                r: color[0],
-                g: color[1], 
-                b: color[2],
+                r: L,
+                g: a, 
+                b: b,
             }; 
         }
 

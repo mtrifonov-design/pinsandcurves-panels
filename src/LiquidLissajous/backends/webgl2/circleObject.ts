@@ -1,3 +1,5 @@
+import { resolveLygia } from "./resolveLygia";
+
 const circleVS = `#version 300 es
 in  vec2 a_pos;          // quad corner (-1..1)
 in  vec2 offset;         // instance centre in clip-space
@@ -13,16 +15,19 @@ void main() {
   gl_Position = vec4(a_pos * vec2(radius, radius * aspect) + offset, 0.0, 1.0);
 }`;
 
-const circleFS = `#version 300 es
+const circleFS = resolveLygia(`#version 300 es
 precision highp float;
+#include "lygia/color/space/oklab2rgb.glsl"
 in  vec2 v_local;
 in  vec3 v_color;
 out vec4 outColor;
 void main() {
   if (length(v_local) > 1.0) discard;  // keep circular footprint
-  if (length(v_local) > 0.8) outColor = vec4(1.0);  // keep circular footprint
+  if (length(v_local) > 0.8) {outColor = vec4(1.0); return;}  // keep circular footprint
   else outColor = vec4(v_color, 1.0);
-}`;
+
+  outColor = oklab2rgb(outColor); // convert to RGB
+}`);
 
 const circleObject = {
             name: "circle",
