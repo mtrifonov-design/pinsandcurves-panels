@@ -136,7 +136,7 @@ export class ParticleSystem {
         this.time = timeline.getProject().timelineData.playheadPosition;
 
         const baseColors = config.particleColors.map(colorConvert);
-        const subdivisions = 0 // Math.floor(config.mixingIntensity * 5);
+        const subdivisions = 0 //Math.floor(config.mixingIntensity * 5);
         let colorLoopCount = 0;
         if (baseColors.length > 1) {
             colorLoopCount = baseColors.length * (subdivisions + 1);
@@ -190,8 +190,8 @@ export class ParticleSystem {
             let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE
             t += (i / this.PARTICLE_COUNT) * 2 * Math.PI;
             let [x, y, z] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 2;
-            y *= this.FIGURE_SCALE_Y * 2;
+            x *= this.FIGURE_SCALE_X * 4;
+            y *= this.FIGURE_SCALE_Y * 4;
             z *= 1;
              //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
@@ -232,8 +232,8 @@ export class ParticleSystem {
         for (let i = 0; i < N; ++i) {
             const t = (i / (N - 1)) * 2 * Math.PI;
             let [x, y] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 2;
-            y *= this.FIGURE_SCALE_Y * 2;
+            x *= this.FIGURE_SCALE_X * 4;
+            y *= this.FIGURE_SCALE_Y * 4;
             this.lissajousLineBuffer[i * 2 + 0] = x;
             this.lissajousLineBuffer[i * 2 + 1] = y;
             this.LISSAJOUS_PATH[i] = [x, y]; // Store path points if needed

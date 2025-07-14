@@ -187,7 +187,7 @@ vec4 getColor(vec3 p) {
             needsNormalization = false; 
             break;
         } else {
-            float w = 1. / pow(distance, 2. + v_slice * 2.);
+            float w = 1. / pow(distance, 2. + v_slice * 3.);
             wTotal += w;
             u_r += fetch(base + 3) * w;
             u_g += fetch(base + 4) * w;

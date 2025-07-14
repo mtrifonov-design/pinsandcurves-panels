@@ -75,7 +75,7 @@ float fetch(int index) {             // helper to fetch RED float
 
 float fallof(float distance) {
 
-    return 1.0 / (1.0 + exp(4.0 * distance - 5.));
+    return 1.0 / (1.0 + exp(3.5 * distance - 5.));
 
 }
 
