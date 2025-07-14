@@ -74,8 +74,8 @@ float fetch(int index) {             // helper to fetch RED float
 
 
 float fallof(float distance) {
-
-    return 1.0 / (1.0 + exp(3.5 * distance - 5.));
+    // prev 5.
+    return 1.0 / (1.0 + exp(3.5 * distance - 3.5));
 
 }
 
@@ -89,7 +89,7 @@ vec4 getColor(vec2 p) {
         float height = (fetch(base + 2) + 1.) / 2.; 
 
         float distance = length(p - center);
-        float a = 2.5;
+        float a = 10.;
         //float dLocal = height * 1. / (sqrt(1. + (distance * a) * (distance * a)));
         float dLocal = height * fallof(distance); // Gaussian falloff
         if (dLocal > d) {

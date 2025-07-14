@@ -6,6 +6,7 @@ import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import { Controls, ControlsData } from '../LiquidLissajousControls.js';
 import { colorConvert, rgbToHsl, hslToRgb } from './colors.js';
 import { matrix, ones, inv, multiply } from 'mathjs';
+import backgroundObject from '../../CyberSpaghetti/backends/webgl2/backgroundObject.js';
 
 
 function rbf(v1: number[], v2: number[],e): number {
@@ -190,8 +191,8 @@ export class ParticleSystem {
             let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE
             t += (i / this.PARTICLE_COUNT) * 2 * Math.PI;
             let [x, y, z] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 4;
-            y *= this.FIGURE_SCALE_Y * 4;
+            x *= this.FIGURE_SCALE_X * 2;
+            y *= this.FIGURE_SCALE_Y * 2;
             z *= 1;
              //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
@@ -201,6 +202,9 @@ export class ParticleSystem {
                 b: gamma(color[2]) * 255 });
             this.PARTICLES[i] = {
                 x, y , z, 
+                // r: gamma(color[0]),
+                // g: gamma(color[1]), 
+                // b: gamma(color[2]),
                 r: L,
                 g: a, 
                 b: b,
@@ -232,8 +236,8 @@ export class ParticleSystem {
         for (let i = 0; i < N; ++i) {
             const t = (i / (N - 1)) * 2 * Math.PI;
             let [x, y] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 4;
-            y *= this.FIGURE_SCALE_Y * 4;
+            x *= this.FIGURE_SCALE_X * 2;
+            y *= this.FIGURE_SCALE_Y * 2;
             this.lissajousLineBuffer[i * 2 + 0] = x;
             this.lissajousLineBuffer[i * 2 + 1] = y;
             this.LISSAJOUS_PATH[i] = [x, y]; // Store path points if needed

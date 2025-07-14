@@ -67,6 +67,7 @@ in float v_e_factor;
 #include "lygia/color/space/oklab2rgb.glsl"
 #include "lygia/filter/gaussianBlur/2D.glsl"
 #include "lygia/color/space/rgb2hsl.glsl"
+#include "lygia/color/space/hsl2rgb.glsl"
 
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
@@ -136,43 +137,6 @@ float rbfSharp(vec3 p, vec3 q, float e) {
    // return 0.05 / (d * d + 0.05);
 }
 
-float linear_spline(float d) {
-    // (0,1) -> (0.1,0.6) -> (0.8, 0.1) -> (5, 0)
-    vec2 p0 = vec2(0.0, 1.0);
-    vec2 p1 = vec2(0.2, 0.54);
-    vec2 p2 = vec2(.4, 0.3);
-    vec2 p3 = vec2(.6, 0.15);
-    vec2 p4 = vec2(1.0, 0.05);
-    vec2 p5 = vec2(1.8, 0.005); // beyond the last point
-    vec2 p6 = vec2(15.0, 0.0); // beyond the last point
-
-    if (d < p0.x) {
-        return mix(p0.y, p1.y, (d - p0.x) / (p1.x - p0.x));
-    }
-    else if (d < p1.x) {
-        return mix(p1.y, p2.y, (d - p1.x) / (p2.x - p1.x));
-    } 
-    else if (d < p2.x) {
-        return mix(p2.y, p3.y, (d - p2.x) / (p3.x - p2.x));
-    }
-    else if (d < p3.x) {
-        return mix(p3.y, p4.y, (d - p3.x) / (p4.x - p3.x));
-    }
-    else if (d < p4.x) {
-        return mix(p4.y, p5.y, (d - p4.x) / (15.0 - p4.x));
-    }
-    else if (d < p5.x) {
-        return mix(p5.y, p6.y, (d - p5.x) / (p5.x - p4.x));
-    }
-    else if (d < p6.x) {
-        return mix(p6.y, 0.0, (d - p6.x) / (p6.x - p5.x));
-    }
-    else {
-        return 0.0; // Beyond the last point
-    }
-
-}
-
 
 vec4 getColor(vec3 p) {
     float r = 0.0;
@@ -216,9 +180,7 @@ vec4 getColor(vec3 p) {
 
         int base = i * STRIDE;
         vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2));
-        vec3 p_adj = p * vec3(1.,1.,3.);
-        vec3 center_adj = center * vec3(1.,1.,3.);
-        float distance = sqrt(dot(p_adj - center_adj, p_adj - center_adj));
+        float distance = sqrt(dot(p - center, p - center));
         if (i == 0 || distance < minDistance) {
             minDistance = distance;
             minDistanceColor = vec3(fetch(base + 3), fetch(base + 4), fetch(base + 5));
@@ -241,12 +203,9 @@ vec4 getColor(vec3 p) {
             needsNormalization = false; 
             break;
         } else {
-            float w = 1. / pow((distance), 2.);
-            //float w = 1. / (1. + exp(7. * (distance - v_slice * 2.)));
-            float fac = v_slice * 10. + 2.;
-            //float w = 1. / sqrt(1. + (distance * fac) * (distance * fac));
-            //float w = linear_spline(distance);
+            float w = 1. / pow(distance, 2. + v_slice * 3.);
 
+            
             wTotal += w;
             u_r += r * w;
             u_g += g * w;
@@ -287,66 +246,57 @@ vec4 getColor(vec3 p) {
 void main() {
 
     vec2 uv = v_uv;
-    int PCOUNT = int(v_particleCount); // number of particles
-
-    // Compute texel size (pixel direction in UV space)
-    vec2 pixelDirection = vec2(0.05);
-
-    // Pick kernel size (must be small if running on WebGL1)
-    const int kernelSize = 9;
-
-    // Blur the red channel of the depth texture using gaussian blur
-    vec4 blurred = gaussianBlur2D(u_depth_field, (uv + 1.0) / 2.0, pixelDirection, kernelSize);
-
-
-
-    //float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
-    float depthField = blurred.r; // use the blurred depth field
+    vec4 col = texture(u_depth_field, (v_uv + 1.) / 2.);
     
-    vec3 bgColor = v_backgroundColor; // background color
+    // int PCOUNT = int(v_particleCount); // number of particles
 
-    vec4 accColor = vec4(bgColor,1.);
-    int ITERATIONS = 16;
-    float stepSize = (1.0 / float(ITERATIONS)) * 2.;
-    float transmittance = 1.;
-    float sigma = 1.1;
+    // // Compute texel size (pixel direction in UV space)
+    // vec2 pixelDirection = vec2(0.01);
 
-    // for (int i = 0; i < ITERATIONS && transmittance > 0.01; ++i) {
-    //     float depth = (float(i)+ 0.5) * stepSize;
-    //     vec3 p = vec3(uv, 1. - depth);
-    //     vec4 col = getColor(p);
-    //     float alpha = col.a;
+    // // Pick kernel size (must be small if running on WebGL1)
+    // const int kernelSize = 20;
 
-    //     float density = alpha * .5;
-    //     float segmentAlpha = 1. - exp(-sigma * density * stepSize);
+    // // Blur the red channel of the depth texture using gaussian blur
+    // vec4 blurred = gaussianBlur2D(u_depth_field, (uv + 1.0) / 2.0, pixelDirection, kernelSize);
 
-    //     vec3 colorContribution = col.rgb * segmentAlpha * transmittance;
-    //     accColor.rgb += colorContribution;
+    // vec3 blurredHSL = rgb2hsl(blurred.xyz);
 
-    //     accColor.a += segmentAlpha * transmittance;
+    // float sat = blurredHSL.z; // saturation of the blurred depth field
 
-    //     transmittance *= (1.0 - segmentAlpha);
-
+    // float satSum = 0.0;
+    // float brightnessSum = 0.0;
+    // for (int i = 0; i < PCOUNT; ++i) {
+    //     int base = i * STRIDE;
+        
+    //     float r = fetch(base + 3); // red weight
+    //     float g = fetch(base + 4); // green weight
+    //     float b = fetch(base + 5); // blue weight
+    //     vec3 particle = vec3(r,g,b);
+    //     //particle = oklab2rgb(particle);
+    //     float particleSat = rgb2hsl(particle).z; // saturation of the particle color
+    //     float particleBrightness =rgb2hsl(particle).y; // brightness of the particle color
+    //     brightnessSum += particleBrightness;
+    //     satSum += particleSat;
     // }
+    // brightnessSum /= float(PCOUNT); // average brightness of all particles
+    // satSum /= float(PCOUNT); // average saturation of all particles
+    // // float satDiff = satSum - sat;
+    // // float brightnessDiff = brightnessSum - blurredHSL.y;
 
-    float d =depthField * 2. - 1.;
-    outColor = getColor(vec3(v_uv, d)); 
+    // // vec4 hsl = rgb2hsl(blurred);
+    // // hsl.z *= 1. + (satDiff * v_slice); // adjust saturation based on the slice factor
+    // // hsl.y *= 1. + (brightnessDiff * v_slice); // adjust brightness based on the slice factor
+    // // vec4 adjustedCol = hsl2rgb(hsl); // convert back to RGB
 
-    //outColor = getColor(vec3(v_uv, 1.)); 
-    // alpha blend outcolor on top of background color
+    // // outColor = vec4(vec3(sat), 1.0); // output the saturation as color
+    // vec4 hsl = rgb2hsl(col);
+    // hsl.y *= 1. + (v_slice - 0.5);
+    // outColor = hsl2rgb(hsl); // convert back to RGB
+
+    // //outColor = adjustedCol; // output the adjusted color
+    // // outColor = vec4(vec3(rgb2hsl(outColor).y), 1.0);
     
-    //outColor = vec4(bgColor, 1.0);
-    //outColor = (1.0 - accColor.a / 2.) * outColor + accColor;
-    // outColor = accColor;
-    //outColor = oklab2rgb(outColor);
-
-    //outColor = vec4(accColor.xyz, 1.0); 
-    //outColor = vec4(accColor.xyz / stepsTaken, 1.);
-
-    //outColor = vec4(vec3(getColor(vec3(uv, v_slice * 2. - 1.)).a), 1.);
-    //outColor = vec4(getColor(vec3(uv, v_slice * 2. - 1.)).rgb, 1.);
-    //outColor = vec4(vec3(depthField), 1.0); 
-    outColor = oklab2rgb(outColor);
+    outColor = col;
 
 
 }`);
@@ -358,8 +308,8 @@ const MAX_PARTICLES = ParticleSystem.HARD_MAX;      // max number of particles
 const texWidth = MAX_PARTICLES * FLOATS_PER_PARTICLE;
 
 
-const gradientObject = {
-    name: "voronoiBG",
+const effectObject = {
+    name: "effectObj",
     instanceAttributes: [{
         name: "particleCount",
         size: 1,
@@ -406,7 +356,7 @@ const gradientObject = {
 
 
 
-function gradientDraw(particleSystem: ParticleSystem) {
+function effectDraw(particleSystem: ParticleSystem) {
     // Store particle positions in normalized [0,1] coordinates
     const particles = particleSystem.PARTICLES;
     const P = particles.length;
@@ -448,12 +398,12 @@ function gradientDraw(particleSystem: ParticleSystem) {
         },               // no per-instance data
         dynamicData: dynData,
         textures: {
-            u_depth_field: "exampleTexture"
+            u_depth_field: "example2Texture"
 
         }
     }
 }
 
-export { gradientDraw };
+export { effectDraw };
 
-export default gradientObject;
+export default effectObject;

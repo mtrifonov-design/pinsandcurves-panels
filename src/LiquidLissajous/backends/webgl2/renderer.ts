@@ -8,6 +8,7 @@ import pathObject, { pathDraw } from './pathObject.js';
 import { initTriMesh } from './TriMesh.js';
 import obstacleProblem from '../../core/ObstacleProblem.js';
 import depthObject, { depthDraw } from './depthObject.js';
+import effectObject, { effectDraw } from './effectObject.js';
 
 function makeTileableNoise(size = 64, float = false) {
   const N = size * size;
@@ -32,6 +33,7 @@ export class WebGL2Renderer {
         SimpleWebGL2.__defineobject__(pathObject);
         SimpleWebGL2.__defineobject__(gradientObject);
         SimpleWebGL2.__defineobject__(depthObject);
+        SimpleWebGL2.__defineobject__(effectObject);
         SimpleWebGL2.__createtexture__({
             name: "depth_field",
             width: 8,
@@ -53,7 +55,7 @@ export class WebGL2Renderer {
         const RTV_W = 512, RTV_H = 512;
         this.RTV_W = RTV_W;
         this.RTV_H = RTV_H;
-        const rtTex = gl.createTexture()!;
+        let rtTex = gl.createTexture()!;
         gl.bindTexture(gl.TEXTURE_2D, rtTex);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
@@ -66,7 +68,7 @@ export class WebGL2Renderer {
         SimpleWebGL2.__adopttexture__('exampleTexture', rtTex, RTV_W, RTV_H);
 
         // (c) framebuffer that owns the texture
-        const rtFBO = gl.createFramebuffer()!;
+        let rtFBO = gl.createFramebuffer()!;
         gl.bindFramebuffer(gl.FRAMEBUFFER, rtFBO);
         gl.framebufferTexture2D(gl.FRAMEBUFFER,
                                 gl.COLOR_ATTACHMENT0,
@@ -77,6 +79,32 @@ export class WebGL2Renderer {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);   // tidy up
         this.rtFBO = rtFBO;                         // keep for draw()
+
+
+        rtTex = gl.createTexture()!;
+        gl.bindTexture(gl.TEXTURE_2D, rtTex);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, RTV_W, RTV_H, 0,
+                    gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+        // (b) adopt it so later passes can bind it by name
+        SimpleWebGL2.__adopttexture__('example2Texture', rtTex, RTV_W, RTV_H);
+
+        // (c) framebuffer that owns the texture
+        rtFBO = gl.createFramebuffer()!;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, rtFBO);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER,
+                                gl.COLOR_ATTACHMENT0,
+                                gl.TEXTURE_2D,
+                                rtTex, 0);
+        if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE)
+        console.error('RT FBO incomplete');
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);   // tidy up
+        this.rt2FBO = rtFBO;                         // keep for draw()
 
     }
 
@@ -104,16 +132,26 @@ export class WebGL2Renderer {
         // );
         SimpleWebGL2.__end__();  
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        //gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        //gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.rt2FBO);
+        gl.viewport(0, 0, this.RTV_W, this.RTV_H);
 
 
-        SimpleWebGL2.__begin__();
+        //SimpleWebGL2.__begin__();
         SimpleWebGL2.__drawobjectinstances__("voronoiBG", gradientDraw(this.particleSys));
 
+        SimpleWebGL2.__end__();
         
         // SimpleWebGL2.__updatetexture__("depth_field", computeDepthFieldTexture(this.particleSys, 8, 5));
 
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+        SimpleWebGL2.__begin__();
+
+        SimpleWebGL2.__drawobjectinstances__("effectObj", effectDraw(this.particleSys));
 
         // const inputPoints = [
         // ]
