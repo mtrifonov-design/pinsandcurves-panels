@@ -218,6 +218,7 @@ vec4 getColor(vec3 p) {
         int base = i * STRIDE;
         vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2));
         vec3 p_adj = p * vec3(1.,1.,2.5);
+        
         vec3 center_adj = center * vec3(1.,1.,2.5);
         float distance = sqrt(dot(p_adj - center_adj, p_adj - center_adj));
         if (i == 0 || distance < minDistance) {
