@@ -9,6 +9,8 @@ import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvi
 import { CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 import LissajousSelectButtonGroup from './LissajousPreview';
 import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../core/lissajousCurves';
+import PresetButton from './PresetButton';
+import presets from './presets';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -64,6 +66,14 @@ export function CyberSpaghettiControlsInterior({
     return Math.floor(loopLength);
   }
 
+  const setPreset = (preset: typeof presets[keyof typeof presets]) => {
+    const loopLength = updateAnimationSpeed(preset.animationSpeed, preset.lissajousParams.integral);
+    update({
+      ...preset,
+      loopLifecycle: loopLength,
+    });
+  
+  }
 
 
   return (
@@ -98,7 +108,44 @@ export function CyberSpaghettiControlsInterior({
         >Watch tutorial</a>
       </div>
       <hr></hr>
+      Pick a preset to get started 
+      <div style={{
+        display: "flex",
+        gap: "1rem",
+      }}>
+        <PresetButton
+          label="Burning Sunset"
+          preset={presets.burningSunset}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Ocean Blues"
+          preset={presets.oceanBlues}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Forest Greens"
+          preset={presets.forestGreens}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Hot Pink"
+          preset={presets.hotPink}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Tropical Disco"
+          preset={presets.tropicalDisco}
+          onClick={setPreset}
+        />
+        {/* <PresetButton
+          label="Pastel Dream"
+          preset={presets.pastelDream}
+          onClick={update}
+        /> */}
 
+      </div>
+      Customize to your liking
         <CollapsibleSection title="General" iconName="settings">
       <label style={{
         display: 'flex',
@@ -255,17 +302,31 @@ export function CyberSpaghettiControlsInterior({
       
       {/* Advanced Section Toggle Button */}
       {/* Advanced Section */}
-      <CollapsibleSection title="Lissajous Figure" iconName="all_inclusive">
+      <CollapsibleSection title="Lissajous Knot" iconName="all_inclusive">
           {/* Show Lissajous Figure Toggle */}
-          <div style={{}}>
-            <Button
-              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
-              text={state.showLissajousFigure ? 'Hide lissajous figure' : 'Show lissajous figure'}
-              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
-              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
-              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
-            />
-          </div>
+          <div style={{
+              display: "flex",
+              flexDirection: "row",
+              gap: "1rem",
+              padding: "1.5rem",
+              //border: "1px solid var(--gray3)",
+              borderWidth: "2px",
+              backgroundColor: "var(--gray2)",
+              borderRadius: "var(--borderRadiusSmall)",
+              marginBottom: "1rem",
+              alignItems: "center",
+            }}>
+              <div>
+                <Icon iconName="info" hoverBgColor='var(--gray2)' color="white"/>
+              </div>
+              <div>
+              <b style={{color: "white"}}>What are Lissajous knots?</b><br></br>
+              Lissajous knots are mathematical paths that are defined by equations involving sine and cosine functions.
+              They are used here to create complex, looping paths on which color particles can move.
+              Feel free to experiment with different parameters to create unique patterns.
+              </div>
+            </div>
+
           {/* Offset selection */}
 
           {/* <div>
@@ -324,9 +385,27 @@ export function CyberSpaghettiControlsInterior({
               }}
             />
           </div> */}
-          <label style={{
+          <div style={{
           }}>
-            <div style={{marginBottom: "1em", marginRight: "1em"}}>Select Lissajous Knot</div>
+            <div style={{marginBottom: "1em", marginRight: "1em",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+
+            }}>lissajous knot
+            <div style={{}}>
+            <Button
+              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
+              text={state.showLissajousFigure ? 'hide knot' : 'show knot'}
+              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
+              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
+              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
+            />
+          </div>
+
+
+            </div>
+
             <LissajousSelectButtonGroup
               value={state.lissajousParams}
               options={LISSAJOUS_CURVES.map(curve => ({
@@ -340,7 +419,7 @@ export function CyberSpaghettiControlsInterior({
               }}
           
           />
-          </label>
+          </div>
           <label style={{
         display: 'flex',
         alignItems: 'center',
