@@ -12,7 +12,7 @@ in float height;        // height of the texture
 // in float time;
 // in vec3 backgroundColor;
 
-// in float slice;
+in float slice;
 // in float e_factor;
 
 // in vec3 noise;
@@ -26,7 +26,7 @@ out float v_width;       // pass to FS
 out float v_height;      // pass to FS
 // out float v_time;
 
-// out float v_slice;
+out float v_slice;
 // out float v_e_factor;
 
 void main() {
@@ -41,7 +41,7 @@ v_particleCount = particleCount;   // pass to FS
     // v_time = time;
     // v_backgroundColor = backgroundColor; // pass to FS
 
-    // v_slice = slice;      
+    v_slice = slice;      
     // v_e_factor = e_factor; 
 }`;
 
@@ -75,7 +75,7 @@ float fetch(int index) {             // helper to fetch RED float
 
 float fallof(float distance) {
     // prev 5.
-    return 1.0 / (1.0 + exp(3.5 * distance - 3.5));
+    return 1.0 / (1.0 + exp((3.) * distance - 3.5));
 
 }
 
@@ -105,8 +105,37 @@ void main() {
     vec2 uv = v_uv;
     int PCOUNT = int(v_particleCount); // number of particles
 
+    float sum = 0.0;
+    float weightSum = 0.0;
+    float sigma2 = 0.1; // controls the falloff distance
+    float heightPower = 1. + 10.0; // controls the emphasis on height
+
+    for (int i = 0; i < PCOUNT; ++i) {
+        int base = i * STRIDE;
+        vec3 point = vec3(fetch(base), fetch(base + 1), fetch(base + 2)); 
+        vec2 delta = uv - point.xy;
+        float r2 = dot(delta, delta);
+
+
+        // Distance falloff (controls spatial locality)
+        float w = exp(-r2 / sigma2);
+        
+        // Height emphasis (prevents lower points from winning)
+        float z = (point.z  + 1.) / 2.;
+        
+        // Optional nonlinearity: exaggerate taller points
+        float h = pow(z, heightPower);
+        
+        sum += w * h;
+        weightSum += w;
+    }
+
+    float result = pow(sum / weightSum, 1.0 / heightPower);
+
+
+
     vec4 col = getColor(uv);
-    outColor = col;
+    outColor = vec4(vec3(result),1.0);
 }`);
 
 
@@ -128,6 +157,10 @@ const depthObject = {
         name: "height",
         size: 1,
     },
+    {
+        name: "slice",
+        size: 1,
+    }
     ],
     vertexShader: voroVS,
     fragmentShader: voroFS,

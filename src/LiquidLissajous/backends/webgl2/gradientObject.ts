@@ -67,6 +67,7 @@ in float v_e_factor;
 #include "lygia/color/space/oklab2rgb.glsl"
 #include "lygia/filter/gaussianBlur/2D.glsl"
 #include "lygia/color/space/rgb2hsl.glsl"
+#include "lygia/simulate/simpleAndFastFluid.glsl"
 
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
@@ -216,8 +217,8 @@ vec4 getColor(vec3 p) {
 
         int base = i * STRIDE;
         vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2));
-        vec3 p_adj = p * vec3(1.,1.,3.);
-        vec3 center_adj = center * vec3(1.,1.,3.);
+        vec3 p_adj = p * vec3(1.,1.,2.5);
+        vec3 center_adj = center * vec3(1.,1.,2.5);
         float distance = sqrt(dot(p_adj - center_adj, p_adj - center_adj));
         if (i == 0 || distance < minDistance) {
             minDistance = distance;
@@ -241,7 +242,7 @@ vec4 getColor(vec3 p) {
             needsNormalization = false; 
             break;
         } else {
-            float w = 1. / pow((distance), 2.);
+            float w = 1. / pow((distance), 2.5);
             //float w = 1. / (1. + exp(7. * (distance - v_slice * 2.)));
             float fac = v_slice * 10. + 2.;
             //float w = 1. / sqrt(1. + (distance * fac) * (distance * fac));
@@ -297,7 +298,6 @@ void main() {
 
     // Blur the red channel of the depth texture using gaussian blur
     vec4 blurred = gaussianBlur2D(u_depth_field, (uv + 1.0) / 2.0, pixelDirection, kernelSize);
-
 
 
     //float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
