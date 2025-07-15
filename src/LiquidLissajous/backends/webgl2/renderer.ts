@@ -149,7 +149,15 @@ export class WebGL2Renderer {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+
+
         SimpleWebGL2.__begin__();
+
+        gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LESS);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        
 
         SimpleWebGL2.__drawobjectinstances__("effectObj", effectDraw(this.particleSys));
 
@@ -195,10 +203,12 @@ export class WebGL2Renderer {
         //SimpleWebGL2.__drawobjectinstances__("depthObj", depthDraw(this.particleSys));
         
         if (this.particleSys.SHOW_LISSAJOUS_FIGURE) {
+
             SimpleWebGL2.__drawobjectinstances__("path", pathDraw(this.particleSys));
             SimpleWebGL2.__drawobjectinstances__("circle",circleDraw(this.particleSys));
         }
 
+        gl.disable(gl.DEPTH_TEST);
         SimpleWebGL2.__end__();
 
     }

@@ -7,6 +7,8 @@ import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../LiquidLissajousControls';
 import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
 import { CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
+import LissajousSelectButtonGroup from './LissajousPreview';
+import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../core/lissajousCurves';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -52,6 +54,16 @@ export function CyberSpaghettiControlsInterior({
     update({ particleColors: state.particleColors.filter((_, i) => i !== idx) });
   };
 
+  const updateAnimationSpeed = (speed: number, distance: number) => {
+    const minSpeed = 0.1;
+    const maxFrameLoop = 5000;
+    const adj = (1 / minSpeed) * LISSAJOUS_CURVES_MAX_INTEGRAL / maxFrameLoop;
+
+    const loopLength = distance / (speed * adj);
+    timeline?.projectTools.updateFocusRange([0, Math.floor(loopLength)],true);
+    return Math.floor(loopLength);
+  }
+
 
 
   return (
@@ -62,6 +74,7 @@ export function CyberSpaghettiControlsInterior({
         flexDirection: 'column',
         backgroundColor: "var(--gray1)",
         width: '100vw',
+        minWidth: '400px',
         height: '100vh',
         padding: '1rem',
         color: 'var(--gray6)',
@@ -118,7 +131,7 @@ export function CyberSpaghettiControlsInterior({
           />
         </div>
       </label>
-      <label style={{
+      {/* <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
@@ -137,6 +150,27 @@ export function CyberSpaghettiControlsInterior({
             update({ loopLifecycle: c });
           }}
         />
+      </label> */}
+            <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        animation speed &nbsp;
+        <NumberInput
+          initialValue={state.animationSpeed}
+          min={0.1}
+          max={1}
+          step={0.1}
+          onChange={c => {
+            update({ animationSpeed: c })}}
+          onCommit={(c) => {
+            
+            const loopLength = updateAnimationSpeed(c, state.lissajousParams.integral);
+            update({ animationSpeed: c, loopLifecycle: loopLength });
+          }}
+        />
       </label>
       </CollapsibleSection>
       <CollapsibleSection title="Colors" iconName="palette">
@@ -147,7 +181,7 @@ export function CyberSpaghettiControlsInterior({
         gap: '0.5rem',
         justifyContent: 'space-between',
       }}>
-        color mixing intensity &nbsp;
+        mixing softness &nbsp;
         <NumberInput
           initialValue={state.mixingIntensity}
           min={0}
@@ -156,7 +190,7 @@ export function CyberSpaghettiControlsInterior({
           onChange={c => update({ mixingIntensity: c })}
         />
       </label>
-      <label style={{
+      {/* <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
@@ -175,7 +209,7 @@ export function CyberSpaghettiControlsInterior({
                 height: "35px",
               }}
             />
-      </label>
+      </label> */}
 
 
 
@@ -255,7 +289,7 @@ export function CyberSpaghettiControlsInterior({
             </div>
           </div> */}
 
-          <div>
+          {/* <div>
             <div style={{ marginBottom: 4 }}>offset</div>
             <SingleSelectButtonGroup<number>
               options={[
@@ -270,7 +304,6 @@ export function CyberSpaghettiControlsInterior({
 
             />
           </div>
-          {/* Ratio selection */}
           <div>
             <div style={{ marginBottom: 4 }}>ratio</div>
             <SingleSelectButtonGroup<string>
@@ -290,9 +323,59 @@ export function CyberSpaghettiControlsInterior({
                 update({ ratioA: a, ratioB: b });
               }}
             />
-          </div>
+          </div> */}
+          <label style={{
+          }}>
+            <div style={{marginBottom: "1em", marginRight: "1em"}}>Select Lissajous Knot</div>
+            <LissajousSelectButtonGroup
+              value={state.lissajousParams}
+              options={LISSAJOUS_CURVES.map(curve => ({
+                label: `${curve.a}:${curve.b}`,
+                value: curve,
+              }))}
+              onChange={(params) => {
+  
+                const loopLength = updateAnimationSpeed(state.animationSpeed, params.integral);
+                update({ lissajousParams: params, loopLifecycle: loopLength });
+              }}
+          
+          />
+          </label>
+          <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        horizontal rotation &nbsp;
+        <NumberInput
+          initialValue={state.rotateHorizontal}
+          min={0}
+          max={360}
+          step={1}
+          onChange={c => {
+            update({ rotateHorizontal: c })}}
+        />
+      </label>
+      <label style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        justifyContent: 'space-between',
+      }}>
+        vertical rotation &nbsp;
+        <NumberInput
+          initialValue={state.rotateVertical}
+          min={0}
+          max={360}
+          step={1}
+          onChange={c => {
+            update({ rotateVertical: c })}}
+        />
+      </label>
+
       </CollapsibleSection>
-      {/* <CollapsibleSection title="Effects" iconName="star">
+      <CollapsibleSection title="Effects" iconName="star">
       <>
       <label style={{
         display: 'flex',
@@ -310,7 +393,7 @@ export function CyberSpaghettiControlsInterior({
             update({ noiseIntensity: c })}}
         />
       </label>
-            <label style={{
+            {/* <label style={{
         display: 'flex',
         alignItems: 'center',
         gap: '0.5rem',
@@ -389,9 +472,9 @@ export function CyberSpaghettiControlsInterior({
           onChange={c => {
             update({ fluidWarpSpeed: c })}}
         />
-      </label>
+      </label> */}
       </>
-      </CollapsibleSection> */}
+      </CollapsibleSection>
     </div>
   );
 }

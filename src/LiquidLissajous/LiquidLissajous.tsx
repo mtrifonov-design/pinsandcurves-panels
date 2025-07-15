@@ -5,7 +5,7 @@ import ControlsProvider, { useControls } from './ControlConsole/ControlProvider.
 import LiquidLissajousSetup from './LiquidLissajousSetup';
 
 const pb = new ProjectDataStructure.ProjectBuilder();
-pb.setTimelineData(900, 30, 45);
+pb.setTimelineData(5000, 30, 45);
 pb.addContinuousSignal('s1', 'Unused Signal', [0, 1]);
 pb.addContinuousSignal('cx', 'Center X', [0, 1]);
 pb.addPin('cx', 0, 0, 'return easyLinear()');

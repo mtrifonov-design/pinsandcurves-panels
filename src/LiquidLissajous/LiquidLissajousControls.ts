@@ -1,3 +1,4 @@
+import { LISSAJOUS_CURVES, LissajousParams } from "./core/lissajousCurves";
 
 type ControlsData = {
     particleCount: number;
@@ -21,7 +22,10 @@ type ControlsData = {
     fluidWarpIntensity: number;
     fluidWarpScale: number;
     fluidWarpSpeed: number;
-
+    lissajousParams: LissajousParams;
+    animationSpeed: number;
+    rotateVertical: number;
+    rotateHorizontal: number;
 }
 
 class Controls {
@@ -111,6 +115,10 @@ class Controls {
         fluidWarpIntensity: 0.1,
         fluidWarpScale: 0.1,
         fluidWarpSpeed: 0.1,
+        lissajousParams: LISSAJOUS_CURVES[0],
+        animationSpeed: 0.2,
+        rotateVertical: 0,
+        rotateHorizontal: 0,
     }
 }
 

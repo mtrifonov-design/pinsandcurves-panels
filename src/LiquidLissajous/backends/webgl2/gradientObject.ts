@@ -62,8 +62,6 @@ out vec4 outColor;
 in float v_slice;        
 in float v_e_factor;     
 
-// #include "lygia/generative/psrdnoise.glsl"
-// #include "lygia/generative/pnoise.glsl"
 #include "lygia/color/space/oklab2rgb.glsl"
 #include "lygia/filter/gaussianBlur/2D.glsl"
 #include "lygia/color/space/rgb2hsl.glsl"
@@ -75,167 +73,22 @@ float fetch(int index) {             // helper to fetch RED float
   return texelFetch(u_dyn, ivec2(index, 0), 0).r;
 }
 
-// // Helper for squared distance (cheaper than length)
-// float distanceSquared(vec2 a, vec2 b) {
-//     a = a + vec2(1.);
-//     b = b + vec2(1.);
-//     a = a * vec2(0.5); // * vec2(v_width, v_height); 
-//     b = b * vec2(0.5); // * vec2(v_width, v_height); 
-//     vec2 d = a - b;
-//     return dot(d, d);
-// }
-
-// // --- sRGB <-> OKLab conversion functions (from WGSL, ported to GLSL) ---
-// vec3 toLinear(vec3 c) {
-//     return pow(c, vec3(2.2));
-// }
-vec3 toSRGB(vec3 c) {
-    return pow(clamp(c, vec3(0.0), vec3(1.0)), vec3(1.0 / 2.2));
-}
-// vec3 srgbToOKLab(vec3 c) {
-//     vec3 l = toLinear(c);
-//     vec3 lms = vec3(
-//         0.4122214708 * l.x + 0.5363325363 * l.y + 0.0514459929 * l.z,
-//         0.2119034982 * l.x + 0.6806995451 * l.y + 0.1073969566 * l.z,
-//         0.0883024619 * l.x + 0.2817188376 * l.y + 0.6299787005 * l.z
-//     );
-//     vec3 cbrt = pow(lms, vec3(1.0 / 3.0));
-//     return vec3(
-//         0.2104542553 * cbrt.x + 0.7936177850 * cbrt.y - 0.0040720468 * cbrt.z,
-//         1.9779984951 * cbrt.x - 2.4285922050 * cbrt.y + 0.4505937099 * cbrt.z,
-//         0.0259040371 * cbrt.x + 0.7827717662 * cbrt.y - 0.8086757660 * cbrt.z
-//     );
-// }
-vec3 oklabToSRGB(vec3 o) {
-    float l_ = o.x + 0.3963377774 * o.y + 0.2158037573 * o.z;
-    float m_ = o.x - 0.1055613458 * o.y - 0.0638541728 * o.z;
-    float s_ = o.x - 0.0894841775 * o.y - 1.2914855480 * o.z;
-    float l3 = l_ * l_ * l_;
-    float m3 = m_ * m_ * m_;
-    float s3 = s_ * s_ * s_;
-    vec3 rgb = vec3(
-        4.0767416621 * l3 - 3.3077115913 * m3 + 0.2309699292 * s3,
-       -1.2684380046 * l3 + 2.6097574011 * m3 - 0.3413193965 * s3,
-       -0.0041960863 * l3 - 0.7034186147 * m3 + 1.7076147010 * s3
-    );
-    return toSRGB(rgb);
-}
-
-float rbf(vec3 p, vec3 q, float e) {
-    float d = sqrt(dot(p - q, p - q));
-    //return exp( -(d*e) * (d*e) );
-    //return sqrt(1. + (d*e) * (d*e));
-    return 1. / sqrt(1. + (d*e) * (d*e));
-   // return 0.05 / (d * d + 0.05);
-}
-
-float rbfSharp(vec3 p, vec3 q, float e) {
-    float d = sqrt(dot(p - q, p - q));
-    return exp( -(d*e) * (d*e) );
-    //return sqrt(1. + (d*e) * (d*e));
-    //return 1. / sqrt(1. + (d*e) * (d*e));
-   // return 0.05 / (d * d + 0.05);
-}
-
-float linear_spline(float d) {
-    // (0,1) -> (0.1,0.6) -> (0.8, 0.1) -> (5, 0)
-    vec2 p0 = vec2(0.0, 1.0);
-    vec2 p1 = vec2(0.2, 0.54);
-    vec2 p2 = vec2(.4, 0.3);
-    vec2 p3 = vec2(.6, 0.15);
-    vec2 p4 = vec2(1.0, 0.05);
-    vec2 p5 = vec2(1.8, 0.005); // beyond the last point
-    vec2 p6 = vec2(15.0, 0.0); // beyond the last point
-
-    if (d < p0.x) {
-        return mix(p0.y, p1.y, (d - p0.x) / (p1.x - p0.x));
-    }
-    else if (d < p1.x) {
-        return mix(p1.y, p2.y, (d - p1.x) / (p2.x - p1.x));
-    } 
-    else if (d < p2.x) {
-        return mix(p2.y, p3.y, (d - p2.x) / (p3.x - p2.x));
-    }
-    else if (d < p3.x) {
-        return mix(p3.y, p4.y, (d - p3.x) / (p4.x - p3.x));
-    }
-    else if (d < p4.x) {
-        return mix(p4.y, p5.y, (d - p4.x) / (15.0 - p4.x));
-    }
-    else if (d < p5.x) {
-        return mix(p5.y, p6.y, (d - p5.x) / (p5.x - p4.x));
-    }
-    else if (d < p6.x) {
-        return mix(p6.y, 0.0, (d - p6.x) / (p6.x - p5.x));
-    }
-    else {
-        return 0.0; // Beyond the last point
-    }
-
-}
-
-
 vec4 getColor(vec3 p) {
-    float r = 0.0;
-    float g = 0.0;
-    float b = 0.0;
-    float a = 0.0;
     int PCOUNT = int(v_particleCount); // number of particles
-    for (int i = 0; i < PCOUNT; ++i) {
-        int base = i * STRIDE;
-        vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2)); // [0,1] normalized
-
-        float rW = fetch(base + 3); // red weight
-        float gW = fetch(base + 4); // green weight
-        float bW = fetch(base + 5); // blue weight
-        float aW = fetch(base + 6); // alpha weight, not used
-
-        float e = 1.;
-        float eSharp = 100.;
-        r += rW * rbf(p, center, e);
-        g += gW * rbf(p, center, e);
-        b += bW * rbf(p, center, e);
-        a += aW * rbfSharp(p, center, .5);
-    }
-
-    float minDistance = 0.;
-    vec3 minDistanceColor = vec3(0.0);
-
-
     float wTotal = 0.0;
     float u_r = 0.0;
     float u_g = 0.0;
     float u_b = 0.0;
-
     bool needsNormalization = true;
-    float sigma = 0.728; // Gaussian width in normalized units, matches WGSL
-    float inv2sigma2 = 1.0 / (2. * sigma * sigma);
-    vec3 accum = vec3(0.0);
-    float satAccum = 0.0;
     for (int i = 0; i < PCOUNT; ++i) {
-
-
         int base = i * STRIDE;
         vec3 center = vec3(fetch(base), fetch(base + 1), fetch(base+2));
         vec3 p_adj = p * vec3(1.,1.,2.5);
-        
         vec3 center_adj = center * vec3(1.,1.,2.5);
         float distance = sqrt(dot(p_adj - center_adj, p_adj - center_adj));
-        if (i == 0 || distance < minDistance) {
-            minDistance = distance;
-            minDistanceColor = vec3(fetch(base + 3), fetch(base + 4), fetch(base + 5));
-        }
-
-        float wSat = exp(-distance * distance * inv2sigma2);
         float r = fetch(base + 3);
         float g = fetch(base + 4);
         float b = fetch(base + 5);
-        // u_r = r;
-        // u_g = g;
-        // u_b = b;
-        float sat = length(vec3(r, g, b).yz);
-        satAccum += sat * wSat;
-
         if (distance < 0.01) {
             u_r = r;
             u_g = g;
@@ -243,12 +96,7 @@ vec4 getColor(vec3 p) {
             needsNormalization = false; 
             break;
         } else {
-            float w = 1. / pow((distance), 2.5);
-            //float w = 1. / (1. + exp(7. * (distance - v_slice * 2.)));
-            float fac = v_slice * 10. + 2.;
-            //float w = 1. / sqrt(1. + (distance * fac) * (distance * fac));
-            //float w = linear_spline(distance);
-
+            float w = 1. / pow((distance), 1.5 + v_slice * 3.);
             wTotal += w;
             u_r += r * w;
             u_g += g * w;
@@ -262,94 +110,24 @@ vec4 getColor(vec3 p) {
         u_b /= wTotal;
     }
 
-    if (wTotal > 0.) {
-        accum /= wTotal;
-        accum = vec3(u_r, u_g, u_b);
-        float satBlended = length(accum.yz);
-        float satTarget = satAccum / wTotal;
-        float factor = (satBlended > 0.0) ? (satTarget / satBlended) : 1.0;
-        // Clamp factor to avoid extreme values
-        factor = clamp(factor, 0.5, 1.1);
-        // Apply correction to a and b (oklBlended.yz)
-
-        accum.yz *= factor;
-    }
-
-    //return vec4(accum,1.0);
-    return vec4(u_r, u_g, u_b, 1.0); // return average color weighted by distance
-
-
-    vec3 okLabColor = vec3(r, g, b);
-    //return vec4(okLabColor, a); 
-    //return vec4(r,g,b,a);
-    //return vec4(minDistanceColor, a); // return color of the closest particle
-    //return vec4(u_r, u_g, u_b, 1.); // return average color weighted by distance
+    return vec4(u_r, u_g, u_b, 1.0); 
 }
 
 void main() {
 
     vec2 uv = v_uv;
-    int PCOUNT = int(v_particleCount); // number of particles
-
-    // Compute texel size (pixel direction in UV space)
+    int PCOUNT = int(v_particleCount); 
     vec2 pixelDirection = vec2(0.05);
-
-    // Pick kernel size (must be small if running on WebGL1)
     const int kernelSize = 9;
-
-    // Blur the red channel of the depth texture using gaussian blur
     vec4 blurred = gaussianBlur2D(u_depth_field, (uv + 1.0) / 2.0, pixelDirection, kernelSize);
-
-
-    //float depthField = texture(u_depth_field, (v_uv + 1.) / 2.).r;
     float depthField = blurred.r; // use the blurred depth field
-    
     vec3 bgColor = v_backgroundColor; // background color
-
-    vec4 accColor = vec4(bgColor,1.);
-    int ITERATIONS = 16;
-    float stepSize = (1.0 / float(ITERATIONS)) * 2.;
-    float transmittance = 1.;
-    float sigma = 1.1;
-
-    // for (int i = 0; i < ITERATIONS && transmittance > 0.01; ++i) {
-    //     float depth = (float(i)+ 0.5) * stepSize;
-    //     vec3 p = vec3(uv, 1. - depth);
-    //     vec4 col = getColor(p);
-    //     float alpha = col.a;
-
-    //     float density = alpha * .5;
-    //     float segmentAlpha = 1. - exp(-sigma * density * stepSize);
-
-    //     vec3 colorContribution = col.rgb * segmentAlpha * transmittance;
-    //     accColor.rgb += colorContribution;
-
-    //     accColor.a += segmentAlpha * transmittance;
-
-    //     transmittance *= (1.0 - segmentAlpha);
-
-    // }
-
-    float d =depthField * 2. - 1.;
+    float d = depthField * 2. - 1.;
     outColor = getColor(vec3(v_uv, d)); 
 
-    //outColor = getColor(vec3(v_uv, 1.)); 
-    // alpha blend outcolor on top of background color
-    
-    //outColor = vec4(bgColor, 1.0);
-    //outColor = (1.0 - accColor.a / 2.) * outColor + accColor;
-    // outColor = accColor;
-    //outColor = oklab2rgb(outColor);
-
-    //outColor = vec4(accColor.xyz, 1.0); 
-    //outColor = vec4(accColor.xyz / stepsTaken, 1.);
-
-    //outColor = vec4(vec3(getColor(vec3(uv, v_slice * 2. - 1.)).a), 1.);
     //outColor = vec4(getColor(vec3(uv, v_slice * 2. - 1.)).rgb, 1.);
     //outColor = vec4(vec3(depthField), 1.0); 
     outColor = oklab2rgb(outColor);
-
-
 }`);
 
 console.log(voroFS);

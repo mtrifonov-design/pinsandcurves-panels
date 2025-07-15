@@ -7,6 +7,7 @@ import { Controls, ControlsData } from '../LiquidLissajousControls.js';
 import { colorConvert, rgbToHsl, hslToRgb } from './colors.js';
 import { matrix, ones, inv, multiply } from 'mathjs';
 import backgroundObject from '../../CyberSpaghetti/backends/webgl2/backgroundObject.js';
+import { lissajousKnot } from './lissajousCurves.js';
 
 
 function rbf(v1: number[], v2: number[],e): number {
@@ -70,16 +71,7 @@ export class ParticleSystem {
         return [x, y];
     }
 
-    lissajousKnot(t: number, params: {
-        a: number, a_delta: number,
-        b: number, b_delta: number,
-        c: number,
-    }) {
-        const x = Math.cos(params.a * t + params.a_delta);
-        const y = Math.cos(params.b * t + params.b_delta);
-        const z = Math.cos(params.c * t);
-        return [x, y, z]
-    }
+
 
     constructColorWeights() {
         const particleLength = this.PARTICLES.length;
@@ -133,11 +125,29 @@ export class ParticleSystem {
         return colorMatrix;
     }
 
+    perform3DRotation([x,y,z]: number[], angleX: number, angleY: number): [number, number, number] {
+        // Rotate around X axis
+        angleX = angleX * Math.PI / 180;
+        angleY = angleY * Math.PI / 180;
+        let newY = y * Math.cos(angleX) - z * Math.sin(angleX);
+        let newZ = y * Math.sin(angleX) + z * Math.cos(angleX);
+        y = newY;
+        z = newZ;
+
+        // Rotate around Y axis
+        let newX = x * Math.cos(angleY) + z * Math.sin(angleY);
+        newZ = -x * Math.sin(angleY) + z * Math.cos(angleY);
+        x = newX;
+        z = newZ;
+
+        return [x, y, z];
+    }
+
     update(config: ControlsData, timeline: TimelineController) {
         this.time = timeline.getProject().timelineData.playheadPosition;
 
         const baseColors = config.particleColors.map(colorConvert);
-        const subdivisions = 0 //Math.floor(config.mixingIntensity * 5);
+        const subdivisions = 0; //Math.floor(config.mixingIntensity * 5);
         let colorLoopCount = 0;
         if (baseColors.length > 1) {
             colorLoopCount = baseColors.length * (subdivisions + 1);
@@ -178,21 +188,19 @@ export class ParticleSystem {
         }
         this.PARTICLE_COLORS = colorStops;
 
-        // Default Lissajous parameters for a classic figure
-        const lissajousParams = {
-            t: this.REL_TIME * 2 * Math.PI,
-            a: config.ratioA, a_delta: config.offset,
-            b: config.ratioB, b_delta: 0.7,
-            c: 1
-        };
 
         this.PARTICLES = [];
         for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
             let t = (this.time % this.LOOP_LIFECYCLE) * 2 * Math.PI / this.LOOP_LIFECYCLE
             t += (i / this.PARTICLE_COUNT) * 2 * Math.PI;
-            let [x, y, z] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 2;
-            y *= this.FIGURE_SCALE_Y * 2;
+            let [x, y, z] = lissajousKnot(t, this.CONFIG.lissajousParams);
+            [x,y,z] = this.perform3DRotation([x,y,z], config.rotateVertical, config.rotateHorizontal);
+            x /= Math.sqrt(3);
+            y /= Math.sqrt(3);
+            z /= Math.sqrt(3);
+
+            x *= this.FIGURE_SCALE_X * 3;
+            y *= this.FIGURE_SCALE_Y * 3;
             z *= 1;
              //console.log(`Particle ${i}: x=${x}, y=${y}, z=${z}`);
             const color = this.PARTICLE_COLORS[i];
@@ -217,8 +225,6 @@ export class ParticleSystem {
             b: config.backgroundColor[2]
         });
         this.BACKGROUND_COLOR = [bgcolor.L, bgcolor.a, bgcolor.b];
-        console.log("Background color in Oklab:", this.BACKGROUND_COLOR);
-       
 
         const colorWeights = this.constructColorWeights();
         for (let i = 0; i < this.PARTICLE_COUNT; ++i) {
@@ -235,12 +241,18 @@ export class ParticleSystem {
         this.LISSAJOUS_PATH = [];
         for (let i = 0; i < N; ++i) {
             const t = (i / (N - 1)) * 2 * Math.PI;
-            let [x, y] = this.lissajousKnot(t, lissajousParams);
-            x *= this.FIGURE_SCALE_X * 2;
-            y *= this.FIGURE_SCALE_Y * 2;
-            this.lissajousLineBuffer[i * 2 + 0] = x;
-            this.lissajousLineBuffer[i * 2 + 1] = y;
-            this.LISSAJOUS_PATH[i] = [x, y]; // Store path points if needed
+            let [x, y,z] = lissajousKnot(t, this.CONFIG.lissajousParams);
+            [x,y,z] = this.perform3DRotation([x,y,z], config.rotateVertical , config.rotateHorizontal);
+            x /= Math.sqrt(3);
+            y /= Math.sqrt(3);
+            z /= Math.sqrt(3);
+            
+            x *= this.FIGURE_SCALE_X * 3;
+            y *= this.FIGURE_SCALE_Y * 3;
+            this.lissajousLineBuffer[i * 3 + 0] = x;
+            this.lissajousLineBuffer[i * 3 + 1] = y;
+            //this.lissajousLineBuffer[i * 3 + 1] = y;
+            this.LISSAJOUS_PATH[i] = [x, y, z]; // Store path points if needed
         }
     }
 }

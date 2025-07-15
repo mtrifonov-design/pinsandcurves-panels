@@ -1,48 +1,30 @@
 import { ParticleSystem } from "../../core/ParticleSystem";
 import { resolveLygia } from "./resolveLygia";
 
-const FLOATS_PER_PARTICLE = 7;          // x,y,z,r,g,b,a
+const FLOATS_PER_PARTICLE = 7;          
 
-// minimal FS quad – no per-instance attributes
 const voroVS = `#version 300 es
 in  vec2 a_pos;
-in float particleCount;  // number of particles
-in float width;         // width of the texture
-in float height;        // height of the texture
-// in float time;
-// in vec3 backgroundColor;
+in float particleCount;  
+in float width;         
+in float height;        
 
 in float slice;
-// in float e_factor;
-
-// in vec3 noise;
-// in vec3 fluidWarp;
-// out vec3 v_noise;
-// out vec3 v_fluidWarp;
 out vec2 v_uv;
 out float v_particleCount;
-// out vec3 v_backgroundColor; // pass to FS
-out float v_width;       // pass to FS
-out float v_height;      // pass to FS
-// out float v_time;
+// out vec3 v_backgroundColor;
+out float v_width;      
+out float v_height;      
 
 out float v_slice;
-// out float v_e_factor;
 
 void main() {
-  v_uv = a_pos;          // 0‥1
-v_particleCount = particleCount;   // pass to FS    
-  gl_Position = vec4(a_pos, 0.0, 1.0);
-    v_width = width;      // pass to FS
-    v_height = height;    // pass to FS
-    // v_noise = noise;
-    // v_fluidWarp = fluidWarp;
-
-    // v_time = time;
-    // v_backgroundColor = backgroundColor; // pass to FS
-
+    v_uv = a_pos;          
+    v_particleCount = particleCount;   
+    gl_Position = vec4(a_pos, 0.0, 1.0);
+    v_width = width;      
+    v_height = height;   
     v_slice = slice;      
-    // v_e_factor = e_factor; 
 }`;
 
 const voroFS = resolveLygia(`#version 300 es
@@ -51,55 +33,18 @@ uniform sampler2D u_dyn;
 uniform sampler2D u_depth_field;
 in  float v_width;        // width of the texture
 in float v_height;       // height of the texture
-// in  float v_time;         // time, not used
 in  vec2 v_uv;
-// in vec3 v_backgroundColor; // background color
-// in vec3 v_noise;
-// in vec3 v_fluidWarp;
 in  float v_particleCount; // number of particles
 out vec4 outColor;
 
 in float v_slice;        
 in float v_e_factor;     
 
-// #include "lygia/generative/psrdnoise.glsl"
-// #include "lygia/generative/pnoise.glsl"
-//#include "lygia/filter/gaussianBlur/2D.glsl"
-
 const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
 float fetch(int index) {             // helper to fetch RED float
   return texelFetch(u_dyn, ivec2(index, 0), 0).r;
 }
-
-
-float fallof(float distance) {
-    // prev 5.
-    return 1.0 / (1.0 + exp((3.) * distance - 3.5));
-
-}
-
-vec4 getColor(vec2 p) {
-    float d = 0.0;
-    int PCOUNT = int(v_particleCount); // number of particles
-
-    for (int i = 0; i < PCOUNT; ++i) {
-        int base = i * STRIDE;
-        vec2 center = vec2(fetch(base), fetch(base + 1)); 
-        float height = (fetch(base + 2) + 1.) / 2.; 
-
-        float distance = length(p - center);
-        float a = 10.;
-        //float dLocal = height * 1. / (sqrt(1. + (distance * a) * (distance * a)));
-        float dLocal = height * fallof(distance); // Gaussian falloff
-        if (dLocal > d) {
-            d = dLocal;
-        }
-    }
-
-    return vec4(vec3(d), 1.); 
-}
-
 void main() {
 
     vec2 uv = v_uv;
@@ -115,26 +60,13 @@ void main() {
         vec3 point = vec3(fetch(base), fetch(base + 1), fetch(base + 2)); 
         vec2 delta = uv - point.xy;
         float r2 = dot(delta, delta);
-
-
-        // Distance falloff (controls spatial locality)
         float w = exp(-r2 / sigma2);
-        
-        // Height emphasis (prevents lower points from winning)
         float z = (point.z  + 1.) / 2.;
-        
-        // Optional nonlinearity: exaggerate taller points
-        float h = pow(z, heightPower);
-        
+        float h = pow(z, heightPower); 
         sum += w * h;
         weightSum += w;
     }
-
     float result = pow(sum / weightSum, 1.0 / heightPower);
-
-
-
-    vec4 col = getColor(uv);
     outColor = vec4(vec3(result),1.0);
 }`);
 
