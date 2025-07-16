@@ -110,6 +110,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent, controls }: 
         />}
             <Button
             onClick={async () => {
+                recordEvent({ path: "liquidlissajous-saveframe", event: true });
                 frameSaver.saveFrame();
 
             }}
