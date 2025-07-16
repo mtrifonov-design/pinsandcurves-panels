@@ -2,8 +2,10 @@ function getFile(url) {
     let httpRequest = new XMLHttpRequest();
     httpRequest.open("GET", url, false);
     httpRequest.send();
-    if (httpRequest.status == 200)
-        return httpRequest.responseText;
+    if (httpRequest.status == 200) {
+        const response = httpRequest.responseText;
+        return response;
+    }
     else
         return "";
   }
@@ -16,9 +18,10 @@ function resolveLygia(lines) {
     let src = "";
     lines.forEach( (line, i) => {
         const line_trim = line.trim();
-        if (line_trim.startsWith('#include \"lygia') ) {
+        if (line_trim.startsWith('#include "lygia') ) {
             let include_url = line_trim.substring(15);
-            include_url = "https://lygia.xyz" + include_url.replace(/\"|\;|\s/g,'');
+            include_url = "/pinsandcurves-panels/lygia" + include_url.replace(/\"|\;|\s/g,'');
+            console.log("include_url", include_url);
             src += getFile(include_url) + '\n';
         }
         else {

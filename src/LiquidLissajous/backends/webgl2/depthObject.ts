@@ -1,74 +1,76 @@
 import { ParticleSystem } from "../../core/ParticleSystem";
 import { resolveLygia } from "./resolveLygia";
+import depthVS from "./shaders/depthVS.glsl";
+import depthFS from "./shaders/depthFS.glsl";
 
 const FLOATS_PER_PARTICLE = 7;          
 
-const voroVS = `#version 300 es
-in  vec2 a_pos;
-in float particleCount;  
-in float width;         
-in float height;        
+// const voroVS = `#version 300 es
+// in  vec2 a_pos;
+// in float particleCount;  
+// in float width;         
+// in float height;        
 
-in float slice;
-out vec2 v_uv;
-out float v_particleCount;
-// out vec3 v_backgroundColor;
-out float v_width;      
-out float v_height;      
+// in float slice;
+// out vec2 v_uv;
+// out float v_particleCount;
+// // out vec3 v_backgroundColor;
+// out float v_width;      
+// out float v_height;      
 
-out float v_slice;
+// out float v_slice;
 
-void main() {
-    v_uv = a_pos;          
-    v_particleCount = particleCount;   
-    gl_Position = vec4(a_pos, 0.0, 1.0);
-    v_width = width;      
-    v_height = height;   
-    v_slice = slice;      
-}`;
+// void main() {
+//     v_uv = a_pos;          
+//     v_particleCount = particleCount;   
+//     gl_Position = vec4(a_pos, 0.0, 1.0);
+//     v_width = width;      
+//     v_height = height;   
+//     v_slice = slice;      
+// }`;
 
-const voroFS = resolveLygia(`#version 300 es
-precision highp float;
-uniform sampler2D u_dyn;
-uniform sampler2D u_depth_field;
-in  float v_width;        // width of the texture
-in float v_height;       // height of the texture
-in  vec2 v_uv;
-in  float v_particleCount; // number of particles
-out vec4 outColor;
+// const voroFS = (`#version 300 es
+// precision highp float;
+// uniform sampler2D u_dyn;
+// uniform sampler2D u_depth_field;
+// in  float v_width;        // width of the texture
+// in float v_height;       // height of the texture
+// in  vec2 v_uv;
+// in  float v_particleCount; // number of particles
+// out vec4 outColor;
 
-in float v_slice;        
-in float v_e_factor;     
+// in float v_slice;        
+// in float v_e_factor;     
 
-const int STRIDE  = ${FLOATS_PER_PARTICLE};
+// const int STRIDE  = ${FLOATS_PER_PARTICLE};
 
-float fetch(int index) {             // helper to fetch RED float
-  return texelFetch(u_dyn, ivec2(index, 0), 0).r;
-}
-void main() {
+// float fetch(int index) {             // helper to fetch RED float
+//   return texelFetch(u_dyn, ivec2(index, 0), 0).r;
+// }
+// void main() {
 
-    vec2 uv = v_uv;
-    int PCOUNT = int(v_particleCount); // number of particles
+//     vec2 uv = v_uv;
+//     int PCOUNT = int(v_particleCount); // number of particles
 
-    float sum = 0.0;
-    float weightSum = 0.0;
-    float sigma2 = 0.1; // controls the falloff distance
-    float heightPower = 1. + 10.0; // controls the emphasis on height
+//     float sum = 0.0;
+//     float weightSum = 0.0;
+//     float sigma2 = 0.1; // controls the falloff distance
+//     float heightPower = 1. + 10.0; // controls the emphasis on height
 
-    for (int i = 0; i < PCOUNT; ++i) {
-        int base = i * STRIDE;
-        vec3 point = vec3(fetch(base), fetch(base + 1), fetch(base + 2)); 
-        vec2 delta = uv - point.xy;
-        float r2 = dot(delta, delta);
-        float w = exp(-r2 / sigma2);
-        float z = (point.z  + 1.) / 2.;
-        float h = pow(z, heightPower); 
-        sum += w * h;
-        weightSum += w;
-    }
-    float result = pow(sum / weightSum, 1.0 / heightPower);
-    outColor = vec4(vec3(result),1.0);
-}`);
+//     for (int i = 0; i < PCOUNT; ++i) {
+//         int base = i * STRIDE;
+//         vec3 point = vec3(fetch(base), fetch(base + 1), fetch(base + 2)); 
+//         vec2 delta = uv - point.xy;
+//         float r2 = dot(delta, delta);
+//         float w = exp(-r2 / sigma2);
+//         float z = (point.z  + 1.) / 2.;
+//         float h = pow(z, heightPower); 
+//         sum += w * h;
+//         weightSum += w;
+//     }
+//     float result = pow(sum / weightSum, 1.0 / heightPower);
+//     outColor = vec4(vec3(result),1.0);
+// }`);
 
 
 const MAX_PARTICLES = ParticleSystem.HARD_MAX;      // max number of particles
@@ -94,8 +96,8 @@ const depthObject = {
         size: 1,
     }
     ],
-    vertexShader: voroVS,
-    fragmentShader: voroFS,
+    vertexShader: depthVS,
+    fragmentShader: depthFS,
     dynamicData: { width: texWidth, height: 1 },
 
 }
