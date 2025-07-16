@@ -65,10 +65,10 @@ const presets = {
         fluidWarpIntensity: 0.1,
         fluidWarpScale: 0.1,
         fluidWarpSpeed: 0.1,
-        lissajousParams: LISSAJOUS_CURVES[0],
+        lissajousParams: LISSAJOUS_CURVES[1],
         animationSpeed: 0.2,
         rotateVertical: 0,
-        rotateHorizontal: 0,
+        rotateHorizontal: 138,
     },
 
     // rgb(84, 9, 218)
@@ -80,45 +80,7 @@ const presets = {
         particleColors: [
             [84, 9, 218],
             [78, 113, 255],
-            [141, 216, 255],
             [187, 251, 255],
-        ],
-        backgroundColor: [0, 0, 0],
-        loopLifecycle: 300,
-        mixingIntensity: 1,
-        showLissajousFigure: false,
-        ratioA: 1,
-        ratioB: 2,
-        offset: Math.PI / 2,
-        width: 1920,
-        height: 1080,
-        figureScaleX: 0.2,
-        figureScaleY: 0.3,
-        noiseEnabled: true,
-        noiseScale: 0.1,
-        noiseIntensity: 0.1,
-        noiseSpeed: 0.1,
-        fluidWarpEnabled: true,
-        fluidWarpIntensity: 0.1,
-        fluidWarpScale: 0.1,
-        fluidWarpSpeed: 0.1,
-        lissajousParams: LISSAJOUS_CURVES[0],
-        animationSpeed: 0.15,
-        rotateVertical: 0,
-        rotateHorizontal: 0,
-    },
-
-    //    rgb(172, 23, 84)
-    // rgb(229, 56, 136)
-    // rgb(243, 113, 153)
-    // rgb(247, 168, 196)
-    hotPink: {
-        particleCount: 10,
-        particleColors: [
-            [172, 23, 84],
-            [229, 56, 136],
-            [243, 113, 153],
-            [247, 168, 196],
         ],
         backgroundColor: [0, 0, 0],
         loopLifecycle: 300,
@@ -139,21 +101,56 @@ const presets = {
         fluidWarpIntensity: 0.1,
         fluidWarpScale: 0.1,
         fluidWarpSpeed: 0.1,
-        lissajousParams: LISSAJOUS_CURVES[0],
+        lissajousParams: LISSAJOUS_CURVES[5],
+        animationSpeed: 0.25,
+        rotateVertical: 0,
+        rotateHorizontal: 0,
+    },
+
+    //    rgb(172, 23, 84)
+    // rgb(229, 56, 136)
+    // rgb(243, 113, 153)
+    // rgb(247, 168, 196)
+    hotPink: {
+        particleCount: 10,
+        particleColors: [
+            [172, 23, 84],
+            [229, 56, 136],
+            [243, 113, 153],
+            [247, 168, 196],
+        ],
+        backgroundColor: [0, 0, 0],
+        loopLifecycle: 300,
+        mixingIntensity: 1,
+        showLissajousFigure: false,
+        ratioA: 1,
+        ratioB: 2,
+        offset: Math.PI / 2,
+        width: 1920,
+        height: 1080,
+        figureScaleX: 0.2,
+        figureScaleY: 0.3,
+        noiseEnabled: true,
+        noiseScale: 0.1,
+        noiseIntensity: 0.1,
+        noiseSpeed: 0.1,
+        fluidWarpEnabled: true,
+        fluidWarpIntensity: 0.1,
+        fluidWarpScale: 0.1,
+        fluidWarpSpeed: 0.1,
+        lissajousParams: LISSAJOUS_CURVES[2],
         animationSpeed: 0.3,
         rotateVertical: 0,
         rotateHorizontal: 0,
     },
 
     //    rgb(47, 82, 73)
-    // rgb(67, 112, 87)
     // rgb(151, 176, 103)
     // rgb(227, 222, 97)
     forestGreens: {
         particleCount: 10,
         particleColors: [
             [47, 82, 73],
-            [67, 112, 87],
             [151, 176, 103],
             [227, 222, 97],
         ],
@@ -179,7 +176,7 @@ const presets = {
         lissajousParams: LISSAJOUS_CURVES[0],
         animationSpeed: 0.2,
         rotateVertical: 0,
-        rotateHorizontal: 0,
+        rotateHorizontal: 34,
     },
 
         //    rgb(24, 1, 97)
@@ -207,13 +204,13 @@ const presets = {
         figureScaleY: 0.3,
         noiseEnabled: true,
         noiseScale: 0.1,
-        noiseIntensity: 0.5,
+        noiseIntensity: 0.7,
         noiseSpeed: 0.1,
         fluidWarpEnabled: true,
         fluidWarpIntensity: 0.1,
         fluidWarpScale: 0.1,
         fluidWarpSpeed: 0.1,
-        lissajousParams: LISSAJOUS_CURVES[0],
+        lissajousParams: LISSAJOUS_CURVES[5],
         animationSpeed: 0.4,
         rotateVertical: 0,
         rotateHorizontal: 0,

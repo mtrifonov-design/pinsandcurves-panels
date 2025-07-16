@@ -25,12 +25,13 @@ interface FrameSaverScreenProps {
     recordEvent: (event: { path: string; event: boolean }) => void;
 }
 
-export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaverScreenProps) {
+export default function FrameSaverScreen({ frameSaver, recordEvent, controls }: FrameSaverScreenProps) {
     const { rendering, totalFrames, renderedFrames } = React.useSyncExternalStore(
         frameSaver.subscribe.bind(frameSaver),
         frameSaver.getStatus.bind(frameSaver),
     );
 
+    frameSaver.setControls(controls);
 
     const videoEncoderAvailable = isBrowserKnownToWork();
 
@@ -75,13 +76,6 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
             onClick={async () => {
                 const w = FreeWorkload();
                 w.setMetadata("recording", false);
-                // w.thread("default").worker(globalThis.CK_INSTANCE, {
-                //     beginRender: {
-                //         type: "imseq"
-                //     }
-                // })
-                // w.dispatch();
-
                 const c = new CK_Circuit(registerUnitProcessor, w);
                 await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
@@ -114,6 +108,14 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
             text={"export as .mp4"}
             iconName="movie"
         />}
+            <Button
+            onClick={async () => {
+                frameSaver.saveFrame();
+
+            }}
+            text={"export frame"}
+            iconName="camera"
+        />
         {displayOverlay && <div style={{
             position: "absolute",
             top: "50%",

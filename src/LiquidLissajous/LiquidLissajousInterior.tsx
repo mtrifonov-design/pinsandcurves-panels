@@ -134,6 +134,6 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
         }}>
             <TimelineBar timeline={timeline} />
         </div>
-        <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} />
+        <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} controls={controlsSnapshot} />
     </div>
 }

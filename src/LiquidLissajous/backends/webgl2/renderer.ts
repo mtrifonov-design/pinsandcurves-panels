@@ -44,7 +44,6 @@ export class WebGL2Renderer {
             
         })
         const depthFieldTexture = computeDepthFieldTexture(this.particleSys, 16, 5);
-        console.log("Depth field texture computed", depthFieldTexture);
         SimpleWebGL2.__end__init__();
 
         this.triMesh = initTriMesh();

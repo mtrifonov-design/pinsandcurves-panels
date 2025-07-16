@@ -1,5 +1,5 @@
 import { NumberInput, Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
-import React, { useState, useSyncExternalStore } from 'react';
+import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
@@ -11,10 +11,15 @@ import LissajousSelectButtonGroup from './LissajousPreview';
 import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../core/lissajousCurves';
 import PresetButton from './PresetButton';
 import presets from './presets';
+import SwitchableSection from './SwitchableSection';
 
 export function CyberSpaghettiControlsInterior({
   controls,
 }: { controls: Controls }) {
+
+
+
+
   // Add missing fields to ControlsData for advanced controls
   type AdvancedControls = ReturnType<Controls['getSnapshot']> & {
     showLissajousFigure: boolean;
@@ -26,6 +31,10 @@ export function CyberSpaghettiControlsInterior({
     controls.subscribeInternal.bind(controls),
     controls.getSnapshot.bind(controls)
   ) as AdvancedControls;
+
+  useEffect(() => {
+    updateAnimationSpeed(state.animationSpeed, state.lissajousParams.integral);
+  }, []);
 
   const externalState = useSyncExternalStore(
     controls.subscribeToExternalState.bind(controls),
@@ -110,8 +119,11 @@ export function CyberSpaghettiControlsInterior({
       <hr></hr>
       Pick a preset to get started 
       <div style={{
-        display: "flex",
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+        alignItems: "center",
         gap: "1rem",
+        flexWrap: "wrap",
       }}>
         <PresetButton
           label="Burning Sunset"
@@ -147,6 +159,7 @@ export function CyberSpaghettiControlsInterior({
       </div>
       Customize to your liking
         <CollapsibleSection title="General" iconName="settings">
+        
       <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -219,6 +232,29 @@ export function CyberSpaghettiControlsInterior({
           }}
         />
       </label>
+      <SwitchableSection label="export perfect loop" activeOnToggled={false}
+          checked={state.exportPerfectLoop}
+          onToggle={(checked) => update({ exportPerfectLoop: checked })}
+        >
+        <label style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                justifyContent: 'space-between',
+              }}>
+                export duration (seconds) &nbsp;
+                <NumberInput
+                  initialValue={state.exportDuration}
+                  min={1}
+                  max={30}
+                  step={1}
+
+                  onCommit={(c) => {
+                    update({ exportDuration: c})
+                  }}
+                />
+              </label>
+        </SwitchableSection>
       </CollapsibleSection>
       <CollapsibleSection title="Colors" iconName="palette">
       {/* Global limits */}
@@ -387,25 +423,15 @@ export function CyberSpaghettiControlsInterior({
           </div> */}
           <div style={{
           }}>
-            <div style={{marginBottom: "1em", marginRight: "1em",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-
-            }}>lissajous knot
-            <div style={{}}>
-            <Button
-              iconName={state.showLissajousFigure ? 'visibility' : 'visibility_off'}
-              text={state.showLissajousFigure ? 'hide knot' : 'show knot'}
-              onClick={() => update({ showLissajousFigure: !state.showLissajousFigure })}
-              bgColor={state.showLissajousFigure ? 'var(--gray4)' : 'var(--gray2)'}
-              color={state.showLissajousFigure ? 'white' : 'var(--gray6)'}
-            />
-          </div>
-
-
-            </div>
-
+            <SwitchableSection label="display lissajous knot" 
+              checked={(state.showLissajousFigure)}
+              onToggle={(checked) => update({ showLissajousFigure: checked })}
+            >
+              <div style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}>
             <LissajousSelectButtonGroup
               value={state.lissajousParams}
               options={LISSAJOUS_CURVES.map(curve => ({
@@ -415,11 +441,13 @@ export function CyberSpaghettiControlsInterior({
               onChange={(params) => {
   
                 const loopLength = updateAnimationSpeed(state.animationSpeed, params.integral);
-                update({ lissajousParams: params, loopLifecycle: loopLength });
+                update({ lissajousParams: params, loopLifecycle: loopLength,
+                  rotateHorizontal: 0,
+                  rotateVertical: 0,
+                 });
               }}
           
           />
-          </div>
           <label style={{
         display: 'flex',
         alignItems: 'center',
@@ -452,6 +480,10 @@ export function CyberSpaghettiControlsInterior({
             update({ rotateVertical: c })}}
         />
       </label>
+      </div>
+          </SwitchableSection>
+          </div>
+          
 
       </CollapsibleSection>
       <CollapsibleSection title="Effects" iconName="star">

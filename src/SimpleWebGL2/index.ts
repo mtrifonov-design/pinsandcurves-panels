@@ -122,7 +122,7 @@ function __getgl__(): WebGL2RenderingContext {
 
 /*----------------------------- __init__ ------------------------------*/
 function __init__(canvas: HTMLCanvasElement): void {
-  gl = canvas.getContext("webgl2", { antialias: false });
+  gl = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true });
   if (!gl) throw new Error("WebGL 2 not supported by this browser");
 
   gl.enable(gl.BLEND);

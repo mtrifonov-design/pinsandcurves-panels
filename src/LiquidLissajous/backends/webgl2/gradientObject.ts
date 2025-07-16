@@ -130,7 +130,6 @@ void main() {
     outColor = oklab2rgb(outColor);
 }`);
 
-console.log(voroFS);
 
 
 const MAX_PARTICLES = ParticleSystem.HARD_MAX;      // max number of particles

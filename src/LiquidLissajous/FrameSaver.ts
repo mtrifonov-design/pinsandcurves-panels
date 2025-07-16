@@ -2,6 +2,7 @@
 import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 import JSZip from "jszip";
 import { imagesToMp4 } from "./imagesToMp4";
+import { ControlsData } from "./LiquidLissajousControls";
 
 
 class FrameSaver {
@@ -10,12 +11,17 @@ class FrameSaver {
     #height: number;
     #canvas: HTMLCanvasElement;
     #anticipatedFrame: number;
+    #controls: ControlsData;
     #frames: any[] = [];
     constructor({ timeline, width, height }) {
         //console.log('FrameSaver', timeline, width, height);
         this.#timeline = timeline;
         this.#width = width;
         this.#height = height;
+    }
+
+    setControls(controls) {
+        this.#controls = controls;
     }
 
     setSize(width: number, height: number) {
@@ -51,12 +57,12 @@ class FrameSaver {
         const currentFrame = project.timelineData.playheadPosition;
         if (currentFrame !== this.#anticipatedFrame) return;
         const focusRange = project.timelineData.focusRange;
-        if (currentFrame < focusRange[1]) {
+        if (this.#status.renderedFrames + 1 < this.#status.totalFrames) {
             // get p5js canvas
             const canvas = document.querySelector('canvas');
             this.#frames.push(canvas.toDataURL());
-            this.#anticipatedFrame = currentFrame + 1;
-            this.#timeline.projectTools.updatePlayheadPosition(currentFrame + 1, true);
+            this.#anticipatedFrame = (currentFrame + 1) % focusRange[1];
+            this.#timeline.projectTools.updatePlayheadPosition(this.#anticipatedFrame, true);
             this.#status = {
                 ...this.#status,
                 renderedFrames: this.#status.renderedFrames + 1,
@@ -139,13 +145,28 @@ class FrameSaver {
         this.#rendering = true;
         const project = this.#timeline.getProject();
         const focusRange = project.timelineData.focusRange;
+        const totalFrames = this.#controls.exportPerfectLoop ? focusRange[1] - focusRange[0] : Math.floor(this.#controls.exportDuration * 30); 
+
         this.#anticipatedFrame = focusRange[0];
         this.#status = {
             rendering: true,
-            totalFrames: focusRange[1] - focusRange[0],
+            totalFrames,
             renderedFrames: 0,
         }
         this.#timeline.projectTools.updatePlayheadPosition(focusRange[0], true);
+    }
+
+    saveFrame() {
+        const canvas = document.querySelector('canvas');
+        console.log('Saving frame', canvas);
+        const dataUrl = canvas.toDataURL();
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.style.display = 'none';
+        a.download = 'frame.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
 }

@@ -79,7 +79,6 @@ void main() {
     outColor.xyz += (noise - 0.5) * v_noise.x * 0.8;
 }`);
 
-console.log(voroFS);
 
 
 const MAX_PARTICLES = ParticleSystem.HARD_MAX;      // max number of particles

@@ -26,6 +26,8 @@ type ControlsData = {
     animationSpeed: number;
     rotateVertical: number;
     rotateHorizontal: number;
+    exportPerfectLoop: boolean;
+    exportDuration: number;
 }
 
 class Controls {
@@ -119,6 +121,8 @@ class Controls {
         animationSpeed: 0.2,
         rotateVertical: 0,
         rotateHorizontal: 0,
+        exportPerfectLoop: false,
+        exportDuration: 10,
     }
 }
 
