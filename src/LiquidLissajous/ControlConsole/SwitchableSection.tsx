@@ -28,6 +28,7 @@ const SwitchableSection =  ({
             </div>
             <Switch.Root className="SwitchRoot"
                 onCheckedChange={(checked) => {onToggle(checked)}}
+                checked={checked}
             >
                 <Switch.Thumb className="SwitchThumb" />
             </Switch.Root>
