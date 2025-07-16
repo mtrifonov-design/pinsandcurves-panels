@@ -108,7 +108,7 @@ export function CyberSpaghettiControlsInterior({
       Liquid Lissajous (Beta)
       </h2>
       <div>
-        Version 0.0.2. <a style={{
+        Version 0.0.5. <a style={{
           color: "var(--continuousBlue3)",
           textDecoration: "underline",
           cursor: "pointer",
