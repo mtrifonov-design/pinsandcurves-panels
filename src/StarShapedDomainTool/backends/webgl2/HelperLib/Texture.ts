@@ -29,6 +29,12 @@ type TextureDescription = {
     shape: number[];
     type: TextureType;
     createFramebuffer?: boolean;
+    textureOptions? : {
+        minFilter?: number;
+        magFilter?: number;
+        wrapS?: number;
+        wrapT?: number;
+    }
 }
 
 
@@ -49,10 +55,18 @@ class Texture {
         this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, 1);
         this.gl.texImage2D(this.gl.TEXTURE_2D, 0, internalFormat, this.description.shape[0], this.description.shape[1], 0, format, type, null);
 
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+        if (this.description.textureOptions) {
+            const { minFilter, magFilter, wrapS, wrapT } = this.description.textureOptions;
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, minFilter ?? this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, magFilter ?? this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, wrapS ?? this.gl.CLAMP_TO_EDGE);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, wrapT ?? this.gl.CLAMP_TO_EDGE);
+        } else {
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+            this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+        }
 
         if (this.description.createFramebuffer) {
             this.framebuffer = this.gl.createFramebuffer();
