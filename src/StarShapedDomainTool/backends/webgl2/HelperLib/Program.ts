@@ -66,6 +66,9 @@ class Program {
         ${this.programDescription.fragmentShader}
         `;
 
+        //console.log('Setting up program with vertex shader:', vertexShaderSource);
+        //console.log('Setting up program with fragment shader:', fragmentShaderSource);
+
         const vertexShader = this.gl.createShader(this.gl.VERTEX_SHADER);
         if (!vertexShader) {
             throw new Error('Failed to create vertex shader');
@@ -121,8 +124,23 @@ class Program {
         this.gl.uniformBlockBinding(this.program, index, 0);
         this.gl.bindBuffer(this.gl.UNIFORM_BUFFER, null);
 
+        // bind textures
+        let slot = 0;
+        for (const [texName, texture] of Object.entries(pdc.textures)) {
+            const location = this.gl.getUniformLocation(this.program, texName);
+            if (location === null) {
+                console.warn(`Uniform location for ${texName} not found`);
+                continue;
+            }
+            this.gl.activeTexture(this.gl.TEXTURE0 + slot);
+            this.gl.bindTexture(this.gl.TEXTURE_2D, texture.texture);
+            this.gl.uniform1i(location, slot);
+            slot++;
+        }
+
         // bind vertex attributes
         this.gl.bindVertexArray(vertexProvider.vao);
+        // check if the vao provides a index buffer
         if (vertexProvider.vertexProviderSignature.instancedCall) {
             this.gl.drawElementsInstanced(
                 this.gl.TRIANGLES,
@@ -139,6 +157,11 @@ class Program {
                 0
             )
         }
+        const err = this.gl.getError();
+        if (err !== this.gl.NO_ERROR) {
+            console.error(`WebGL error: ${err}`);
+        }
+        this.gl.bindVertexArray(null);
     }
 }
 

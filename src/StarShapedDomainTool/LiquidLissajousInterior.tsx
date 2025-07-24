@@ -80,7 +80,10 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
             rendererRef.current = new StarShapedDomainWipeRenderer(canvas);
             // rendererRef.current = new WebGPURenderer(canvas, particleSystem);
             const renderer = rendererRef.current;
-            const loop = () => {
+
+            renderer.init().then(() => {
+                renderer.setup();
+                const loop = () => {
                 rendererRef.current!.draw();
                 const { rendering } = frameSaver.getStatus();
                 if (rendering && renderer.onFrameReady) {
@@ -88,7 +91,10 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
                 }
                 requestAnimationFrame(loop);
             };
-            requestAnimationFrame(loop);
+                requestAnimationFrame(loop);
+            }).catch((error) => {
+                console.error("Error initializing renderer:", error);
+            });
 
         }
         return () => { };

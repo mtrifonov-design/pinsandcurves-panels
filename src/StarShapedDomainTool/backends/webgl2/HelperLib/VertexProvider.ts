@@ -66,6 +66,8 @@ class VertexProvider {
             derivedVertexStructureObject.push({ ...attribute, layoutIdx });
         }
 
+
+
         const onlyVertexStructureObject = derivedVertexStructureObject.filter(attr => !attr.instanceAttribute);
         const onlyInstanceStructureObject = derivedVertexStructureObject.filter(attr => attr.instanceAttribute);
         this.onlyVertexStructureObject = onlyVertexStructureObject;
@@ -82,7 +84,7 @@ class VertexProvider {
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
         this.gl.bufferData(
             this.gl.ELEMENT_ARRAY_BUFFER, 
-            this.vertexProviderSignature.indexCount * Uint32Array.BYTES_PER_ELEMENT, 
+            this.vertexProviderSignature.indexCount * Uint16Array.BYTES_PER_ELEMENT, 
             this.gl.DYNAMIC_DRAW);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
 
@@ -101,6 +103,10 @@ class VertexProvider {
         if (!this.vao) {
             throw new Error('Failed to create vertex array object');
         }
+        for (let layoutIdx = 0; layoutIdx < this.vertexProviderSignature.vertexStructure.length; layoutIdx++) {
+            this.gl.enableVertexAttribArray(layoutIdx);
+        }
+
         this.gl.bindVertexArray(this.vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
 
@@ -249,6 +255,8 @@ class VertexProvider {
             throw new Error('Vertex buffer is not initialized. Call setup() first.');
         }
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
+        // Log the buffer as floating point values for debugging
+        //console.log('Setting vertex data:', new Float32Array(bufferData));
         this.gl.bufferSubData(this.gl.ARRAY_BUFFER, 0, bufferData);
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
     }
@@ -288,8 +296,12 @@ class VertexProvider {
         if (!this.indexBuffer) {
             throw new Error('Index buffer is not initialized. Call setup() first.');
         }
+        // check if vao is bound
+        if (this.gl.getParameter(this.gl.VERTEX_ARRAY_BINDING) === this.vao) {
+            throw new Error('Vertex array object is bound. This is not allowed at this point.');
+        }
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-        const indexData = new Uint32Array(data);
+        const indexData = new Uint16Array(data);
         this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, indexData, this.gl.DYNAMIC_DRAW);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, null);
     }
