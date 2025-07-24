@@ -14,6 +14,8 @@ import CyberSpaghettiControlConsole from './CyberSpaghetti/ControlConsole';
 import LiquidLissajous from './LiquidLissajous/LiquidLissajous';
 import LiquidLissajousControlConsole from './LiquidLissajous/ControlConsole';
 import AssetTestPanel from './AssetManager/testPanel/AssetTestPanel';
+import StarShapedDomainTool from './StarShapedDomainTool/StarShapedDomainTool';
+
 const Default = () => <h1>Default Page</h1>;
 
 
@@ -43,6 +45,7 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />
           <Route path="/liquidlissajous" element={<LiquidLissajous />} />
           <Route path="/liquidlissajous-controlconsole" element={<LiquidLissajousControlConsole />} />
+          <Route path="/starshapeddomainwipe" element={<StarShapedDomainTool />} />
         </Routes>
       </StyleProvider>
     </div>

@@ -1,0 +1,144 @@
+
+// The purpose of this class is to provide an abstraction for a "Uniform Buffer Object" in WebGL2.
+// Conceptually, we consider this an "input" to a program.
+type UniformType = 
+|'float'
+|'vec2'
+|'vec3'
+|'vec4'
+|'mat3'
+|'mat3x3'
+|'mat4'
+|'mat4x4'
+|'int'
+|'ivec2'
+|'ivec3'
+|'ivec4';
+
+type UniformStructure = {
+    name: string;
+    type: UniformType;
+}[];
+
+type UniformProviderSignature = {
+    uniformProviderName: string;
+    uniformStructure: UniformStructure;
+};
+
+type UniformValues = {
+    [key: string]: number | number[]
+};
+
+class UniformProvider {
+    gl: WebGL2RenderingContext;
+    uniformStructure: UniformStructure;
+    uniformProviderName: string;
+    constructor(gl: WebGL2RenderingContext, uniformProviderSignature: UniformProviderSignature) {
+        const { uniformProviderName, uniformStructure } = uniformProviderSignature;
+        this.gl = gl;
+        if (!this.gl) {
+            throw new Error('WebGL2RenderingContext is not provided');
+        }
+        this.uniformProviderName = uniformProviderName;
+        this.uniformStructure = uniformStructure;
+    }
+
+
+    buffer: WebGLBuffer | null = null;
+    setup() {
+        const buffer = this.gl.createBuffer();
+        if (!buffer) {
+            throw new Error('Failed to create uniform buffer');
+        }
+
+        // allocate the buffer with the size of all uniforms combined
+        this.gl.bindBuffer(this.gl.UNIFORM_BUFFER, buffer);
+        this.gl.bufferData(this.gl.UNIFORM_BUFFER, this.uniformBufferSize, this.gl.DYNAMIC_DRAW);
+        this.gl.bindBuffer(this.gl.UNIFORM_BUFFER, null);
+        this.buffer = buffer;
+    }
+
+    getUniformSize(name: string): number {
+        const uniform = this.uniformStructure.find(u => u.name === name);
+        if (!uniform) {
+            throw new Error(`Uniform ${name} not found in structure`);
+        }
+        const type = uniform.type;
+        switch (type) {
+            case 'float':
+                return 4;
+            case 'vec2':
+                return 8;
+            case 'vec3':
+                return 12;
+            case 'vec4':
+                return 16;
+            case 'mat3':
+            case 'mat3x3':
+                return 36; 
+            case 'mat4':
+            case 'mat4x4':
+                return 64;
+            case 'int':
+                return 4;
+            case 'ivec2':
+                return 8;
+            case 'ivec3':
+                return 12;
+            case 'ivec4':
+                return 16;
+            default:
+                throw new Error(`Unknown uniform type: ${type}`);
+        }
+    }
+
+    getUniformOffset(name: string) : number {
+        let offset = 0;
+        for (let i = 0; i < this.uniformStructure.length; i++) {
+            const uniform = this.uniformStructure[i];
+            if (uniform.name === name) {
+                return offset;
+            }
+            offset += this.getUniformSize(uniform.name);
+        }
+        throw new Error(`Uniform ${name} not found in structure`);
+    }
+
+    get uniformBufferSize() {
+        return this.uniformStructure.reduce((total, uniform) => {
+            const size = this.getUniformSize(uniform.name);
+            return total + size;
+        }, 0);
+    }
+
+    setUniforms(uniformValues: UniformValues) {
+        if (!this.buffer) {
+            throw new Error('Uniform buffer is not initialized. Call setup() first.');
+        }
+        this.gl.bindBuffer(this.gl.UNIFORM_BUFFER, this.buffer);
+        for (const uniform of Object.keys(uniformValues)) {
+            const value = uniformValues[uniform];
+            const offset = this.getUniformOffset(uniform);
+            const size = this.getUniformSize(uniform);
+            if (Array.isArray(value)) {
+                if (value.length * 4 !== size) {
+                    throw new Error(`Uniform ${uniform} has incorrect size. Expected ${size / 4} elements, got ${value.length}`);
+                }
+                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, new Float32Array(value));
+            } else if (typeof value === 'number') {
+                if (size !== 4) {
+                    throw new Error(`Uniform ${uniform} has incorrect size. Expected ${size / 4} elements, got 1`);
+                }
+                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, new Float32Array([value]));
+            } else {
+                throw new Error(`Uniform ${uniform} has unsupported type. Expected number or array, got ${typeof value}`);
+            }
+        }
+        this.gl.bindBuffer(this.gl.UNIFORM_BUFFER, null);
+    }
+
+
+}
+
+export type { UniformProviderSignature }
+export default UniformProvider;
