@@ -84,13 +84,13 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
             renderer.init().then(() => {
                 renderer.setup();
                 const loop = () => {
-                rendererRef.current!.draw();
-                const { rendering } = frameSaver.getStatus();
-                if (rendering && renderer.onFrameReady) {
-                    renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
-                }
-                requestAnimationFrame(loop);
-            };
+                    rendererRef.current!.draw();
+                    const { rendering } = frameSaver.getStatus();
+                    if (rendering && renderer.onFrameReady) {
+                        renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
+                    }
+                    requestAnimationFrame(loop);
+                };
                 requestAnimationFrame(loop);
             }).catch((error) => {
                 console.error("Error initializing renderer:", error);

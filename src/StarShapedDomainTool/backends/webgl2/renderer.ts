@@ -95,7 +95,7 @@ export class StarShapedDomainWipeRenderer {
             createFramebuffer: true,
         });
         this.resources.shapeViewerTexture.setup();
-        this.resources.shapeViewerTexture.setData(this.image);
+
 
         this.resources.mainCanvasTexture = new Texture(this.gl, {
             shape: [1920,1080],
@@ -110,13 +110,13 @@ export class StarShapedDomainWipeRenderer {
         this.resources.fullscreenQuadVertexProvider.setIndexData([0, 1, 2, 1, 3, 2]);
 
         this.resources.distanceTexture = new Texture(this.gl, {
-            shape: [90,1],
-            type: 'R32F',
+            shape: [9000,1],
+            type: 'R8',
             createFramebuffer: true,
             textureOptions: {
                 minFilter: this.gl.LINEAR,
                 magFilter: this.gl.LINEAR,
-                wrapS: this.gl.CLAMP_TO_EDGE,
+                wrapS: this.gl.REPEAT,
                 wrapT: this.gl.CLAMP_TO_EDGE
             }
         });
@@ -143,7 +143,7 @@ export class StarShapedDomainWipeRenderer {
                 vec2 mid = (p1 + p2) * 0.5;
                 for (int i = 0; i < 32; i++) {
                     float val = texture(u_texture, toUV(mid)).r;
-                    bool inShape = val > .5;
+                    bool inShape = val > .8;
                     if (inShape) {
                         p1 = mid;
                     } else {
@@ -152,6 +152,7 @@ export class StarShapedDomainWipeRenderer {
                     mid = (p1 + p2) * 0.5;
                 }
                 distanceValue = sqrt(dot(mid, mid)) / sqrt(2.0); 
+                //distanceValue = 0.5;
             }
         `,
             vertexProviderSignature: this.resources.fullscreenQuadVertexProviderSignature,
@@ -171,25 +172,59 @@ export class StarShapedDomainWipeRenderer {
             out vec4 outColor;
             in vec2 v_texCoord;
             uniform sampler2D u_texture;
+            #define N 32
+            #define SIGMA 0.005
+
+            float gaussian(float x, float sigma) {
+                return exp(-0.5 * (x * x) / (sigma * sigma));
+            }
+
             void main() {
                 float normedDistance = sqrt(dot(v_texCoord, v_texCoord)) / sqrt(2.0);
                 float angle = (atan(v_texCoord.y, v_texCoord.x) + 3.14159265) / 6.28318530718;
                 //float targetDistance = texture(u_texture, vec2(angle, 0.5)).r ;
-                float targetDistance = 0;
-                int samples = 5;
-                float delta = 0.01;
-                for (int i = 0; i < samples; i++) {
-                    float i_f = float(i);
-                    float pos = angle + (i_f - 0.5 / float(samples)) * delta;
-                    targetDistance += texture(u_texture, vec2(pos, 0.5)).r;
+                //angle = v_texCoord.x;
+                //targetDistance = .3;
+
+                float accum = 0.0;
+                float totalWeight = 0.0;
+                for (int i = 0; i < N; i++) {
+                    float offset = (float(i) - float(N) * 0.5 + 0.5) / float(N); 
+                    float span = 0.03;
+                    offset *= span; 
+                    float weight = gaussian(offset, SIGMA);
+                    float pos = mod(angle + offset, 1.0); // wrap angularly
+                    float sample_ = texture(u_texture, vec2(pos, 0.5)).r;
+
+                    accum += sample_ * weight;
+                    totalWeight += weight;
                 }
-                targetDistance /= float(samples);
+                float blurred = accum / totalWeight;
+                
+                
+                // float targetDistance = 0.0;
+                // float accumDelta = -0.05;
+                // float delta = abs(accumDelta * 2.) / 128.;
+                // for (int i = 0; i < 128; i++) {
+                //     float pos = angle + accumDelta;
+                //     accumDelta += delta;
+                //     float sample_ = texture(u_texture, vec2(pos, 0.5)).r;
+                //     targetDistance += sample_;
+
+                // }
+                // targetDistance /= 128.0;
+                float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
+                targetDistance = blurred;
+                
                 float currentDistance = normedDistance;
                 float distance = currentDistance - targetDistance;
-                //distance = smoothstep(0.0, 0.1, distance);
                 distance = max(distance, 0.0);
                 float outC = sin(distance * 3.14159265 * 7.) * 0.5 + 0.5;
                 outColor = vec4(vec3(outC),1.);
+
+                //outColor = vec4(v_texCoord * 0.5 + 0.5,1., 1.0);
+                //outColor = vec4(vec3(targetDistance), 1.0);
+
                 //outColor = vec4(vec3(texture(u_texture, v_texCoord * 0.5 + 0.5).r), 1.0);
                 //outColor = vec4(distance, distance, distance, 1.0);
                 //outColor = vec4(texture(u_texture, v_texCoord * 0.5 + 0.5).rgb, 1.0);
@@ -201,42 +236,12 @@ export class StarShapedDomainWipeRenderer {
         this.resources.mainCanvasDistanceRendererProgram.setup();
     }
 
-    // init() {
-    //     // setup uniform buffer
-    //     this.setupUniformBuffer();
-
-    //     // setup fullscreen quad vertex buffer (will reuse for all shaders)
-    //     this.setupFullScreenQuad();
-
-    //     // setup input "shape" texture
-
-    //     // setup processed "shape distance" texture & framebuffer
-
-    //     // setup main canvas texture & framebuffer
-    //     this.setupMainCanvasTexture();
-
-    //     // setup shape preview texture & framebuffer
-    //     this.setupShapePreviewTexture();
-
-    //     // setup programs
-
-    //     // setup shape processing program (essentially compute)
-
-    //     // setup main canvas rendering program
-    //     this.setupMainCanvasProgram();
-
-    //     // setup shape preview rendering program
-    //     this.setupShapePreviewProgram();
-
-
-    //     // setup final screen rendering program
-    //     this.setupFinalScreenProgram();
-    // };
 
     draw() {
         // Render Pass: Compute distances
-        this.gl.viewport(0, 0, 90, 1);
+        this.gl.viewport(0, 0, 9000, 1);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.distanceTexture.framebuffer);
+        //this.gl.drawBuffers([this.gl.COLOR_ATTACHMENT0]);
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.resources.uniformProvider.setUniforms({
@@ -313,7 +318,7 @@ export class StarShapedDomainWipeRenderer {
             uniformProvider: this.resources.uniformProvider,
             vertexProvider: this.resources.fullscreenQuadVertexProvider,
             textures: {
-                u_texture: this.resources.shapeViewerTexture
+                u_texture: this.resources.inputShape
             }
         });
     };
