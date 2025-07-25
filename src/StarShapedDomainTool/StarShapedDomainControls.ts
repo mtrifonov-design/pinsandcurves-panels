@@ -14,6 +14,7 @@ type ControlsData = {
 
     canvasPoint: [number, number];
     canvasScale: number;
+    shapeScale: number;
 
     shapePoint: [number, number];
 
@@ -102,6 +103,7 @@ class Controls {
         ],
         canvasPoint: [0, 0],
         canvasScale: 1,
+        shapeScale: 1,
         shapePoint: [0, 0],
         perspectiveFactor: 1,
         noiseDegenerationEnabled: false,
@@ -111,7 +113,7 @@ class Controls {
         exportDuration: 10,
         exportPerfectLoop: true,
         shapeImageAssetId: '',
-        showShapeInspector: false
+        showShapeInspector: false,
     }
 }
 

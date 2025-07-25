@@ -229,9 +229,11 @@ export class StarShapedDomainWipeRenderer {
                 
                 float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
                 targetDistance = blurred;
+                targetDistance *= canvasBox.w;
                 
                 float currentDistance = normedDistance;
                 float distance = currentDistance - targetDistance;
+                distance /= targetDistance;
                 distance *= canvasBox.z;
                 
 
@@ -286,7 +288,7 @@ export class StarShapedDomainWipeRenderer {
         this.gl.clearColor(1, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.resources.mainCanvasUniformProvider.setUniforms({
-            canvasBox: [...engine.CONFIG.canvasPoint, engine.CONFIG.canvasScale,1.],
+            canvasBox: [...engine.CONFIG.canvasPoint, engine.CONFIG.canvasScale,engine.CONFIG.shapeScale],
             boundingBox: [1, 1, 0, 0],
             time: [engine.REL_TIME,0]
         });

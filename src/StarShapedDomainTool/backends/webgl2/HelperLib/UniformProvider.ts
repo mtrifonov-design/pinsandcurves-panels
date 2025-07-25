@@ -70,12 +70,12 @@ class UniformProvider {
             case 'vec2':
                 return 8;
             case 'vec3':
-                return 12;
+                return 16;
             case 'vec4':
                 return 16;
             case 'mat3':
             case 'mat3x3':
-                return 36; 
+                return 64; 
             case 'mat4':
             case 'mat4x4':
                 return 64;
@@ -84,7 +84,7 @@ class UniformProvider {
             case 'ivec2':
                 return 8;
             case 'ivec3':
-                return 12;
+                return 16;
             case 'ivec4':
                 return 16;
             default:
@@ -105,10 +105,12 @@ class UniformProvider {
     }
 
     get uniformBufferSize() {
-        return this.uniformStructure.reduce((total, uniform) => {
+        const baseSize=  this.uniformStructure.reduce((total, uniform) => {
             const size = this.getUniformSize(uniform.name);
             return total + size;
         }, 0);
+        // Align to 16 bytes
+        return Math.ceil(baseSize / 16) * 16;
     }
 
     setUniforms(uniformValues: UniformValues) {

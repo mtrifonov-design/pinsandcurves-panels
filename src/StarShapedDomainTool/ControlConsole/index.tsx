@@ -203,14 +203,31 @@ export function CyberSpaghettiControlsInterior({
           gap: '0.5rem',
           justifyContent: 'space-between',
         }}>
-          scale &nbsp;
+          ripple scale &nbsp;
           <NumberInput
             initialValue={state.canvasScale}
             min={0.1}
-            max={1}
+            max={10}
             step={0.1}
             onChange={c => {
               update({ canvasScale: c })
+            }}
+          />
+        </label>
+                <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          justifyContent: 'space-between',
+        }}>
+          shape scale &nbsp;
+          <NumberInput
+            initialValue={state.shapeScale}
+            min={0.1}
+            max={10}
+            step={0.1}
+            onChange={c => {
+              update({ shapeScale: c })
             }}
           />
         </label>
