@@ -1,7 +1,7 @@
 import React, { createContext, useRef, useEffect, useState } from 'react';
 import { useAssets } from '../../AssetManager/hooks/useAssets';
 import { useIndex } from '../../AssetManager/hooks/useIndex';
-import Controller, { Controls } from '../LiquidLissajousControls';
+import Controller, { Controls } from '../StarShapedDomainControls';
 import CONFIG from '../../Config';
 import { useCK } from '../../CK_Adapter/CK_Provider';
 

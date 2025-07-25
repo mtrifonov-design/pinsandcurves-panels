@@ -2,7 +2,7 @@ import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pins
 import TimelineProvider, { useTimeline } from '../TimelineUtils/TimelineProvider.js';
 import { AssetProvider } from '../AssetManager/context/AssetProvider.js';
 import ControlsProvider, { useControls } from './ControlConsole/ControlProvider.js';
-import LiquidLissajousSetup from './LiquidLissajousSetup.js';
+import LiquidLissajousSetup from './StarShapedDomainSetup.js';
 
 const pb = new ProjectDataStructure.ProjectBuilder();
 pb.setTimelineData(5000, 30, 45);

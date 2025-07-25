@@ -2,7 +2,7 @@
 // Each particle: position (vec2), color (vec3)
 
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
-import { Controls, ControlsData } from '../LiquidLissajousControls.js';
+import { Controls, ControlsData } from '../StarShapedDomainControls.js';
 import { colorConvert } from './colors.js';
 
 function easeInOutCubic(x: number): number {

@@ -2,7 +2,7 @@
 import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 import JSZip from "jszip";
 import { imagesToMp4 } from "./imagesToMp4";
-import { ControlsData } from "./LiquidLissajousControls";
+import { ControlsData } from "./StarShapedDomainControls";
 
 
 class FrameSaver {

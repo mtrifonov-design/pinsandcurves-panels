@@ -3,7 +3,7 @@
 import { rgb_to_oklab, gamma } from './oklab.js';
 
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
-import { Controls, ControlsData } from '../LiquidLissajousControls.js';
+import { Controls, ControlsData } from '../StarShapedDomainControls.js';
 import { colorConvert, rgbToHsl, hslToRgb } from './colors.js';
 import { matrix, ones, inv, multiply } from 'mathjs';
 import backgroundObject from '../../CyberSpaghetti/backends/webgl2/backgroundObject.js';

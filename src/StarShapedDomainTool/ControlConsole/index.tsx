@@ -4,7 +4,7 @@ import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
 import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
-import type { Controls } from '../LiquidLissajousControls';
+import type { Controls } from '../StarShapedDomainControls';
 import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
 import { CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 import LissajousSelectButtonGroup from './LissajousPreview';

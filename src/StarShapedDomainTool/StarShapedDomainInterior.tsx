@@ -8,7 +8,7 @@ import { StarShapedDomainWipeRenderer, WebGL2Renderer } from './backends/webgl2/
 import TimelineBar from './TimelineBar.js';
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
 
-export default function LiquidLissajousInterior({ timeline, controls }: any) {
+export default function StarShapedDomainInterior({ timeline, controls }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const particleSystemRef = useRef<any>(new ParticleSystem());

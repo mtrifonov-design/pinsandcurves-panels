@@ -1,0 +1,10 @@
+- shape point
+- canvas point
+- canvas scale
+- color stops (as actual stops)
+- perspective factor
+- noise decay enabled
+- noise decay amplitude
+- noise decay frequency
+- speed
+- shape image (asset id)
