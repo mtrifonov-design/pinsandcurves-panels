@@ -15,6 +15,7 @@ import LiquidLissajous from './LiquidLissajous/LiquidLissajous';
 import LiquidLissajousControlConsole from './LiquidLissajous/ControlConsole';
 import AssetTestPanel from './AssetManager/testPanel/AssetTestPanel';
 import StarShapedDomainTool from './StarShapedDomainTool/StarShapedDomainTool';
+import StarShapedDomainControlConsole from './StarShapedDomainTool/ControlConsole';
 
 const Default = () => <h1>Default Page</h1>;
 
@@ -46,6 +47,8 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/liquidlissajous" element={<LiquidLissajous />} />
           <Route path="/liquidlissajous-controlconsole" element={<LiquidLissajousControlConsole />} />
           <Route path="/starshapeddomainwipe" element={<StarShapedDomainTool />} />
+          <Route path="/starshapeddomainwipe-controlconsole" element={<StarShapedDomainControlConsole />} />
+        
         </Routes>
       </StyleProvider>
     </div>

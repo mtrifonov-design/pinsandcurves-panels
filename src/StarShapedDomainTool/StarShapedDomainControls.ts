@@ -1,33 +1,35 @@
 import { LISSAJOUS_CURVES, LissajousParams } from "./core/lissajousCurves";
 
 type ControlsData = {
-    particleCount: number;
-    mixingIntensity: number;
-    particleColors: [number, number, number][];
-    backgroundColor: [number, number, number];
-    loopLifecycle: number,
-    showLissajousFigure: boolean;
-    ratioA: number;
-    ratioB: number;
-    offset: number;
+
     width: number;
     height: number;
-    figureScaleX: number;
-    figureScaleY: number;
-    noiseIntensity: number;
-    noiseEnabled: boolean;
-    noiseScale: number;
-    noiseSpeed: number;
-    fluidWarpEnabled: boolean;
-    fluidWarpIntensity: number;
-    fluidWarpScale: number;
-    fluidWarpSpeed: number;
-    lissajousParams: LissajousParams;
-    animationSpeed: number;
-    rotateVertical: number;
-    rotateHorizontal: number;
-    exportPerfectLoop: boolean;
+    
+    colorStops: {
+        r: number;
+        g: number;
+        b: number;
+        pc: number;
+    }[];
+
+    canvasPoint: [number, number];
+    canvasScale: number;
+
+    shapePoint: [number, number];
+
+    perspectiveFactor: number;
+
+    noiseDegenerationEnabled: boolean;
+    noiseDegenerationAmplitude: number;
+    noiseDegenerationFrequency: number;
+
+    speed: number;
     exportDuration: number;
+    exportPerfectLoop: boolean;
+
+    shapeImageAssetId: string;
+
+    showShapeInspector: boolean;
 }
 
 class Controls {
@@ -92,37 +94,24 @@ class Controls {
     }
 
     static defaultControls = {
-        particleCount: 10,
-        particleColors: [
-            [255, 0, 0],
-            [0,255, 0],
-            [0, 0, 255],
+        width: 800,
+        height: 600,
+        colorStops: [
+            { r: 0, g: 0, b: 0, pc: 0 },
+            { r: 255, g: 255, b: 255, pc: 1 }
         ],
-        backgroundColor: [0, 0, 0],
-        loopLifecycle: 300,
-        mixingIntensity: 0.3,
-        showLissajousFigure: false,
-        ratioA: 1,
-        ratioB: 2,
-        offset: Math.PI / 2,
-        width: 1920,
-        height: 1080,
-        figureScaleX: 0.2,
-        figureScaleY: 0.3,
-        noiseEnabled: true,
-        noiseScale: 0.1,
-        noiseIntensity: 0.1,
-        noiseSpeed: 0.1,
-        fluidWarpEnabled: true,
-        fluidWarpIntensity: 0.1,
-        fluidWarpScale: 0.1,
-        fluidWarpSpeed: 0.1,
-        lissajousParams: LISSAJOUS_CURVES[0],
-        animationSpeed: 0.2,
-        rotateVertical: 0,
-        rotateHorizontal: 0,
-        exportPerfectLoop: false,
+        canvasPoint: [0, 0],
+        canvasScale: 1,
+        shapePoint: [0, 0],
+        perspectiveFactor: 1,
+        noiseDegenerationEnabled: false,
+        noiseDegenerationAmplitude: 0.5,
+        noiseDegenerationFrequency: 1.0,
+        speed: 1.0,
         exportDuration: 10,
+        exportPerfectLoop: true,
+        shapeImageAssetId: '',
+        showShapeInspector: false
     }
 }
 

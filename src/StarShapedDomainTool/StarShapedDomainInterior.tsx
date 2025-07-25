@@ -1,18 +1,17 @@
 import React, { useRef, useEffect, useSyncExternalStore } from 'react';
-import { ParticleSystem } from './core/ParticleSystem.js';
-import { WebGPURenderer } from './backends/webgpu/renderer.js';
+import { Engine } from './core/Engine.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen.js';
 import useGoatCounter from '../hooks/useGoatCounter.js';
-import { StarShapedDomainWipeRenderer, WebGL2Renderer } from './backends/webgl2/renderer.js';
+import { StarShapedDomainWipeRenderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
 
 export default function StarShapedDomainInterior({ timeline, controls }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const particleSystemRef = useRef<any>(new ParticleSystem());
-    const particleSystem = particleSystemRef.current;
+    const engineRef = useRef<Engine>(new Engine());
+    const engine = engineRef.current;
     const rendererRef = useRef<any>(null);
 
     const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
@@ -20,7 +19,7 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
 
     const { width, height } = controlsSnapshot;
 
-    particleSystem.update(controlsSnapshot, timeline);
+    engine.update(controlsSnapshot, timeline);
 
     const { recordEvent } = useGoatCounter(defaultEvent);
 
@@ -78,13 +77,12 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
         canvas.height = height;
         if (!rendererRef.current) {
             rendererRef.current = new StarShapedDomainWipeRenderer(canvas);
-            // rendererRef.current = new WebGPURenderer(canvas, particleSystem);
             const renderer = rendererRef.current;
 
             renderer.init().then(() => {
                 renderer.setup();
                 const loop = () => {
-                    rendererRef.current!.draw();
+                    renderer.draw(engine);
                     const { rendering } = frameSaver.getStatus();
                     if (rendering && renderer.onFrameReady) {
                         renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
@@ -98,7 +96,7 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
 
         }
         return () => { };
-    }, [width, height, timeline, controls, particleSystem]);
+    }, [width, height, timeline, controls, engine]);
 
     if (!timeline) {
         return <div>No timeline found</div>

@@ -1,7 +1,9 @@
+import { Engine } from "../../core/Engine";
 import Program from "./HelperLib/Program";
 import Texture from "./HelperLib/Texture";
 import UniformProvider from "./HelperLib/UniformProvider";
 import VertexProvider from "./HelperLib/VertexProvider";
+import { circleProgram, circleVertexProvider } from "./CircleProgram/circleProgram";
 
 // @ts-nocheck
 export class StarShapedDomainWipeRenderer {
@@ -40,8 +42,21 @@ export class StarShapedDomainWipeRenderer {
                 { name: 'boundingBox', type: 'vec4' }
             ]
         };
+        this.resources.mainCanvasUniformProviderSignature = {
+            uniformProviderName: 'MainCanvasUniforms',
+            uniformStructure: [
+                { name: 'canvasBox', type: 'vec4' },
+                { name: 'time', type: 'vec2' },
+                { name: 'boundingBox', type: 'vec4' },
+            ]
+        };
+        this.resources.circleVertexProvider = circleVertexProvider(this.gl);
+        this.resources.circleProgram = circleProgram(this.gl, this.resources.uniformProviderSignature);
+        this.resources.circleProgram.setup();
         this.resources.uniformProvider = new UniformProvider(this.gl, this.resources.uniformProviderSignature);
         this.resources.uniformProvider.setup();
+        this.resources.mainCanvasUniformProvider = new UniformProvider(this.gl, this.resources.mainCanvasUniformProviderSignature);
+        this.resources.mainCanvasUniformProvider.setup();
         this.resources.fullscreenQuadVertexProviderSignature = {
             vertexProviderName: 'FullscreenQuad',
             vertexStructure: [
@@ -82,6 +97,9 @@ export class StarShapedDomainWipeRenderer {
             uniformProviderSignature: this.resources.uniformProviderSignature
         });
         this.resources.exampleProgram.setup();
+        
+
+
         this.resources.inputShape = new Texture(this.gl, {
             shape: [this.image.width, this.image.height],
             type: 'RGBA8',
@@ -139,11 +157,21 @@ export class StarShapedDomainWipeRenderer {
             void main() {
                 float angle = v_texCoord.x * 6.28318530718; 
                 vec2 p1 = shapePoint;
-                vec2 p2 = vec2(cos(angle), sin(angle)) * sqrt(2.);
+                vec2 p2 = shapePoint + vec2(cos(angle), sin(angle)) * sqrt(2.);
                 vec2 mid = (p1 + p2) * 0.5;
+                float val = texture(u_texture, toUV(p1)).r;
+                float inShapeVal = 0.;
+                if (val > 0.5) {
+                    inShapeVal = 1.0;
+                } 
                 for (int i = 0; i < 32; i++) {
                     float val = texture(u_texture, toUV(mid)).r;
-                    bool inShape = val > .8;
+                    if (val > 0.5) {
+                        val = 1.0;
+                    } else {
+                        val = 0.0;
+                    }
+                    bool inShape = val == inShapeVal;
                     if (inShape) {
                         p1 = mid;
                     } else {
@@ -151,7 +179,7 @@ export class StarShapedDomainWipeRenderer {
                     }
                     mid = (p1 + p2) * 0.5;
                 }
-                distanceValue = sqrt(dot(mid, mid)) / sqrt(2.0); 
+                distanceValue = sqrt(dot(mid - shapePoint, mid - shapePoint)) / sqrt(2.0);
                 //distanceValue = 0.5;
             }
         `,
@@ -180,11 +208,9 @@ export class StarShapedDomainWipeRenderer {
             }
 
             void main() {
-                float normedDistance = sqrt(dot(v_texCoord, v_texCoord)) / sqrt(2.0);
-                float angle = (atan(v_texCoord.y, v_texCoord.x) + 3.14159265) / 6.28318530718;
-                //float targetDistance = texture(u_texture, vec2(angle, 0.5)).r ;
-                //angle = v_texCoord.x;
-                //targetDistance = .3;
+                vec2 distVector = v_texCoord - canvasBox.xy;
+                float normedDistance = sqrt(dot(distVector, distVector));
+                float angle = (atan(distVector.y, distVector.x) + 3.14159265) / 6.28318530718;
 
                 float accum = 0.0;
                 float totalWeight = 0.0;
@@ -193,7 +219,7 @@ export class StarShapedDomainWipeRenderer {
                     float span = 0.03;
                     offset *= span; 
                     float weight = gaussian(offset, SIGMA);
-                    float pos = mod(angle + offset, 1.0); // wrap angularly
+                    float pos = mod(angle + offset, 1.0); 
                     float sample_ = texture(u_texture, vec2(pos, 0.5)).r;
 
                     accum += sample_ * weight;
@@ -201,26 +227,22 @@ export class StarShapedDomainWipeRenderer {
                 }
                 float blurred = accum / totalWeight;
                 
-                
-                // float targetDistance = 0.0;
-                // float accumDelta = -0.05;
-                // float delta = abs(accumDelta * 2.) / 128.;
-                // for (int i = 0; i < 128; i++) {
-                //     float pos = angle + accumDelta;
-                //     accumDelta += delta;
-                //     float sample_ = texture(u_texture, vec2(pos, 0.5)).r;
-                //     targetDistance += sample_;
-
-                // }
-                // targetDistance /= 128.0;
                 float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
                 targetDistance = blurred;
                 
                 float currentDistance = normedDistance;
                 float distance = currentDistance - targetDistance;
+                distance *= canvasBox.z;
+                
+
                 distance = max(distance, 0.0);
-                float outC = sin(distance * 3.14159265 * 7.) * 0.5 + 0.5;
+                float PI = 3.14159265;
+                float outC = sin(distance * PI * 2. - time.x * 2. * PI) * 0.5 + 0.5;
+                distance = smoothstep(0.0, .1, distance);
                 outColor = vec4(vec3(outC),1.);
+                //outColor = vec4(vec3(targetDistance), 1.0);
+
+                //outColor = vec4(targetDistance,0., distance, 1.0);
 
                 //outColor = vec4(v_texCoord * 0.5 + 0.5,1., 1.0);
                 //outColor = vec4(vec3(targetDistance), 1.0);
@@ -231,13 +253,13 @@ export class StarShapedDomainWipeRenderer {
             }
         `,
             vertexProviderSignature: this.resources.fullscreenQuadVertexProviderSignature,
-            uniformProviderSignature: this.resources.uniformProviderSignature
+            uniformProviderSignature: this.resources.mainCanvasUniformProviderSignature
         });
         this.resources.mainCanvasDistanceRendererProgram.setup();
     }
 
 
-    draw() {
+    draw(engine: Engine) {
         // Render Pass: Compute distances
         this.gl.viewport(0, 0, 9000, 1);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.distanceTexture.framebuffer);
@@ -245,8 +267,8 @@ export class StarShapedDomainWipeRenderer {
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.resources.uniformProvider.setUniforms({
-            shapePoint: [0, 0],
-            canvasPoint: [0, 0],
+            shapePoint: engine.CONFIG.shapePoint,
+            canvasPoint: engine.CONFIG.canvasPoint,
             boundingBox: [1, 1, 0, 0] // full canvas
         });
         this.resources.distanceComputationProgram.draw({
@@ -263,28 +285,37 @@ export class StarShapedDomainWipeRenderer {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.mainCanvasTexture.framebuffer);
         this.gl.clearColor(1, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.resources.uniformProvider.setUniforms({
-            shapePoint: [0, 0],
-            canvasPoint: [0, 0],
-            boundingBox: [1, 1, 0, 0] 
+        this.resources.mainCanvasUniformProvider.setUniforms({
+            canvasBox: [...engine.CONFIG.canvasPoint, engine.CONFIG.canvasScale,1.],
+            boundingBox: [1, 1, 0, 0],
+            time: [engine.REL_TIME,0]
         });
+        
         this.resources.mainCanvasDistanceRendererProgram.draw({
-            uniformProvider: this.resources.uniformProvider,
+            uniformProvider: this.resources.mainCanvasUniformProvider,
             vertexProvider: this.resources.fullscreenQuadVertexProvider,
             textures: {
                 u_texture: this.resources.distanceTexture
             }
         });
+
+
+
         // Render Pass 2: Render into shape viewer texture
         this.gl.viewport(0, 0, 500, 500);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.shapeViewerTexture.framebuffer);
         this.gl.clearColor(1, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+        // enable regular alpha blending
+        this.gl.enable(this.gl.BLEND);
+        this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+        this.gl.blendEquation(this.gl.FUNC_ADD);
         this.resources.uniformProvider.setUniforms({
-            shapePoint: [0, 0],
-            canvasPoint: [0, 0],
+            shapePoint: engine.CONFIG.shapePoint,
+            canvasPoint: engine.CONFIG.canvasPoint,
             boundingBox: [1, 1, 0, 0] 
         });
+
         this.resources.exampleProgram.draw({
             uniformProvider: this.resources.uniformProvider,
             vertexProvider: this.resources.fullscreenQuadVertexProvider,
@@ -292,14 +323,27 @@ export class StarShapedDomainWipeRenderer {
                 u_texture: this.resources.inputShape
             }
         });
+        this.resources.uniformProvider.setUniforms({
+                shapePoint: engine.CONFIG.shapePoint,
+                canvasPoint: engine.CONFIG.canvasPoint,
+                boundingBox: [1, 1, 0, 0] // full canvas
+        });
+        this.resources.circleProgram.draw({
+            uniformProvider: this.resources.uniformProvider,
+            vertexProvider: this.resources.circleVertexProvider,
+            textures: {
+            }
+        })
+        this.gl.disable(this.gl.BLEND); // disable blending for the next pass
+
         // Render Pass 3, composite the final image
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.resources.uniformProvider.setUniforms({
-            shapePoint: [0, 0],
-            canvasPoint: [0, 0],
+            shapePoint: engine.CONFIG.shapePoint,
+            canvasPoint: engine.CONFIG.canvasPoint,
             boundingBox: [-1,1, 0, 0] // full canvas
         });
         this.resources.exampleProgram.draw({
@@ -309,18 +353,21 @@ export class StarShapedDomainWipeRenderer {
                 u_texture: this.resources.mainCanvasTexture
             }
         });
-        this.resources.uniformProvider.setUniforms({
-            shapePoint: [0, 0],
-            canvasPoint: [0, 0],
-            boundingBox: [0.25, -0.25, 0.5, -0.5] // full canvas
-        });
-        this.resources.exampleProgram.draw({
-            uniformProvider: this.resources.uniformProvider,
-            vertexProvider: this.resources.fullscreenQuadVertexProvider,
-            textures: {
-                u_texture: this.resources.inputShape
-            }
-        });
+        if (engine.CONFIG.showShapeInspector) {
+            this.resources.uniformProvider.setUniforms({
+                shapePoint: engine.CONFIG.shapePoint,
+                canvasPoint: engine.CONFIG.canvasPoint,
+                boundingBox: [0.25, -0.25, 0.5, -0.5] // full canvas
+            });
+            this.resources.exampleProgram.draw({
+                uniformProvider: this.resources.uniformProvider,
+                vertexProvider: this.resources.fullscreenQuadVertexProvider,
+                textures: {
+                    u_texture: this.resources.shapeViewerTexture
+                }
+            });
+        }
+
     };
 
 }
