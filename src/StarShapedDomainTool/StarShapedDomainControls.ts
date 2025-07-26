@@ -98,9 +98,10 @@ class Controls {
         width: 800,
         height: 600,
         colorStops: [
-            { r: 0, g: 0, b: 0, pc: 0 },
+            { r: 1, g: 0, b: 0, pc: 0 },
             { r: 1, g: 0, b: 0, pc: 0.2 },
-            { r: 0, g: 1, b: 0, pc: 0.5 },
+            { r: 0, g: 1, b: 0, pc: 0.22 },
+            { r: 0, g: 1, b: 0, pc: 0.52 },
             { r: 0, g: 0, b: 1, pc: 0.8 },
         ],
         canvasPoint: [0, 0],

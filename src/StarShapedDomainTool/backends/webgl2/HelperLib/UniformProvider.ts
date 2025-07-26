@@ -92,6 +92,32 @@ class UniformProvider {
         }
     }
 
+    getUniformType(name: string): string {
+        const uniform = this.uniformStructure.find(u => u.name === name);
+        if (!uniform) {
+            throw new Error(`Uniform ${name} not found in structure`);
+        }
+        const type = uniform.type;
+        switch (type) {
+            case 'float':
+            case 'vec2':
+            case 'vec3':
+            case 'vec4':
+            case 'mat3':
+            case 'mat3x3':
+            case 'mat4':
+            case 'mat4x4':
+                return "float";
+            case 'int':
+            case 'ivec2':
+            case 'ivec3':
+            case 'ivec4':
+                return "int";
+            default:
+                throw new Error(`Unknown uniform type: ${type}`);
+        }
+    }
+
     getUniformOffset(name: string) : number {
         let offset = 0;
         for (let i = 0; i < this.uniformStructure.length; i++) {
@@ -122,16 +148,19 @@ class UniformProvider {
             const value = uniformValues[uniform];
             const offset = this.getUniformOffset(uniform);
             const size = this.getUniformSize(uniform);
+            const type = this.getUniformType(uniform);
             if (Array.isArray(value)) {
                 if (value.length * 4 !== size) {
                     throw new Error(`Uniform ${uniform} has incorrect size. Expected ${size / 4} elements, got ${value.length}`);
                 }
-                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, new Float32Array(value));
+                const arr = type === 'int' ? new Int32Array(value) : new Float32Array(value);
+                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, arr);
             } else if (typeof value === 'number') {
                 if (size !== 4) {
                     throw new Error(`Uniform ${uniform} has incorrect size. Expected ${size / 4} elements, got 1`);
                 }
-                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, new Float32Array([value]));
+                const arr = type === 'int' ? new Int32Array([value]) : new Float32Array([value]);
+                this.gl.bufferSubData(this.gl.UNIFORM_BUFFER, offset, arr);
             } else {
                 throw new Error(`Uniform ${uniform} has unsupported type. Expected number or array, got ${typeof value}`);
             }

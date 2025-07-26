@@ -226,6 +226,13 @@ export class StarShapedDomainWipeRenderer {
             colorFloatArray[index + 2] = colorStop.b;
             colorFloatArray[index + 3] = colorStop.pc;
         }
+        // add the first color stop at the end to create a loop
+        const firstColorStop = engine.CONFIG.colorStops[0];
+        const lastIndex = engine.CONFIG.colorStops.length * 4;
+        colorFloatArray[lastIndex] = firstColorStop.r;
+        colorFloatArray[lastIndex + 1] = firstColorStop.g;
+        colorFloatArray[lastIndex + 2] = firstColorStop.b;
+        colorFloatArray[lastIndex + 3] = 1;
         this.resources.colorGradientTexture.setData(colorFloatArray);
 
         // Render Pass: Compute distances
@@ -257,7 +264,7 @@ export class StarShapedDomainWipeRenderer {
             canvasBox: [...engine.CONFIG.canvasPoint, engine.CONFIG.canvasScale,engine.CONFIG.shapeScale],
             boundingBox: [1, 1, 0, 0],
             time: [engine.REL_TIME,0],
-            numberColorStops: engine.CONFIG.colorStops.length,
+            numberColorStops: engine.CONFIG.colorStops.length + 1,
         });
         
         this.resources.mainCanvasDistanceRendererProgram.draw({

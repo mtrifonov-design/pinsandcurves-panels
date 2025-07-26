@@ -26,6 +26,7 @@ const mainCanvasProgram = (
             }
 
             vec4 getColorFromGradient(float d) {
+                d -= time.x;
                 float d_mod = mod(d, 1.0);
 
                 vec3 colorA = vec3(0.);
@@ -33,27 +34,39 @@ const mainCanvasProgram = (
                 float colAPos = 0.0;
                 float colBPos = 0.0;
                 float maxColors = 200.;
-                float endPos = float(numberColorStops - 1) / maxColors;
+                float endPos = float(numberColorStops) / maxColors;
                 d_mod = d_mod * endPos;
                 for (int i = 0; i < numberColorStops; i++) {
-                    float pc = float(i) / float(numberColorStops - 1);
-                    float pos = pc * endPos;
-                    vec4 col = texture(u_colorGradient, vec2(0.01, 0.5));
-                    if (d_mod < col.a) {
-                        colorA = col.rgb;
-                        colAPos = col.a;
-                    } else {
-                        colorB = col.rgb;
-                        colBPos = col.a;
+                    vec2 pc = vec2(float(i) / float(numberColorStops),float(i+1) / float(numberColorStops));
+                    vec2 pos = pc * endPos;
+                    vec4 col1 = texture(u_colorGradient, vec2(pos.x, 0.5));
+                    vec4 col2 = texture(u_colorGradient, vec2(pos.y, 0.5));
+
+                    if (d_mod >= col1.a * endPos && d_mod < col2.a * endPos) {
+                        colorA = col1.rgb;
+                        colAPos = col1.a * endPos;
+                        colorB = col2.rgb;
+                        colBPos = col2.a * endPos;
                         break;
                     }
                 }
 
                 float relD = (d_mod - colAPos) / (colBPos - colAPos);
+                //colorA = vec3(1.,0.,0.);
+                //colorB = vec3(0.,0.,1.);
                 return vec4(mix(colorA, colorB, relD), 1.0);
 
+                // float debugVal = 0.0;
+                // for (int i = 0; i < numberColorStops; i++) {
+                //     debugVal += 0.1;
+                // }   
+
+                //return vec4(vec3(debugVal), 0.);
+                //return vec4(1.);
+
+
                 //return vec4(mix(colorA, colorB, smoothstep(0.0, 1.0, d_mod)), 1.0);
-                //return texture(u_colorGradient, vec2(0.03, 0.5));
+                //return texture(u_colorGradient, vec2(0.018, 0.5));
             }
 
             void main() {
@@ -88,11 +101,11 @@ const mainCanvasProgram = (
                 distance = max(distance, -canvasBox.z * (1.-canvasBox.w));
                 float PI = 3.14159265;
                 float outC = sin(distance * PI * 2. - time.x * 2. * PI) * 0.5 + 0.5;
-                distance = smoothstep(0.0, .1, distance);
+                //distance = smoothstep(0.0, .1, distance);
 
                 vec4 color = getColorFromGradient(distance);
                 outColor = color;
-                //outColor = vec4(vec3(outC),1.);
+                //outColor = vec4(vec3(distance),1.);
             }
         `,
             vertexProviderSignature: vSig,
