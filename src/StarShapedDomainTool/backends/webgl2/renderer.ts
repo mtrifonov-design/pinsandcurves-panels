@@ -4,6 +4,7 @@ import Texture from "./HelperLib/Texture";
 import UniformProvider from "./HelperLib/UniformProvider";
 import VertexProvider from "./HelperLib/VertexProvider";
 import { circleProgram, circleVertexProvider } from "./CircleProgram/circleProgram";
+import { mainCanvasProgram } from "./MainCanvasProgram/MainCanvasProgram";
 
 // @ts-nocheck
 export class StarShapedDomainWipeRenderer {
@@ -46,8 +47,9 @@ export class StarShapedDomainWipeRenderer {
             uniformProviderName: 'MainCanvasUniforms',
             uniformStructure: [
                 { name: 'canvasBox', type: 'vec4' },
-                { name: 'time', type: 'vec2' },
                 { name: 'boundingBox', type: 'vec4' },
+                { name: 'time', type: 'vec2' },
+                { name: 'numberColorStops', type: 'int' }
             ]
         };
         this.resources.circleVertexProvider = circleVertexProvider(this.gl);
@@ -188,80 +190,44 @@ export class StarShapedDomainWipeRenderer {
         });
         this.resources.distanceComputationProgram.setup();
 
-        this.resources.mainCanvasDistanceRendererProgram = new Program(this.gl, {
-            vertexShader: `
-            out vec2 v_texCoord;
-            void main() {
-                gl_Position = vec4(a_position, 0.0, 1.0);
-                v_texCoord = a_position;
-            }
-        `,
-            fragmentShader: `
-            out vec4 outColor;
-            in vec2 v_texCoord;
-            uniform sampler2D u_texture;
-            #define N 32
-            #define SIGMA 0.005
-
-            float gaussian(float x, float sigma) {
-                return exp(-0.5 * (x * x) / (sigma * sigma));
-            }
-
-            void main() {
-                vec2 distVector = v_texCoord - canvasBox.xy;
-                float normedDistance = sqrt(dot(distVector, distVector));
-                float angle = (atan(distVector.y, distVector.x) + 3.14159265) / 6.28318530718;
-
-                float accum = 0.0;
-                float totalWeight = 0.0;
-                for (int i = 0; i < N; i++) {
-                    float offset = (float(i) - float(N) * 0.5 + 0.5) / float(N); 
-                    float span = 0.03;
-                    offset *= span; 
-                    float weight = gaussian(offset, SIGMA);
-                    float pos = mod(angle + offset, 1.0); 
-                    float sample_ = texture(u_texture, vec2(pos, 0.5)).r;
-
-                    accum += sample_ * weight;
-                    totalWeight += weight;
-                }
-                float blurred = accum / totalWeight;
-                
-                float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
-                targetDistance = blurred;
-                targetDistance *= canvasBox.w;
-                
-                float currentDistance = normedDistance;
-                float distance = currentDistance - targetDistance;
-                distance /= targetDistance;
-                distance *= canvasBox.z;
-                
-
-                distance = max(distance, 0.0);
-                float PI = 3.14159265;
-                float outC = sin(distance * PI * 2. - time.x * 2. * PI) * 0.5 + 0.5;
-                distance = smoothstep(0.0, .1, distance);
-                outColor = vec4(vec3(outC),1.);
-                //outColor = vec4(vec3(targetDistance), 1.0);
-
-                //outColor = vec4(targetDistance,0., distance, 1.0);
-
-                //outColor = vec4(v_texCoord * 0.5 + 0.5,1., 1.0);
-                //outColor = vec4(vec3(targetDistance), 1.0);
-
-                //outColor = vec4(vec3(texture(u_texture, v_texCoord * 0.5 + 0.5).r), 1.0);
-                //outColor = vec4(distance, distance, distance, 1.0);
-                //outColor = vec4(texture(u_texture, v_texCoord * 0.5 + 0.5).rgb, 1.0);
-            }
-        `,
-            vertexProviderSignature: this.resources.fullscreenQuadVertexProviderSignature,
-            uniformProviderSignature: this.resources.mainCanvasUniformProviderSignature
-        });
+        this.resources.mainCanvasDistanceRendererProgram = mainCanvasProgram(
+            this.gl,
+            this.resources.mainCanvasUniformProviderSignature,
+            this.resources.fullscreenQuadVertexProviderSignature
+        )
         this.resources.mainCanvasDistanceRendererProgram.setup();
+
+        this.resources.colorGradientTexture = new Texture(this.gl, {
+            shape: [200,1],
+            type: 'RGBA32F',
+            createFramebuffer: false,
+            textureOptions: {
+                minFilter: this.gl.NEAREST,
+                magFilter: this.gl.NEAREST,
+                wrapS: this.gl.CLAMP_TO_EDGE,
+                wrapT: this.gl.CLAMP_TO_EDGE
+            }
+        });
+        this.resources.colorGradientTexture.setup();
     }
 
 
     draw(engine: Engine) {
+
+        const colorFloatArray = new Float32Array(200 * 4);
+        for (let i = 0; i < 200; i++) {
+            colorFloatArray[i] = 1.0;
+        }
+        for (let i = 0; i < engine.CONFIG.colorStops.length; i++) {
+            const colorStop = engine.CONFIG.colorStops[i];
+            const index = i * 4;
+            colorFloatArray[index] = colorStop.r;
+            colorFloatArray[index + 1] = colorStop.g;
+            colorFloatArray[index + 2] = colorStop.b;
+            colorFloatArray[index + 3] = colorStop.pc;
+        }
+        this.resources.colorGradientTexture.setData(colorFloatArray);
+
         // Render Pass: Compute distances
         this.gl.viewport(0, 0, 9000, 1);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.distanceTexture.framebuffer);
@@ -290,14 +256,16 @@ export class StarShapedDomainWipeRenderer {
         this.resources.mainCanvasUniformProvider.setUniforms({
             canvasBox: [...engine.CONFIG.canvasPoint, engine.CONFIG.canvasScale,engine.CONFIG.shapeScale],
             boundingBox: [1, 1, 0, 0],
-            time: [engine.REL_TIME,0]
+            time: [engine.REL_TIME,0],
+            numberColorStops: engine.CONFIG.colorStops.length,
         });
         
         this.resources.mainCanvasDistanceRendererProgram.draw({
             uniformProvider: this.resources.mainCanvasUniformProvider,
             vertexProvider: this.resources.fullscreenQuadVertexProvider,
             textures: {
-                u_texture: this.resources.distanceTexture
+                u_texture: this.resources.distanceTexture,
+                u_colorGradient: this.resources.colorGradientTexture
             }
         });
 

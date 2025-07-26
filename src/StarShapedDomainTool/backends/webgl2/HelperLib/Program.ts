@@ -55,6 +55,7 @@ class Program {
     setup() {
         const vertexShaderSource = `#version 300 es
         precision mediump float;
+        precision mediump int;
         ${generateUniformBlockString(this.programDescription.uniformProviderSignature)}
         ${generateVertexBlockString(this.programDescription.vertexProviderSignature)}
         ${this.programDescription.vertexShader}
@@ -62,6 +63,7 @@ class Program {
 
         const fragmentShaderSource = `#version 300 es
         precision mediump float;
+        precision mediump int;
         ${generateUniformBlockString(this.programDescription.uniformProviderSignature)}
         ${this.programDescription.fragmentShader}
         `;
