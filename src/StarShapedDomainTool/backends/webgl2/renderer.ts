@@ -49,7 +49,8 @@ export class StarShapedDomainWipeRenderer {
                 { name: 'canvasBox', type: 'vec4' },
                 { name: 'boundingBox', type: 'vec4' },
                 { name: 'time', type: 'vec2' },
-                { name: 'numberColorStops', type: 'int' }
+                { name: 'numberColorStops', type: 'int' },
+                { name: 'perspectiveFactor', type: 'float' }
             ]
         };
         this.resources.circleVertexProvider = circleVertexProvider(this.gl);
@@ -265,6 +266,7 @@ export class StarShapedDomainWipeRenderer {
             boundingBox: [1, 1, 0, 0],
             time: [engine.REL_TIME,0],
             numberColorStops: engine.CONFIG.colorStops.length + 1,
+            perspectiveFactor: engine.CONFIG.perspectiveFactor
         });
         
         this.resources.mainCanvasDistanceRendererProgram.draw({

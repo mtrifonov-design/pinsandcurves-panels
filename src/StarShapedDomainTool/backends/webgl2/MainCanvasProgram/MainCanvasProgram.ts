@@ -26,8 +26,10 @@ const mainCanvasProgram = (
             }
 
             vec4 getColorFromGradient(float d) {
-                d -= time.x;
-                float d_mod = mod(d, 1.0);
+                //d -= time.x;
+                d -= time.x * canvasBox.z;
+                float d_mod = mod(d, canvasBox.z);
+                d_mod /= canvasBox.z;
 
                 vec3 colorA = vec3(0.);
                 vec3 colorB = vec3(0.);
@@ -69,6 +71,10 @@ const mainCanvasProgram = (
                 //return texture(u_colorGradient, vec2(0.018, 0.5));
             }
 
+            float perspectiveFunction(float d) {
+                return mix(d, pow(d, 0.33), perspectiveFactor);
+            }
+
             void main() {
                 vec2 distVector = v_texCoord - canvasBox.xy;
                 float normedDistance = sqrt(dot(distVector, distVector));
@@ -95,17 +101,14 @@ const mainCanvasProgram = (
                 float currentDistance = normedDistance;
                 float distance = currentDistance - targetDistance;
                 distance /= targetDistance;
-                distance *= canvasBox.z;
-                
 
-                distance = max(distance, -canvasBox.z * (1.-canvasBox.w));
+                distance = max(distance, -(1.-canvasBox.w));
+                distance += (1.-canvasBox.w);
                 float PI = 3.14159265;
-                float outC = sin(distance * PI * 2. - time.x * 2. * PI) * 0.5 + 0.5;
-                //distance = smoothstep(0.0, .1, distance);
+                distance = perspectiveFunction(distance);
 
                 vec4 color = getColorFromGradient(distance);
                 outColor = color;
-                //outColor = vec4(vec3(distance),1.);
             }
         `,
             vertexProviderSignature: vSig,

@@ -207,7 +207,7 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput
             initialValue={state.canvasScale}
             min={0.1}
-            max={10}
+            max={2}
             step={0.1}
             onChange={c => {
               update({ canvasScale: c })
@@ -223,9 +223,9 @@ export function CyberSpaghettiControlsInterior({
           shape scale &nbsp;
           <NumberInput
             initialValue={state.shapeScale}
-            min={0.1}
+            min={0.01}
             max={10}
-            step={0.1}
+            step={0.01}
             onChange={c => {
               update({ shapeScale: c })
             }}
@@ -242,7 +242,7 @@ export function CyberSpaghettiControlsInterior({
             initialValue={state.perspectiveFactor}
             min={0.1}
             max={1}
-            step={0.1}
+            step={0.01}
             onChange={c => {
               update({ perspectiveFactor: c })
             }}
