@@ -30,19 +30,30 @@ const mainCanvasProgram = (
 
                 vec3 colorA = vec3(0.);
                 vec3 colorB = vec3(0.);
+                float colAPos = 0.0;
+                float colBPos = 0.0;
                 float maxColors = 200.;
+                float endPos = float(numberColorStops - 1) / maxColors;
+                d_mod = d_mod * endPos;
                 for (int i = 0; i < numberColorStops; i++) {
-                    vec4 col = texture(u_colorGradient, vec2(float(i) / float(numberColorStops - 1), 0.5));
+                    float pc = float(i) / float(numberColorStops - 1);
+                    float pos = pc * endPos;
+                    vec4 col = texture(u_colorGradient, vec2(0.01, 0.5));
                     if (d_mod < col.a) {
                         colorA = col.rgb;
+                        colAPos = col.a;
                     } else {
                         colorB = col.rgb;
+                        colBPos = col.a;
                         break;
                     }
                 }
 
-                return vec4(mix(colorA, colorB, smoothstep(0.0, 1.0, d_mod)), 1.0);
-                return texture(u_colorGradient, vec2(0.03, 0.5));
+                float relD = (d_mod - colAPos) / (colBPos - colAPos);
+                return vec4(mix(colorA, colorB, relD), 1.0);
+
+                //return vec4(mix(colorA, colorB, smoothstep(0.0, 1.0, d_mod)), 1.0);
+                //return texture(u_colorGradient, vec2(0.03, 0.5));
             }
 
             void main() {
