@@ -20,20 +20,22 @@ export class StarShapedDomainWipeRenderer {
     }
 
     image: HTMLImageElement;
-    async init() {
+    imageId: string = '';
+    async loadImage(dataUrl?: string) {
         const imAdr = "/pinsandcurves-panels/shape.jpg";
         const image = new Image();
-        image.src = imAdr;
-        this.image = image;
+        image.src = dataUrl ? dataUrl : imAdr;
         await new Promise((resolve) => {
             image.onload = () => {
+                this.image = image;
                 resolve(true);
             };
         });
+
     }
 
     resources : any = {};
-    setup() {
+    setup(engine: Engine) {
         this.gl.getExtension('EXT_color_buffer_float');
         this.resources.uniformProviderSignature = {
             uniformProviderName: 'Uniforms',
@@ -100,23 +102,21 @@ export class StarShapedDomainWipeRenderer {
             uniformProviderSignature: this.resources.uniformProviderSignature
         });
         this.resources.exampleProgram.setup();
-        
-
-
         this.resources.inputShape = new Texture(this.gl, {
-            shape: [this.image.width, this.image.height],
+            shape: [500, 500],
             type: 'RGBA8',
         })
         this.resources.inputShape.setup();
-        this.resources.inputShape.setData(this.image);
+        //console.log('Setting input shape texture data', engine.image);
+        this.resources.inputShape.setData(engine.image);
+        this.imageId = engine.currentImageAssetId;
 
         this.resources.shapeViewerTexture = new Texture(this.gl, {
-            shape: [480, 480],
+            shape: [500, 500],
             type: 'RGBA8',
             createFramebuffer: true,
         });
         this.resources.shapeViewerTexture.setup();
-
 
         this.resources.mainCanvasTexture = new Texture(this.gl, {
             shape: [1920,1080],
@@ -214,6 +214,10 @@ export class StarShapedDomainWipeRenderer {
 
 
     draw(engine: Engine) {
+        if (this.imageId !== engine.currentImageAssetId) {
+            this.resources.inputShape.setData(engine.image);
+            this.imageId = engine.currentImageAssetId;
+        }
 
         const colorFloatArray = new Float32Array(200 * 4);
         for (let i = 0; i < 200; i++) {
@@ -222,17 +226,17 @@ export class StarShapedDomainWipeRenderer {
         for (let i = 0; i < engine.CONFIG.colorStops.length; i++) {
             const colorStop = engine.CONFIG.colorStops[i];
             const index = i * 4;
-            colorFloatArray[index] = colorStop.r;
-            colorFloatArray[index + 1] = colorStop.g;
-            colorFloatArray[index + 2] = colorStop.b;
-            colorFloatArray[index + 3] = colorStop.pc;
+            colorFloatArray[index] = colorStop.color.r;
+            colorFloatArray[index + 1] = colorStop.color.g;
+            colorFloatArray[index + 2] = colorStop.color.b;
+            colorFloatArray[index + 3] = colorStop.position;
         }
         // add the first color stop at the end to create a loop
         const firstColorStop = engine.CONFIG.colorStops[0];
         const lastIndex = engine.CONFIG.colorStops.length * 4;
-        colorFloatArray[lastIndex] = firstColorStop.r;
-        colorFloatArray[lastIndex + 1] = firstColorStop.g;
-        colorFloatArray[lastIndex + 2] = firstColorStop.b;
+        colorFloatArray[lastIndex] = firstColorStop.color.r;
+        colorFloatArray[lastIndex + 1] = firstColorStop.color.g;
+        colorFloatArray[lastIndex + 2] = firstColorStop.color.b;
         colorFloatArray[lastIndex + 3] = 1;
         this.resources.colorGradientTexture.setData(colorFloatArray);
 

@@ -1,4 +1,4 @@
-import { NumberInput } from '@mtrifonov-design/pinsandcurves-design';
+import { GradientPicker, NumberInput, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 import React, { useEffect, useSyncExternalStore } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import ControlsProvider, { useControls } from './ControlProvider';
@@ -6,10 +6,11 @@ import FullscreenLoader from '../../FullscreenLoader/FullscreenLoader';
 //import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import type { Controls } from '../StarShapedDomainControls';
 import TimelineProvider, { useTimeline } from '../../TimelineUtils/TimelineProvider';
-import { CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';import PresetButton from './PresetButton';
+import PresetButton from './PresetButton';
 import presets from './presets';
 import SwitchableSection from './SwitchableSection';
 import { ControlsData } from '../StarShapedDomainControls';
+import ImageUploader from './UploadBox';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -250,11 +251,31 @@ export function CyberSpaghettiControlsInterior({
         </label>
       </CollapsibleSection>
       <CollapsibleSection title="Colors" iconName="palette">
-        Content.
+        <div style={{
+          width: '100%',
+          height: '100px',
+          padding: '1rem',
+        }}>
+        <GradientPicker
+          stops={state.colorStops}
+          onChange={(colors) => {
+            update({ colorStops: colors });
+          }}
+          style={{
+            width: '100%',
+            height: '200px',
+          }}
+          />
+        </div>
       </CollapsibleSection>
       <CollapsibleSection title="Shape" iconName="all_inclusive">
         <div style={{
         }}>
+          <ImageUploader 
+            updateState={update}
+            selectedImage={state.shapeImageAssetId}
+            images={state.shapeImageAssetIds}
+          />
           <SwitchableSection label="display shape inspector"
             checked={(state.showShapeInspector)}
             onToggle={(checked) => update({ showShapeInspector: checked })}

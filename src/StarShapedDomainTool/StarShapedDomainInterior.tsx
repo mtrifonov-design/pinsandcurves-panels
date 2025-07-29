@@ -5,7 +5,37 @@ import FrameSaverScreen from './FrameSaverScreen.js';
 import useGoatCounter from '../hooks/useGoatCounter.js';
 import { StarShapedDomainWipeRenderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
+import { useIndex } from '../AssetManager/hooks/useIndex.js';
+import { useAssets } from '../AssetManager/hooks/useAssets.js';
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
+
+class ImageController {
+    initialised = false
+    data?: string;
+    constructor() {}
+    load(data: string) {
+        this.data = data;
+        this.initialised = true;
+    }
+    receiveUpdate(update: string) {
+        this.data = update;
+    }
+    receiveMetadataUpdate() {}
+    getSnapshot() {
+        return this.data;
+    }
+    destroy() {
+        this.data = undefined;
+        this.initialised = false;
+    }
+    update: (u: any) => void;
+    updateMetadata: (m: any) => void;
+    setHooks(hooks) {
+        this.update = hooks.update;
+        this.updateMetadata = hooks.updateMetadata;
+    }
+}
+
 
 export default function StarShapedDomainInterior({ timeline, controls }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -16,10 +46,34 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
 
     const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const timelineProject = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
+    const { index: indexInitialized, index} = useIndex();
+    const assetsList = indexInitialized ? Object.keys(index.data)
+    .filter(id => index.data[id].type === 'image')
+    .map(id => ({
+        assetId: id,
+        assetController: new ImageController(),
+    })): [];
+    const { initialized: assetsInitialized, assets } = useAssets(assetsList);
+    const processedAssets = assetsInitialized ? Object.keys(assets).map(id => ({
+        assetId: id,
+        assetController: assets[id],
+    })) : [];
 
     const { width, height } = controlsSnapshot;
 
-    engine.update(controlsSnapshot, timeline);
+    const [engineInitialized, setEngineInitialized] = React.useState(false);
+
+    useEffect(() => {
+        if (!engineInitialized) {
+            engine.init().then(() => {
+                setEngineInitialized(true);
+            }).catch((error) => {
+                console.error("Error initializing engine:", error);
+            });
+        }
+    }, [engineInitialized, engine]);
+
+    engine.update(controlsSnapshot, timeline, processedAssets);
 
     const { recordEvent } = useGoatCounter(defaultEvent);
 
@@ -78,28 +132,25 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
         if (!rendererRef.current) {
             rendererRef.current = new StarShapedDomainWipeRenderer(canvas);
             const renderer = rendererRef.current;
-
-            renderer.init().then(() => {
-                renderer.setup();
-                const loop = () => {
-                    renderer.draw(engine);
-                    const { rendering } = frameSaver.getStatus();
-                    if (rendering && renderer.onFrameReady) {
-                        renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
-                    }
-                    requestAnimationFrame(loop);
-                };
+            renderer.setup(engine);
+            const loop = () => {
+                renderer.draw(engine);
+                const { rendering } = frameSaver.getStatus();
+                if (rendering && renderer.onFrameReady) {
+                    renderer.onFrameReady(frameSaver.frame.bind(frameSaver));
+                }
                 requestAnimationFrame(loop);
-            }).catch((error) => {
-                console.error("Error initializing renderer:", error);
-            });
-
+            };
+            requestAnimationFrame(loop);
         }
         return () => { };
-    }, [width, height, timeline, controls, engine]);
+    }, [width, height, timeline, controls, engine, canvasRef.current]);
 
     if (!timeline) {
         return <div>No timeline found</div>
+    }
+    if (!engineInitialized) {
+        return <div>Loading...</div>
     }
 
     return <div
@@ -140,3 +191,6 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
         <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} controls={controlsSnapshot} />
     </div>
 }
+
+
+export { ImageController}

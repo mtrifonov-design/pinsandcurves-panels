@@ -6,10 +6,13 @@ type ControlsData = {
     height: number;
     
     colorStops: {
-        r: number;
-        g: number;
-        b: number;
-        pc: number;
+        color: {
+            r: number;
+            g: number;
+            b: number;
+        };
+        position: number;
+        id: string;        
     }[];
 
     canvasPoint: [number, number];
@@ -29,6 +32,7 @@ type ControlsData = {
     exportPerfectLoop: boolean;
 
     shapeImageAssetId: string;
+    shapeImageAssetIds: string[];
 
     showShapeInspector: boolean;
 }
@@ -98,11 +102,16 @@ class Controls {
         width: 800,
         height: 600,
         colorStops: [
-            { r: 1, g: 0, b: 0, pc: 0 },
-            { r: 1, g: 0, b: 0, pc: 0.2 },
-            { r: 0, g: 1, b: 0, pc: 0.22 },
-            { r: 0, g: 1, b: 0, pc: 0.52 },
-            { r: 0, g: 0, b: 1, pc: 0.8 },
+            {
+                color: { r: 1, g: 0, b: 0 },
+                position: 0.0,
+                id: crypto.randomUUID(),
+            },
+            {
+                color: { r: 0, g: 0, b: 1 },
+                position: 0.5,
+                id: crypto.randomUUID(),
+            }
         ],
         canvasPoint: [0, 0],
         canvasScale: 1,
@@ -116,6 +125,7 @@ class Controls {
         exportDuration: 10,
         exportPerfectLoop: true,
         shapeImageAssetId: '',
+        shapeImageAssetIds: [],
         showShapeInspector: false,
     }
 }
