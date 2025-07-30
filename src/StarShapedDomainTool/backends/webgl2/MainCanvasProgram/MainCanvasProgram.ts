@@ -27,7 +27,7 @@ const mainCanvasProgram = (
 
             vec4 getColorFromGradient(float d) {
                 //d -= time.x;
-                d -= time.x * canvasBox.z;
+                d += time.x * canvasBox.z;
                 float d_mod = mod(d, canvasBox.z);
                 d_mod /= canvasBox.z;
 
@@ -72,7 +72,12 @@ const mainCanvasProgram = (
             }
 
             float perspectiveFunction(float d) {
-                return mix(d, pow(d, 0.33), perspectiveFactor);
+                float slope = perspectiveFactor * 10.;
+                float y = 1. + slope * d;
+                return 1. / (d + (1. - perspectiveFactor));
+
+
+                //return mix(d, pow(d, 0.33), perspectiveFactor);
             }
 
             void main() {
@@ -99,16 +104,22 @@ const mainCanvasProgram = (
                 targetDistance = blurred;
                 
                 float currentDistance = normedDistance;
-                float distance = currentDistance - targetDistance;
+                vec2 maxDistancePoint = vec2(sqrt(2.)) - canvasBox.xy;
+                float maxDistance = sqrt(dot(maxDistancePoint, maxDistancePoint));
+                float distance = currentDistance;
+
                 distance /= targetDistance;
 
-                distance = max(distance, -(1.-canvasBox.w));
-                distance += (1.-canvasBox.w);
+
+                // distance = max(distance, -(1.-canvasBox.w));
+                // distance += (1.-canvasBox.w);
                 float PI = 3.14159265;
                 distance = perspectiveFunction(distance);
+                //distance *= 10.;
 
                 vec4 color = getColorFromGradient(distance);
                 outColor = color;
+                //outColor = vec4(vec3(distance), 1.0);
             }
         `,
             vertexProviderSignature: vSig,
