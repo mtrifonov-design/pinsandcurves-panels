@@ -1,6 +1,6 @@
 
 
-const PRODUCTION = false;
+const PRODUCTION = true;
 
 const CONFIG = {
     PAC_BACKGROUND_SERVICES: PRODUCTION ? 
