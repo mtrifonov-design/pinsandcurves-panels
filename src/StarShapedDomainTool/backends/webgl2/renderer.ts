@@ -5,6 +5,7 @@ import UniformProvider from "./HelperLib/UniformProvider";
 import VertexProvider from "./HelperLib/VertexProvider";
 import { circleProgram, circleVertexProvider } from "./CircleProgram/circleProgram";
 import { mainCanvasProgram } from "./MainCanvasProgram/MainCanvasProgram";
+import { scanViewProgram } from "./ScanViewProgram/ScanViewProgram";
 
 // @ts-nocheck
 export class StarShapedDomainWipeRenderer {
@@ -21,18 +22,6 @@ export class StarShapedDomainWipeRenderer {
 
     image: HTMLImageElement;
     imageId: string = '';
-    async loadImage(dataUrl?: string) {
-        const imAdr = "/pinsandcurves-panels/shape.jpg";
-        const image = new Image();
-        image.src = dataUrl ? dataUrl : imAdr;
-        await new Promise((resolve) => {
-            image.onload = () => {
-                this.image = image;
-                resolve(true);
-            };
-        });
-
-    }
 
     resources : any = {};
     setup(engine: Engine) {
@@ -197,6 +186,12 @@ export class StarShapedDomainWipeRenderer {
             this.resources.fullscreenQuadVertexProviderSignature
         )
         this.resources.mainCanvasDistanceRendererProgram.setup();
+        this.resources.scanViewProgram = scanViewProgram(
+            this.gl,
+            this.resources.mainCanvasUniformProviderSignature,
+            this.resources.fullscreenQuadVertexProviderSignature
+        )
+        this.resources.scanViewProgram.setup();
 
         this.resources.colorGradientTexture = new Texture(this.gl, {
             shape: [200,1],
@@ -306,6 +301,13 @@ export class StarShapedDomainWipeRenderer {
                 u_texture: this.resources.inputShape
             }
         });
+        this.resources.scanViewProgram.draw({
+                uniformProvider: this.resources.mainCanvasUniformProvider,
+                vertexProvider: this.resources.fullscreenQuadVertexProvider,
+                textures: {
+                    u_texture: this.resources.distanceTexture
+                }
+        });
         this.resources.uniformProvider.setUniforms({
                 shapePoint: engine.CONFIG.shapePoint,
                 canvasPoint: engine.CONFIG.canvasPoint,
@@ -349,6 +351,7 @@ export class StarShapedDomainWipeRenderer {
                     u_texture: this.resources.shapeViewerTexture
                 }
             });
+
         }
 
     };

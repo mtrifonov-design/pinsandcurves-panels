@@ -7,7 +7,7 @@ import { StarShapedDomainWipeRenderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
 import { useIndex } from '../AssetManager/hooks/useIndex.js';
 import { useAssets } from '../AssetManager/hooks/useAssets.js';
-const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
+const defaultEvent = { path: "rippletron-loaded", event: true }
 
 class ImageController {
     initialised = false
