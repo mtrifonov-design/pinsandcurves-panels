@@ -25,15 +25,15 @@ const scanViewProgram = (
             }
 
             void main() {
-                vec2 distVector = v_texCoord - canvasBox.xy;
+                vec2 distVector = v_texCoord - shapePoint;
                 float normedDistance = sqrt(dot(distVector, distVector));
-                float angle = (atan(distVector.y, distVector.x) + 3.14159265) / 6.28318530718;
+                float angle = (atan(-distVector.y, -distVector.x) + 3.14159265) / 6.28318530718;
 
                 float accum = 0.0;
                 float totalWeight = 0.0;
                 for (int i = 0; i < N; i++) {
                     float offset = (float(i) - float(N) * 0.5 + 0.5) / float(N); 
-                    float span = 0.03;
+                    float span = 0.02;
                     offset *= span; 
                     float weight = gaussian(offset, SIGMA);
                     float pos = mod(angle + offset, 1.0); 
@@ -46,10 +46,16 @@ const scanViewProgram = (
                 
                 float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
                 targetDistance = blurred;
+                targetDistance *= sqrt(2.);
                 
                 float currentDistance = normedDistance;
                 if (currentDistance < targetDistance) {
-                    outColor = vec4(1.0, 0.0, 0.0, 1.0);
+                    vec4 inner = vec4(0.0,0.0,1.0,1.0);
+                    vec4 outer = vec4(0.0,0.0,1.0,.5);
+                    outColor = mix(inner, outer, currentDistance / targetDistance);
+                    float edge = 0.05;
+                    float edgeFactor = smoothstep(targetDistance - edge, targetDistance + edge, currentDistance);
+                    outColor = mix(outColor, vec4(0.0, 0.0, 1.0, 1.0), edgeFactor);
                 } else {
                     outColor = vec4(0.0, 0.0, 0.0, 0.0);
                 }

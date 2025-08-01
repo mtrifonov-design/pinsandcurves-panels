@@ -89,7 +89,20 @@ class Texture {
         }
 
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+    }
 
+    setDescription(description: TextureDescription) {
+        this.description = description;
+        // set up the texture again with the new description
+        if (this.texture) {
+            this.gl.deleteTexture(this.texture);
+            this.texture = null;
+        }
+        if (this.framebuffer) {
+            this.gl.deleteFramebuffer(this.framebuffer);
+            this.framebuffer = null;
+        }
+        this.setup();
     }
 
     setData(data: HTMLImageElement | Float32Array | Uint8Array) {

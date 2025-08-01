@@ -27,6 +27,9 @@ type ControlsData = {
     noiseDegenerationAmplitude: number;
     noiseDegenerationFrequency: number;
 
+    grainEnabled: boolean;
+    grainIntensity: number;
+
     speed: number;
     exportDuration: number;
     exportPerfectLoop: boolean;
@@ -35,6 +38,8 @@ type ControlsData = {
     shapeImageAssetIds: string[];
 
     showShapeInspector: boolean;
+
+    overlayShape: boolean;
 }
 
 class Controls {
@@ -127,6 +132,9 @@ class Controls {
         shapeImageAssetId: '',
         shapeImageAssetIds: [],
         showShapeInspector: false,
+        grainEnabled: false,
+        grainIntensity: 0.5,
+        overlayShape: true
     }
 }
 

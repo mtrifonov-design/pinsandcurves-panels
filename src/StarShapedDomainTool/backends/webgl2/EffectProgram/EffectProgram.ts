@@ -4,7 +4,7 @@ import { VertexProviderSignature } from "../HelperLib/VertexProvider";
 import frag from './frag.glsl';
 
 
-const mainCanvasProgram = (
+const effectProgram = (
     gl : WebGL2RenderingContext,
     uSig : UniformProviderSignature,
     vSig : VertexProviderSignature
@@ -12,8 +12,15 @@ const mainCanvasProgram = (
             vertexShader: `
             out vec2 v_texCoord;
             void main() {
-                gl_Position = vec4(a_position, 0.0, 1.0);
-                v_texCoord = a_position * vec2(1., aspectRatio);
+                mat3 m = mat3(
+                    boundingBox.x, 0., 0.,
+                    0., boundingBox.y, 0.,
+                    boundingBox.z, boundingBox.w, 1.
+                );
+                vec3 pos = m * vec3(a_position, 1.0);
+
+                gl_Position = vec4(pos.xy, 0.0, 1.0);
+                v_texCoord = texCoord;
             }
         `,
             fragmentShader: frag,
@@ -21,4 +28,4 @@ const mainCanvasProgram = (
             uniformProviderSignature: uSig
         });
 
-export { mainCanvasProgram };
+export { effectProgram };

@@ -33,8 +33,8 @@ export function CyberSpaghettiControlsInterior({
   };
 
   const updateAnimationSpeed = (speed: number) => {
-    const maxFrameLoop = 5000;
-    const minFrameLoop = 100;
+    const maxFrameLoop = 500;
+    const minFrameLoop = 15;
     speed = 1 - speed;
     const loopLength = minFrameLoop + (maxFrameLoop - minFrameLoop) * speed;
     timeline?.projectTools.updateFocusRange([0, Math.floor(loopLength)], true);
@@ -108,7 +108,7 @@ export function CyberSpaghettiControlsInterior({
               min={100}
               max={1920 * 2}
               step={10}
-              onChange={c => update({ width: c })}
+              onCommit={c => update({ width: c })}
             />
             <span>x</span>
 
@@ -117,7 +117,7 @@ export function CyberSpaghettiControlsInterior({
               min={100}
               max={1080 * 2}
               step={10}
-              onChange={c => update({ height: c })}
+              onCommit={c => update({ height: c })}
             />
           </div>
         </label>
@@ -129,10 +129,10 @@ export function CyberSpaghettiControlsInterior({
         }}>
           animation speed &nbsp;
           <NumberInput
-            initialValue={state.animationSpeed}
+            initialValue={state.speed}
             min={0.1}
             max={1}
-            step={0.1}
+            step={0.01}
             onChange={c => {
               update({ speed: c })
             }}
@@ -214,24 +214,30 @@ export function CyberSpaghettiControlsInterior({
               update({ canvasScale: c })
             }}
           />
+
         </label>
-                <label style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          justifyContent: 'space-between',
-        }}>
-          shape scale &nbsp;
-          <NumberInput
-            initialValue={state.shapeScale}
-            min={0.01}
-            max={10}
-            step={0.01}
-            onChange={c => {
-              update({ shapeScale: c })
-            }}
-          />
-        </label>
+        <SwitchableSection label="overlay shape"
+          checked={state.overlayShape}
+          onToggle={(checked) => update({ overlayShape: checked })}
+        >
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            justifyContent: 'space-between',
+          }}>
+            shape scale &nbsp;
+            <NumberInput
+              initialValue={state.shapeScale}
+              min={0.01}
+              max={10}
+              step={0.01}
+              onChange={c => {
+                update({ shapeScale: c })
+              }}
+            />
+          </label>
+        </SwitchableSection>
         <label style={{
           display: 'flex',
           alignItems: 'center',
@@ -256,22 +262,25 @@ export function CyberSpaghettiControlsInterior({
           height: '100px',
           padding: '1rem',
         }}>
-        <GradientPicker
-          stops={state.colorStops}
-          onChange={(colors) => {
-            update({ colorStops: colors });
-          }}
-          style={{
-            width: '100%',
-            height: '200px',
-          }}
+          <GradientPicker
+            stops={state.colorStops}
+            onChange={(colors) => {
+              update({ colorStops: colors });
+            }}
+            style={{
+              width: '100%',
+              height: '200px',
+            }}
           />
         </div>
       </CollapsibleSection>
       <CollapsibleSection title="Shape" iconName="all_inclusive">
         <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
         }}>
-          <ImageUploader 
+          <ImageUploader
             updateState={update}
             selectedImage={state.shapeImageAssetId}
             images={state.shapeImageAssetIds}
@@ -315,7 +324,28 @@ export function CyberSpaghettiControlsInterior({
         </div>
       </CollapsibleSection>
       <CollapsibleSection title="Effects" iconName="star">
-        Content.
+        <SwitchableSection label="enable grain"
+          checked={state.grainEnabled}
+          onToggle={(checked) => update({ grainEnabled: checked })}
+        >
+          <label style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            justifyContent: 'space-between',
+          }}>
+            grain intensity &nbsp;
+            <NumberInput
+              initialValue={state.grainIntensity}
+              min={0}
+              max={1}
+              step={0.01}
+              onChange={c => {
+                update({ grainIntensity: c })
+              }}
+            />
+          </label>
+        </SwitchableSection>
       </CollapsibleSection>
     </div>
   );

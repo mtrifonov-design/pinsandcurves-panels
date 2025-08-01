@@ -50,9 +50,9 @@ const circleProgram = (gl: WebGL2RenderingContext, uniformProviderSignature: Uni
             void main() {
                 vec2 center = shapePoint;
                 float radius = length(center - v_texCoord);
-                float size = .1; 
+                float size = .05; 
                 if (radius < size) {
-                    outColor = vec4(1.,0.,0.,1.);
+                    outColor = vec4(1.,1.0,1.0,1.);
                 } else {
                     outColor = vec4(0.0, 0.0, 0.0, 0.0); // Transparent outside the circle
                 }
