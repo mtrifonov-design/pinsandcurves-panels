@@ -159,10 +159,10 @@ class Program {
                 0
             )
         }
-        const err = this.gl.getError();
-        if (err !== this.gl.NO_ERROR) {
-            console.error(`WebGL error: ${err}`);
-        }
+        // const err = this.gl.getError();
+        // if (err !== this.gl.NO_ERROR) {
+        //     console.error(`WebGL error: ${err}`);
+        // }
         this.gl.bindVertexArray(null);
     }
 }

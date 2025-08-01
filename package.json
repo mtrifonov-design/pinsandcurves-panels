@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mtrifonov-design/pinsandcurves-design": "^0.0.31",
+    "@mtrifonov-design/pinsandcurves-design": "^0.0.32",
     "@mtrifonov-design/pinsandcurves-external": "^0.0.242",
     "@mtrifonov-design/pinsandcurves-specialuicomponents": "^0.0.235",
     "delaunator": "^5.0.1",

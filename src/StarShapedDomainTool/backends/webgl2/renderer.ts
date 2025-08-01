@@ -128,6 +128,12 @@ export class StarShapedDomainWipeRenderer {
         this.resources.inputShape = new Texture(this.gl, {
             shape: [500, 500],
             type: 'RGBA8',
+            textureOptions: {
+                minFilter: this.gl.LINEAR,
+                magFilter: this.gl.LINEAR,
+                wrapS: this.gl.CLAMP_TO_EDGE,
+                wrapT: this.gl.CLAMP_TO_EDGE
+            },
         })
         this.resources.inputShape.setup();
         //console.log('Setting input shape texture data', engine.image);
@@ -183,7 +189,7 @@ export class StarShapedDomainWipeRenderer {
             void main() {
                 float angle = v_texCoord.x * 6.28318530718; 
                 vec2 p1 = shapePoint;
-                vec2 p2 = shapePoint + vec2(cos(angle), sin(angle)) * sqrt(2.);
+                vec2 p2 = shapePoint + vec2(cos(angle), sin(angle)) * 2.;
                 vec2 mid = (p1 + p2) * 0.5;
                 float val = texture(u_texture, toUV(p1)).a;
                 float inShapeVal = 0.;
