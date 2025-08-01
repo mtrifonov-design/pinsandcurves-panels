@@ -80,7 +80,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent, controls }: 
                 await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
                 frameSaver.beginImSeq();
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                recordEvent({ path: "rippletron-renderframes", event: true });
                 setDisplayOverlay(true);
 
             }}
@@ -102,7 +102,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent, controls }: 
                 await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
                 frameSaver.beginMp4();
-                recordEvent({ path: "liquidlissajous-renderframes", event: true });
+                recordEvent({ path: "rippletron-renderframes", event: true });
                 setDisplayOverlay(true);
             }}
             text={"export as .mp4"}
@@ -110,7 +110,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent, controls }: 
         />}
             <Button
             onClick={async () => {
-                recordEvent({ path: "liquidlissajous-saveframe", event: true });
+                recordEvent({ path: "rippletron-saveframe", event: true });
                 frameSaver.saveFrame();
 
             }}
