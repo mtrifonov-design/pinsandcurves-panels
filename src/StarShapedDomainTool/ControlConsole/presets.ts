@@ -22,7 +22,7 @@ const presets = {
         "shapeImageAssetIds": ["daisy_shape.png", "star_shape.png", "heart_shape.png"], 
         "showShapeInspector": false, 
         "grainEnabled": true, 
-        "grainIntensity": 0.47, 
+        "grainIntensity": 0.15, 
         "overlayShape": false 
     },
 
