@@ -160,7 +160,7 @@ export class StarShapedDomainWipeRenderer {
         this.resources.fullscreenQuadVertexProvider.setIndexData([0, 1, 2, 1, 3, 2]);
 
         this.resources.distanceTexture = new Texture(this.gl, {
-            shape: [9000,1],
+            shape: [8000,1],
             type: 'R8',
             createFramebuffer: true,
             textureOptions: {
@@ -315,7 +315,7 @@ export class StarShapedDomainWipeRenderer {
         this.resources.colorGradientTexture.setData(colorFloatArray);
 
         // Render Pass: Compute distances
-        this.gl.viewport(0, 0, 9000, 1);
+        this.gl.viewport(0, 0, 8000, 1);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.resources.distanceTexture.framebuffer);
         //this.gl.drawBuffers([this.gl.COLOR_ATTACHMENT0]);
         this.gl.clearColor(0, 0, 0, 1);

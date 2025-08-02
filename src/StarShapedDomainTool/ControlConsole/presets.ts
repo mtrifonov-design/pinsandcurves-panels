@@ -2,7 +2,6 @@
 
 
 const presets = {
-    // star, lotus, heart
     daisy: { 
         "width": 1920, 
         "height": 1080, 
