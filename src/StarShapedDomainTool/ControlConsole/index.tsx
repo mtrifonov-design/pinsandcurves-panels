@@ -11,7 +11,7 @@ import presets from './presets';
 import SwitchableSection from './SwitchableSection';
 import { ControlsData } from '../StarShapedDomainControls';
 import ImageUploader from './UploadBox';
-
+import DoDont from './DoDont';
 export function CyberSpaghettiControlsInterior({
   controls,
 }: { controls: Controls }) {
@@ -278,17 +278,47 @@ export function CyberSpaghettiControlsInterior({
           />
         </div>
       </CollapsibleSection>
-      <CollapsibleSection title="Shape" iconName="all_inclusive">
+      <CollapsibleSection title="Shape" iconName="shapes">
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           gap: '1rem',
         }}>
+
           <ImageUploader
             updateState={update}
             selectedImage={state.shapeImageAssetId}
             images={state.shapeImageAssetIds}
           />
+          <CollapsibleSection 
+          title="Some shapes may not work as expected" 
+          iconName="info"
+          titleStyle={{
+            fontWeight: "normal",
+            color: "var(--gray6)",
+            fontSize: "1rem"
+          }}
+          >
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 250px',
+            gap: '1rem',
+            alignItems: 'start',
+          }}>
+          <div style={{
+            fontSize: '0.8rem',
+          }}>
+            The algorithm used by this tool only works with certain kinds of shapes called <a style={{ textDecoration: "underline", color:"var(--gray7)" }} href="https://en.wikipedia.org/wiki/Star_domain" target="_blank">star domains</a>.
+            These are shapes where you can pick a center point, and every straight line from that center crosses the boundary only once.
+          </div>
+            <DoDont style={{
+              width: '100%',
+              height: 'auto'
+            }} />
+            </div>
+
+
+          </CollapsibleSection>
           <SwitchableSection label="display shape inspector"
             checked={(state.showShapeInspector)}
             onToggle={(checked) => update({ showShapeInspector: checked })}
@@ -350,6 +380,16 @@ export function CyberSpaghettiControlsInterior({
             />
           </label>
         </SwitchableSection>
+      </CollapsibleSection>
+      <CollapsibleSection title="Give Feedback" iconName="favorite">
+        <div style={{ marginBottom: "1rem", color: "var(--gray6)" }}>
+          <span>Notice a bug? Have an idea? Want to say hi?</span>
+          <br></br>
+          Email <strong style={{ color: "var(--gray7)", lineHeight: "2.5" }}>martin@pinsandcurves.app </strong> or message
+          us on <a href="https://www.instagram.com/pinsandcurves/"
+            style={{ color: "var(--gray7)", fontWeight: "bold", textDecoration: "underline" }}>Instagram</a>.<br></br>
+          We'd love to hear from you!
+        </div>
       </CollapsibleSection>
     </div>
   );

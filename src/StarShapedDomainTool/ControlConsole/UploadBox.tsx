@@ -160,13 +160,15 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
+                fontSize: "1.5rem",
                 }}
+                className="materialSymbols"
                 onClick={() => {
                     if (fileInput.current) {
                         fileInput.current.click();
                     }
                 }}
-            >+</div>
+            >upload</div>
         </div>
     );
 };
