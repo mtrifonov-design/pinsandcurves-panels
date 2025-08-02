@@ -46,7 +46,7 @@ const scanViewProgram = (
                 
                 float targetDistance = texture(u_texture, vec2(angle, 0.5)).r;
                 targetDistance = blurred;
-                targetDistance *= sqrt(2.);
+                targetDistance *= sqrt(8.);
                 
                 float currentDistance = normedDistance;
                 if (currentDistance < targetDistance) {

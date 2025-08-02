@@ -186,17 +186,31 @@ export class StarShapedDomainWipeRenderer {
             vec2 toUV(vec2 p) {
                 return p * 0.5 + 0.5;
             }
+
+            float threshold(float val) {
+                if (val > 0.5) {
+                    return 1.0;
+                } else {
+                    return 0.0;
+                }
+            }
             void main() {
                 float angle = v_texCoord.x * 6.28318530718; 
                 vec2 p1 = shapePoint;
-                vec2 p2 = shapePoint + vec2(cos(angle), sin(angle)) * 2.;
-                vec2 mid = (p1 + p2) * 0.5;
                 float val = texture(u_texture, toUV(p1)).a;
-                float inShapeVal = 0.;
-                if (val > 0.5) {
-                    inShapeVal = 1.0;
-                } 
-                for (int i = 0; i < 32; i++) {
+                float inShapeVal = threshold(val);
+                vec2 p2 = vec2(0.);
+                for (int i = 1; i < 11; i++) {
+                    float pc = float(i) / 10.0;
+                    p2 = shapePoint + vec2(cos(angle), sin(angle)) * pc * sqrt(8.0);
+                    float val = texture(u_texture, toUV(p2)).a;
+                    bool notInShape = threshold(val) != inShapeVal;
+                    if (notInShape) {
+                        break;
+                    }
+                }
+                vec2 mid = (p1 + p2) * 0.5;
+                for (int i = 0; i < 16; i++) {
                     float val = texture(u_texture, toUV(mid)).a;
                     if (val > 0.5) {
                         val = 1.0;
@@ -211,7 +225,7 @@ export class StarShapedDomainWipeRenderer {
                     }
                     mid = (p1 + p2) * 0.5;
                 }
-                distanceValue = sqrt(dot(mid - shapePoint, mid - shapePoint)) / sqrt(2.0);
+                distanceValue = sqrt(dot(mid - shapePoint, mid - shapePoint)) / sqrt(8.0);
                 //distanceValue = 0.5;
             }
         `,
