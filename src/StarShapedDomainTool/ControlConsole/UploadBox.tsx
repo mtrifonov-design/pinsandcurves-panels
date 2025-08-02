@@ -110,7 +110,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <div key={index} style={{ 
                     width: "80px",
                     height: "80px",
-                    border: `2px solid ${img === selectedImage ? 'var(--gray6)' : 'var(--gray3)'}`,
+                    border: `2px solid ${img === selectedImage ? 'var(--gray8)' : 'var(--gray3)'}`,
                     borderRadius: "var(--borderRadiusSmall)",
                 }}
                 onClick={() => updateState({ shapeImageAssetId: img })}

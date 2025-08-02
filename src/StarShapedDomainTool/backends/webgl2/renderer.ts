@@ -269,8 +269,7 @@ export class StarShapedDomainWipeRenderer {
             });
         }
 
-
-        if (this.imageId !== engine.currentImageAssetId) {
+        if ((this.imageId !== engine.currentImageAssetId)) {
             this.resources.inputShape.setData(engine.image);
             this.imageId = engine.currentImageAssetId;
         }

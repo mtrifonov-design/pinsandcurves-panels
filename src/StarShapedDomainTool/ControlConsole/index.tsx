@@ -216,6 +216,27 @@ export function CyberSpaghettiControlsInterior({
           />
 
         </label>
+
+        <label style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          justifyContent: 'space-between',
+        }}>
+          perspective strength &nbsp;
+          <NumberInput
+            initialValue={state.perspectiveFactor}
+            min={0.1}
+            max={1}
+            step={0.01}
+            onChange={c => {
+              update({ perspectiveFactor: c })
+            }}
+          />
+        </label>
+        <hr style={{
+          borderColor: "var(--gray2)",
+        }}></hr>
         <SwitchableSection label="overlay shape"
           checked={state.overlayShape}
           onToggle={(checked) => update({ overlayShape: checked })}
@@ -238,23 +259,6 @@ export function CyberSpaghettiControlsInterior({
             />
           </label>
         </SwitchableSection>
-        <label style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.5rem',
-          justifyContent: 'space-between',
-        }}>
-          perspective strength &nbsp;
-          <NumberInput
-            initialValue={state.perspectiveFactor}
-            min={0.1}
-            max={1}
-            step={0.01}
-            onChange={c => {
-              update({ perspectiveFactor: c })
-            }}
-          />
-        </label>
       </CollapsibleSection>
       <CollapsibleSection title="Colors" iconName="palette">
         <div style={{

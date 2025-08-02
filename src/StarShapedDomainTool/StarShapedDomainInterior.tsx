@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useSyncExternalStore } from 'react';
+import React, { useRef, useEffect, useSyncExternalStore, useMemo } from 'react';
 import { Engine } from './core/Engine.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen.js';
@@ -54,10 +54,11 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
         assetController: new ImageController(),
     })): [];
     const { initialized: assetsInitialized, assets } = useAssets(assetsList);
-    const processedAssets = assetsInitialized ? Object.keys(assets).map(id => ({
+    const processedAssets = useMemo(() => assetsInitialized ? Object.keys(assets).map(id => ({
         assetId: id,
         assetController: assets[id],
-    })) : [];
+    })) : [], [assetsInitialized, assets]);
+
 
     const { width, height } = controlsSnapshot;
 
@@ -65,15 +66,14 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
 
     useEffect(() => {
         if (!engineInitialized) {
-            engine.init().then(() => {
+            engine.init(controlsSnapshot, processedAssets).then(() => {
                 setEngineInitialized(true);
             }).catch((error) => {
-                console.error("Error initializing engine:", error);
             });
         }
-    }, [engineInitialized, engine]);
+    }, [engineInitialized, engine, controlsSnapshot, processedAssets]);
 
-    engine.update(controlsSnapshot, timeline, processedAssets);
+    if (engineInitialized)engine.update(controlsSnapshot, timeline, processedAssets);
 
     const { recordEvent } = useGoatCounter(defaultEvent);
 
@@ -113,7 +113,7 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
         return () => {
             window.removeEventListener('resize', handleResize);
         }
-    }, [width, height])
+    }, [width, height, engineInitialized, timeline])
 
     const frameSaverRef = useRef(new FrameSaver({
         timeline,
@@ -144,13 +144,34 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
             requestAnimationFrame(loop);
         }
         return () => { };
-    }, [width, height, timeline, controls, engine, canvasRef.current]);
+    }, [width, height, timeline, controls, engine, engineInitialized,canvasRef.current]);
 
     if (!timeline) {
         return <div>No timeline found</div>
     }
     if (!engineInitialized) {
-        return <div>Loading...</div>
+        return <div style={{
+            display: "flex",
+            justifyContent: "center",
+            flexDirection: "column",
+            gap: "10px",
+            alignItems: "center",
+            height: "100vh",
+            width: "100vw",
+            backgroundColor: "var(--gray1)",
+            color: "var(--gray4)",
+            padding: "20px",
+        }}>
+            <div style={{
+                fontSize: "4rem",
+            }} className="materialSymbols">image</div>
+            <div style={{
+                textAlign: "center",
+            }}>
+            Waiting for image to load...<br></br>
+            If you haven't uploaded an image yet, please do so using the 'shape' settings.
+            </div>
+        </div>
     }
 
     return <div
