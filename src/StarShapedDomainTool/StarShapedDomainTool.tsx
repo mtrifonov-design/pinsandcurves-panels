@@ -24,7 +24,7 @@ const defaultProject = () => {
     const serialised = controller.serialize();
     return serialised;
 }
-const defaultName = "liquidlissajous.timeline"
+const defaultName = "echoknight.timeline"
 
 
 function LiquidLissajousExterior() {

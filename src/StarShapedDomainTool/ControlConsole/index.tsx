@@ -40,8 +40,8 @@ export function CyberSpaghettiControlsInterior({
     timeline?.projectTools.updateFocusRange([0, Math.floor(loopLength)], true);
   }
 
-  const setPreset = (preset: typeof presets[keyof typeof presets]) => {
-    updateAnimationSpeed(preset.speed);
+  const setPreset = (preset: Partial<ControlsData>) => {
+    if (preset.speed) updateAnimationSpeed(preset.speed);
     update({
       ...preset,
     });
@@ -68,7 +68,7 @@ export function CyberSpaghettiControlsInterior({
         color: 'var(--gray7)',
         fontWeight: "normal",
       }}>
-        RippleTron (Beta)
+        EchoKnight (Beta)
       </h2>
       <div>
         Version 0.0.1.
@@ -83,8 +83,18 @@ export function CyberSpaghettiControlsInterior({
         flexWrap: "wrap",
       }}>
         <PresetButton
-          label="TODO"
-          preset={presets.burningSunset}
+          label="Daisy"
+          preset={presets.daisy}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Arcade"
+          preset={presets.arcade}
+          onClick={setPreset}
+        />
+        <PresetButton
+          label="Love"
+          preset={presets.love}
           onClick={setPreset}
         />
       </div>
@@ -207,9 +217,9 @@ export function CyberSpaghettiControlsInterior({
           ripple scale &nbsp;
           <NumberInput
             initialValue={state.canvasScale}
-            min={0.1}
+            min={0.01}
             max={2}
-            step={0.1}
+            step={0.01}
             onChange={c => {
               update({ canvasScale: c })
             }}
@@ -251,7 +261,7 @@ export function CyberSpaghettiControlsInterior({
             <NumberInput
               initialValue={state.shapeScale}
               min={0.01}
-              max={10}
+              max={2}
               step={0.01}
               onChange={c => {
                 update({ shapeScale: c })

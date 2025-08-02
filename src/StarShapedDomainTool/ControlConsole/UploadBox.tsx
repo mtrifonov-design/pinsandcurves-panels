@@ -58,13 +58,24 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
     const { FreeWorkload } = useCK();
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newAssetId = crypto.randomUUID();
-        updateState({ shapeImageAssetId: newAssetId, shapeImageAssetIds: [...images, newAssetId] });
+        
+        
         
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
             // Do something with the file, e.g., upload it
             // convert to data url
+            const fileName = file.name;
+            let newAssetId = fileName;
+            if (images.includes(fileName)) {
+                let counter = 1;
+                while (images.includes(`${fileName}_${counter}`)) {
+                    counter++;
+                }
+                newAssetId = `${fileName}_${counter}`;
+            }
+            updateState({ shapeImageAssetId: newAssetId, shapeImageAssetIds: [...images, newAssetId] });
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 const dataUrl = reader.result as string;
