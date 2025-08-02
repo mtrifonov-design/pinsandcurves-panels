@@ -46,8 +46,8 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/cyberspaghetti-controlconsole" element={<CyberSpaghettiControlConsole />} />
           <Route path="/liquidlissajous" element={<LiquidLissajous />} />
           <Route path="/liquidlissajous-controlconsole" element={<LiquidLissajousControlConsole />} />
-          <Route path="/starshapeddomainwipe" element={<StarShapedDomainTool />} />
-          <Route path="/starshapeddomainwipe-controlconsole" element={<StarShapedDomainControlConsole />} />
+          <Route path="/echoknight" element={<StarShapedDomainTool />} />
+          <Route path="/echoknight-controlconsole" element={<StarShapedDomainControlConsole />} />
         
         </Routes>
       </StyleProvider>
