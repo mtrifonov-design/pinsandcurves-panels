@@ -18,7 +18,10 @@ export function useTracker(defaultEvent?: Record<string, any>) {
       && window.op 
       && typeof window.op === 'function'
     ) {
-      window.op('track', defaultEvent);
+      if (defaultEvent.path) {
+        window.op('track', defaultEvent.path);
+      }
+      
     }
 
 
@@ -32,7 +35,9 @@ export function useTracker(defaultEvent?: Record<string, any>) {
       window.goatcounter.count(event);
     }
     if (typeof window !== 'undefined' && window.op && typeof window.op === 'function') {
-      window.op('track', event);
+      if (event.path) {
+        window.op('track', event.path);
+      }
     }
   }, []);
 
