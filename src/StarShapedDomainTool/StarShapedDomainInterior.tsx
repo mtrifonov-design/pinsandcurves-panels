@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useSyncExternalStore, useMemo } from 'react';
 import { Engine } from './core/Engine.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen.js';
-import useGoatCounter from '../hooks/useGoatCounter.js';
+import useTracker from '../hooks/useTracker.js';
 import { StarShapedDomainWipeRenderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
 import { useIndex } from '../AssetManager/hooks/useIndex.js';
@@ -75,7 +75,7 @@ export default function StarShapedDomainInterior({ timeline, controls }: any) {
 
     if (engineInitialized)engine.update(controlsSnapshot, timeline, processedAssets);
 
-    const { recordEvent } = useGoatCounter(defaultEvent);
+    const { recordEvent } = useTracker(defaultEvent);
 
     useEffect(() => {
         if (!canvasRef.current) return;

@@ -3,7 +3,7 @@ import { ParticleSystem } from './core/ParticleSystem.js';
 import { WebGPURenderer } from './backends/webgpu/renderer.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen';
-import useGoatCounter from '../hooks/useGoatCounter';
+import useTracker from '../hooks/useTracker.js';
 import { WebGL2Renderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
 const defaultEvent = { path: "liquidlissajousviewer-loaded", event: true }
@@ -22,7 +22,7 @@ export default function LiquidLissajousInterior({ timeline, controls }: any) {
 
     particleSystem.update(controlsSnapshot, timeline);
 
-    const { recordEvent } = useGoatCounter(defaultEvent);
+    const { recordEvent } = useTracker(defaultEvent);
 
     useEffect(() => {
         if (!canvasRef.current) return;

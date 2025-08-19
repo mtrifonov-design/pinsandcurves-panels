@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useSyncExternalStore } from 'react';
 import { ParticleSystem } from './core/ParticleSystem.js';
 import FrameSaver from './FrameSaver.js';
 import FrameSaverScreen from './FrameSaverScreen.js';
-import useGoatCounter from '../hooks/useGoatCounter.js';
+import useTracker from '../hooks/useTracker.js';
 import { WebGL2Renderer } from './backends/webgl2/renderer.js';
 import TimelineBar from './TimelineBar.js';
 const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
@@ -21,7 +21,7 @@ export default function CyberSpaghettiInterior({ timeline, controls }: any) {
 
     particleSystem.update(controlsSnapshot, timeline);
 
-    const { recordEvent } = useGoatCounter(defaultEvent);
+    const { recordEvent } = useTracker(defaultEvent);
 
     useEffect(() => {
         if (!canvasRef.current) return;
