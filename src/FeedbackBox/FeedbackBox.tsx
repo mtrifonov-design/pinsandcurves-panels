@@ -13,7 +13,7 @@ function FeedbackBox() {
         if (textboxRef.current) {
             const feedback = textboxRef.current.value;
             // Send feedback to the server or process it
-            const postEndpoint = "http://139.162.159.22:3000/1349064888063889449/feedback";
+            const postEndpoint = "https://139.162.159.22:3000/1349064888063889449/feedback";
 
             setState("sending");
             try {
