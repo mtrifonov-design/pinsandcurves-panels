@@ -1,0 +1,4 @@
+.tarea::placeholder {
+  color: var(--gray5);
+  opacity: 1;
+}
