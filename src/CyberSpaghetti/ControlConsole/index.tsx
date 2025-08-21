@@ -9,7 +9,7 @@ import TimelineProvider from '../../TimelineUtils/TimelineProvider';
 import hexToRgb, { rgbToHex } from '../core/hexToRgb';
 import { useTimeline } from '../../TimelineUtils/TimelineProvider';
 import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';
-
+import FeedbackBox from '../../FeedbackBox/FeedbackBox';
 
 
 
@@ -355,6 +355,13 @@ export function CyberSpaghettiControlsInterior({
           <NumberInput initialValue={state.phaseRandomization} min={0} max={1} step={0.01} onChange={v => update({ phaseRandomization: v })}  />
         </div>
 
+      </CollapsibleSection>
+            <CollapsibleSection title="Give Feedback" iconName="favorite">
+        <div style={{ marginBottom: "1rem", color: "var(--gray6)" }}>
+
+          <FeedbackBox preamble="[FEEDBACK FROM CYBERSPAGHETTI] " />
+
+        </div>
       </CollapsibleSection>
     </div>
   );

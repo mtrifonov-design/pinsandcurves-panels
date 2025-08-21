@@ -12,6 +12,7 @@ import { LISSAJOUS_CURVES, LISSAJOUS_CURVES_MAX_INTEGRAL } from '../core/lissajo
 import PresetButton from './PresetButton';
 import presets from './presets';
 import SwitchableSection from './SwitchableSection';
+import FeedbackBox from '../../FeedbackBox/FeedbackBox';
 
 export function CyberSpaghettiControlsInterior({
   controls,
@@ -585,6 +586,13 @@ export function CyberSpaghettiControlsInterior({
         />
       </label> */}
       </>
+      </CollapsibleSection>
+      <CollapsibleSection title="Give Feedback" iconName="favorite">
+        <div style={{ marginBottom: "1rem", color: "var(--gray6)" }}>
+
+          <FeedbackBox preamble="[FEEDBACK FROM LIQUIDLISSAJOUS] " />
+
+        </div>
       </CollapsibleSection>
     </div>
   );
