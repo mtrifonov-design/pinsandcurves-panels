@@ -4,7 +4,9 @@ import styles from "./styles.module.css";
 
 type FeedbackState = "editing" | "sending" | "sent" | "error";
 
-function FeedbackBox() {
+function FeedbackBox(p: {
+    preamble: string;
+}) {
 
     const [state, setState] = useState<FeedbackState>("editing");
     const textboxRef = useRef<HTMLTextAreaElement>(null);
@@ -13,7 +15,7 @@ function FeedbackBox() {
         if (textboxRef.current) {
             const feedback = textboxRef.current.value;
             // Send feedback to the server or process it
-            const postEndpoint = "https://139.162.159.22:3000/1349064888063889449/feedback";
+            const postEndpoint = "https://pins-and-curves-logging.duckdns.org/1349064888063889449/feedback";
 
             setState("sending");
             try {
@@ -23,7 +25,7 @@ function FeedbackBox() {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        data: feedback,
+                        data: p.preamble + feedback,
                     }),
                 });
                 if (response.ok) {

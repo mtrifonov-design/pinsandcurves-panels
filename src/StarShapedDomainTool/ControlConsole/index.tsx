@@ -394,12 +394,13 @@ export function CyberSpaghettiControlsInterior({
       </CollapsibleSection>
       <CollapsibleSection title="Give Feedback" iconName="favorite">
         <div style={{ marginBottom: "1rem", color: "var(--gray6)" }}>
-          <span>Notice a bug? Have an idea? Want to say hi?</span>
+          {/* <span>Notice a bug? Have an idea? Want to say hi?</span>
           <br></br>
           Email <strong style={{ color: "var(--gray7)", lineHeight: "2.5" }}>martin@pinsandcurves.app </strong> or message
           us on <a href="https://www.instagram.com/pinsandcurves/"
             style={{ color: "var(--gray7)", fontWeight: "bold", textDecoration: "underline" }}>Instagram</a>.<br></br>
-          We'd love to hear from you!
+          We'd love to hear from you! */}
+          <FeedbackBox preamble="[FEEDBACK FROM ECHOKNIGHT] " />
 
         </div>
       </CollapsibleSection>
