@@ -96,6 +96,7 @@ class FrameSaver {
                         totalFrames: 0,
                         rendering: false,
                     }
+                    this.#timeline.projectTools.updatePlayheadPosition(0, true);
                 });
             }
             if (this.#renderMode === "mp4") {
@@ -116,11 +117,11 @@ class FrameSaver {
                         totalFrames: 0,
                         rendering: false,
                     }
+                    this.#timeline.projectTools.updatePlayheadPosition(0, true);
                 })
             }
             this.#frames = [];
             this.#anticipatedFrame = 0;
-            this.#timeline.projectTools.updatePlayheadPosition(0, true);
             this.#rendering = false;
         }
 
