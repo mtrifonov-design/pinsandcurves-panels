@@ -1,0 +1,89 @@
+p_blurX : Program {
+  vertexSignature: <?vsig>,
+  globalSignature: <?gsig>,
+  vertexShader: <<<glsl
+  out vec2 v_uv;
+  void main(){
+    v_uv = 0.5 * (position + 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+  >>>,
+  fragmentShader: <<<glsl
+  in vec2 v_uv;
+  void main(){
+    // 9-tap Gaussian-ish
+    float w0 = 0.227027;
+    float w1 = 0.1945946;
+    float w2 = 0.1216216;
+    float w3 = 0.05405405;
+    float w4 = 0.016216216;
+    vec2 texel = vec2(blurScale / screenSize.x, 0.0);
+
+    vec4 c = texture(src, v_uv) * w0;
+    c += texture(src, v_uv + 1.0 * texel) * w1 + texture(src, v_uv - 1.0 * texel) * w1;
+    c += texture(src, v_uv + 2.0 * texel) * w2 + texture(src, v_uv - 2.0 * texel) * w2;
+    c += texture(src, v_uv + 3.0 * texel) * w3 + texture(src, v_uv - 3.0 * texel) * w3;
+    c += texture(src, v_uv + 4.0 * texel) * w4 + texture(src, v_uv - 4.0 * texel) * w4;
+    outColor = c;
+    //outColor = vec4(1.,0.,0.,1.);
+  }
+  >>>,
+  textures: { src: { filter: 'linear', wrap: 'clamp' } },
+};
+
+p_blurY : Program {
+  vertexSignature: <?vsig>,
+  globalSignature: <?gsig>,
+  vertexShader: <<<glsl
+  out vec2 v_uv;
+  void main(){
+    v_uv = 0.5 * (position + 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+  >>>,
+  fragmentShader: <<<glsl
+  #include "/general_effects/blur/blurex.glsl";
+  in vec2 v_uv;
+  void main(){
+    float w0 = 0.227027;
+    float w1 = 0.1945946;
+    float w2 = 0.1216216;
+    float w3 = 0.05405405;
+    float w4 = 0.016216216;
+    vec2 texel = example(blurScale,screenSize);
+
+    vec4 c = texture(src, v_uv) * w0;
+    c += texture(src, v_uv + 1.0 * texel) * w1 + texture(src, v_uv - 1.0 * texel) * w1;
+    c += texture(src, v_uv + 2.0 * texel) * w2 + texture(src, v_uv - 2.0 * texel) * w2;
+    c += texture(src, v_uv + 3.0 * texel) * w3 + texture(src, v_uv - 3.0 * texel) * w3;
+    c += texture(src, v_uv + 4.0 * texel) * w4 + texture(src, v_uv - 4.0 * texel) * w4;
+    outColor = c;
+    
+  }
+  >>>,
+  textures: { src: { filter: 'linear', wrap: 'clamp' } },
+};
+
+
+pass1 : Texture {
+  signature: <?tsig>,
+  drawOps: [
+    {
+      program: <p_blurX>,
+      vertex: <?v>,
+      global: <?g>,
+      textures: { src: <?input> },
+    },
+  ]
+};
+out : Texture {
+  signature: <?tsig>,
+  drawOps: [
+    {
+      program: <p_blurY>,
+      vertex: <?v>,
+      global: <?g>,
+      textures: { src: <pass1> },
+    },
+  ]
+};

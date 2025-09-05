@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "assets": "serve assets/ --cors",
     "build": "tsc --noEmit || true && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -23,7 +24,8 @@
     "react-dom": "^18.3.1",
     "react-router": "^7.4.0",
     "react-router-dom": "^7.4.0",
-    "resolve-lygia": "^1.0.4"
+    "resolve-lygia": "^1.0.4",
+    "serve": "^14.2.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

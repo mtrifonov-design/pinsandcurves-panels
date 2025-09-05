@@ -1,0 +1,84 @@
+vsig : VertexSignature {
+  attributes: { position: 'vec2' },
+  maxVertexCount: 1024,
+  maxTriangleCount: 2048,
+};
+
+isig : InstanceSignature {
+  attributes: {
+    col: 'vec4',
+    instancePosition: 'vec2',
+    radius: 'float',
+  },
+  maxInstanceCount: 64,
+};
+
+gsig : GlobalSignature {
+  screenSize: 'vec2',
+  blurScale: 'float',
+};
+
+tsig : TextureSignature {
+  type: 'RGBA8',
+  size: [1920, 1080],
+};
+
+v : Vertex { signature: <vsig> };
+
+i : Instance { signature: <isig> };
+
+g : Global { signature: <gsig> };
+
+raytunnel : Use {
+  path: "/cyberspaghetti/raytunnel/main.nectargl",
+  bind: {
+  }
+};
+
+blurred : Use {
+  path: "/general_effects/blur/blur.nectargl",
+  bind: {
+    input: <raytunnel_out>,
+    v: <v>,
+    g: <g>,
+    vsig: <vsig>,
+    gsig: <gsig>,
+    tsig: <tsig>,
+  }
+};
+
+p_put : Program {
+  vertexSignature: <vsig>,
+  vertexShader: <<<glsl
+  out vec2 v_uv;
+  void main(){
+    v_uv = 0.5 * (position + 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+  >>>,
+  fragmentShader: <<<glsl
+  in vec2 v_uv;
+  void main(){
+    outColor = texture(src,v_uv);
+  }
+  >>>,
+  textures: { src: { filter: 'linear', wrap: 'clamp' } },
+};
+
+out : Texture {
+  signature: <tsig>,
+  drawOps: [
+    {
+      program: <p_put>,
+      vertex: <v>,
+      textures: { src: <raytunnel_out> },
+    },
+    {
+      program: <p_put>,
+      vertex: <v>,
+      textures: { src: <blurred_out> },
+      blend: "add"
+    }
+  ]
+}
+

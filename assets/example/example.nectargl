@@ -1,0 +1,140 @@
+vsig : VertexSignature {
+  attributes: { position: 'vec2' },
+  maxVertexCount: 1024,
+  maxTriangleCount: 2048,
+};
+
+isig : InstanceSignature {
+  attributes: {
+    col: 'vec4',
+    instancePosition: 'vec2',
+    radius: 'float',
+  },
+  maxInstanceCount: 64,
+};
+
+gsig : GlobalSignature {
+  screenSize: 'vec2',
+  blurScale: 'float',
+};
+
+tsig : TextureSignature {
+  type: 'RGBA8',
+  size: [1920, 1080],
+};
+
+v : Vertex { signature: <vsig> };
+
+i : Instance { signature: <isig> };
+
+g : Global { signature: <gsig> };
+
+t_bg : Texture { signature: <tsig> };
+
+p_bg : Program {
+  vertexSignature: <vsig>,
+  globalSignature: <gsig>,
+  vertexShader: <<<glsl
+  out vec2 v_uv;
+  void main(){
+    v_uv = 0.5 * (position + 1.0);
+    gl_Position = vec4(position, 0.0, 1.0);
+  }
+  >>>,
+  fragmentShader: <<<glsl
+  in vec2 v_uv;
+  void main(){
+    outColor = texture(backgroundTexture, v_uv);
+  }
+  >>>,
+  textures: {
+    backgroundTexture: { filter: 'linear', wrap: 'clamp' },
+  },
+};
+
+p_circles : Program {
+  vertexSignature: <vsig>,
+  instanceSignature: <isig>,
+  globalSignature: <gsig>,
+  vertexShader: <<<glsl
+  out vec2 v_local;
+  out vec4 v_col;
+  void main(){
+    vec2 r_ndc = (2.0 * vec2(radius) / screenSize);
+    vec2 pos_ndc = (2.0 * instancePosition / screenSize) - 1.0;
+    vec2 p = pos_ndc + position * r_ndc;
+    v_local = position;
+    v_col = col;
+    gl_Position = vec4(p, 0.0, 1.0);
+  }
+  >>>,
+  fragmentShader: <<<glsl
+  in vec2 v_local;
+  in vec4 v_col;
+void main(){
+  float r2 = dot(v_local, v_local);
+  float r  = sqrt(r2);
+  // wider falloff -> softer edge
+  float aEdge = smoothstep(1.02, 0.99, r);
+  if (r > 1.0) discard;
+
+  float z = sqrt(max(0.0, 1.0 - r2));
+  vec3 N = normalize(vec3(v_local, z));
+
+  vec3 L = normalize(vec3(-0.4, 0.5, 0.75));
+  vec3 V = vec3(0.0, 0.0, 1.0);
+  vec3 H = normalize(L + V);
+
+  float lambert = max(dot(N, L), 0.0);
+  float spec    = pow(max(dot(N, H), 0.0), 24.0);
+  float rim     = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+  // Fade lighting near the silhouette and edge
+  float edgeFade = aEdge * aEdge * smoothstep(0.0, 0.3, z);
+
+  vec3 base = v_col.rgb;
+  vec3 col  = base * (0.2 + lambert) + 0.25 * spec + 0.15 * rim * base;
+
+  // AO-ish darkening towards the rim
+  col *= mix(0.8, 1.0, z);
+
+  // Apply fade to color, not just alpha, to kill the white halo
+  col *= edgeFade;
+  float alpha = v_col.a * aEdge;
+
+  outColor = vec4(col, alpha);
+}
+
+  >>>,
+  textures: {},
+};
+out1 : Texture {
+  signature: <tsig>,
+  drawOps: [
+    {
+      program: <p_bg>,
+      vertex: <v>,
+      global: <g>,
+      textures: { backgroundTexture: <t_bg> },
+    },
+    {
+      program: <p_circles>,
+      instance: <i>,
+      vertex: <v>,
+      global: <g>,
+      textures: {},
+    },
+  ],
+};
+blurred : Use {
+  path: "./blur.nectargl",
+  bind: {
+    input: <out1>,
+    v: <v>,
+    g: <g>,
+    vsig: <vsig>,
+    gsig: <gsig>,
+    tsig: <tsig>,
+  }
+};
+

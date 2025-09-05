@@ -1,0 +1,77 @@
+global_sig : GlobalSignature {
+    tunnelData: 'vec4',
+    rayData: 'vec4',
+    time: 'float',
+    colorVarianceFactor: 'float',
+    chaos: 'float',
+};
+ray_sig : InstanceSignature {
+    attributes: {
+        seed: 'float',
+    },
+    maxInstanceCount: 50000,
+};
+quad_sig : VertexSignature {
+    attributes: {
+        position: 'vec2'
+    },
+    maxTriangleCount: 1024,
+    maxVertexCount: 1024,
+};
+global : Global {
+    signature: <global_sig>
+};
+ray : Instance {
+    signature: <ray_sig>,
+};
+quad : Vertex {
+    signature: <quad_sig>
+};
+
+colorTex_sig : TextureSignature {
+    type: 'RGBA32F',
+    size: [100,1],
+};
+colorTex : Texture {
+    signature: <colorTex_sig>
+};
+
+draw_ray : Program {
+    vertexShader: <<<glsl
+    #include "/cyberspaghetti/raytunnel/ray_vs.glsl";
+    >>>,
+    fragmentShader:<<<glsl
+    #include "/cyberspaghetti/raytunnel/ray_fs.glsl";
+    >>>,
+    globalSignature: <global_sig>,
+    instanceSignature: <ray_sig>,
+    vertexSignature: <quad_sig>,
+    textures: {
+        colorTex: {
+            filter: "nearest",
+            clamp: "wrap",
+        }
+    },
+};
+out_sig : TextureSignature {
+  type: 'RGBA8',
+  size: [1920, 1080],
+};
+out : Texture {
+    signature: <out_sig>,
+    drawOps: [
+        {
+            program: <draw_ray>,
+            vertex: <quad>,
+            instance: <ray>,
+            global: <global>,
+            textures: {
+                colorTex: <colorTex>
+            },
+            blend: "add",
+        }
+    ],
+};
+
+
+
