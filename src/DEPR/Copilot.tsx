@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { OrganisationAreaSignalListDependencies } from "@mtrifonov-design/pinsandcurves-specialuicomponents";
-import { messageChannel, useUnit } from "../hooks";
+import { messageChannel, useUnit } from "../LibrariesAndUtils/hooks";
 import CopilotInterior from "../Copilot/Copilot";
 import CONFIG from "../Config";
 
