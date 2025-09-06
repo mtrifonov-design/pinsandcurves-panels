@@ -9,6 +9,31 @@ export default class Graphics {
         this.gl = gl;
     }
 
+    dispose() {
+        this.resources.forEach(resource => {
+            if ("dispose" in resource) {
+                resource.dispose();
+            } else {
+                console.warn("Resource does not have dispose method. This needs to be fixed.");
+            }
+        });
+    }
+
+    executeCommands(commands: Array<{ resource: string, type: string, payload: any }>) {
+        commands.forEach(command => {
+            const resource = this.resources.get(command.resource);
+            if (!resource) {
+                console.warn(`Resource not found: ${command.resource}`);
+                return;
+            }
+            if (command.type in resource) {
+                resource[command.type](command.payload);
+            } else {
+                console.warn(`Unknown command type: ${command.type}`);
+            }
+        });
+    }
+
     setScreen(resourceName: string) {
         const gl = this.gl;
 
