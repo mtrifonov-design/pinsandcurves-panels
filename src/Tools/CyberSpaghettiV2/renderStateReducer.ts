@@ -50,7 +50,7 @@ const colorStops = [
     },
 ];
 // array filled with 100 zeros
-const colorBuffer = new Float32Array(100 * 4);
+const colorBuffer = Array(400).fill(0);
 // fill colorstops in first part
 for (let i = 0; i < colorBuffer.length / 4; i++) {
     const pos = i / (colorBuffer.length / 4);
@@ -154,7 +154,17 @@ function renderStateReducer(state: any) {
                 }
 
             ]
-        }
+        },
+        setupStream: {
+            version: "0",
+            commands: [
+                {
+                    resource: undefined,
+                    type: "setScreen",
+                    payload: ["out"]
+                }
+            ]
+        },
     };
     return renderState;
 }

@@ -73,7 +73,7 @@ class Texture {
         this.gl.bindTexture(this.gl.TEXTURE_2D, null);
     }
 
-    setData(data: HTMLImageElement | Float32Array | Uint8Array) {
+    setData(data: HTMLImageElement | Float32Array | Uint8Array | Array) {
         if (!this.texture) throw new Error('Texture not initialized');
 
         const { format, type } = getUploadInfo(this.description.type, this.gl);
@@ -86,8 +86,22 @@ class Texture {
         if (data instanceof HTMLImageElement) {
             const { internalFormat } = getUploadInfo(this.description.type, gl);
             gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, format, type, data);
-        } else {
+        } else if (data instanceof Float32Array || data instanceof Uint8Array) {
             gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, type, data);
+        } else {
+            // if we passed a regular array, we must figure out how to interpret it based
+            // on the texture format and pass on a typed array
+            let typedArray: Float32Array | Uint8Array | null = null;
+            if (this.description.type === 'RGBA8' || this.description.type === 'R8') {
+                typedArray = new Uint8Array(data);
+            } else if (this.description.type === 'R32F' || this.description.type === 'RGBA32F') {
+                typedArray = new Float32Array(data);
+            }
+            console.log(data);
+            console.log(typedArray);
+            if (typedArray) {
+                gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, type, typedArray);
+            }
         }
         gl.bindTexture(gl.TEXTURE_2D, null);
     }

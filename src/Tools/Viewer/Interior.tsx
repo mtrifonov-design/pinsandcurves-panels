@@ -79,7 +79,14 @@ export default function Interior({ timeline, controls, image }: any) {
         if (!gl) {
             throw new Error("WebGL2 not supported");
         }
-        setRenderer(new NectarRenderer(gl));
+        const r = new NectarRenderer(gl);
+        setRenderer(r);
+        const draw = () => {
+            r.frame();
+            window.requestAnimationFrame(draw);
+        };
+        draw();
+
         return () => { };
     }, [frameSaver]);
 
@@ -99,7 +106,7 @@ export default function Interior({ timeline, controls, image }: any) {
                     payload: [{
                         playheadPosition: [timelineProject.timelineData.playheadPosition],
                         numberOfFrames: [timelineProject.timelineData.numberOfFrames],
-                        rendering: [frameSaver.getStatus().rendering]
+                        rendering: [frameSaver.getStatus().rendering ? 1 : 0]
                     }]
                 }
             ],

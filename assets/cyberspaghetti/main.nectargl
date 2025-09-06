@@ -4,6 +4,12 @@ vsig : VertexSignature {
   maxTriangleCount: 2048,
 };
 
+timeline_sig : GlobalSignature {
+  playheadPosition: 'float',
+  numberOfFrames: 'float',
+  rendering: 'int'
+};
+
 isig : InstanceSignature {
   attributes: {
     col: 'vec4',
@@ -28,6 +34,8 @@ v : Vertex { signature: <vsig> };
 i : Instance { signature: <isig> };
 
 g : Global { signature: <gsig> };
+
+timeline : Global { signature: <timeline_sig> };
 
 raytunnel : Use {
   path: "/cyberspaghetti/raytunnel/main.nectargl",

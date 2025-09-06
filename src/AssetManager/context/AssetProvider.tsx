@@ -32,8 +32,10 @@ export const AssetProvider: React.FC<PropsWithChildren<{}>> = ({
   )
 
   useUnit((unit) => {
+    console.log("unit test", unit)
     return "INIT" in unit.payload
   }, async (unit, workload) => {
+    //console.log("AssetManager INIT", unit.payload);
     const vertexId = unit.payload.payload.vertexId;
     const c = new CK_Circuit(registerUnitProcessor, workload);
     await subscriptionManager.init(vertexId, c);

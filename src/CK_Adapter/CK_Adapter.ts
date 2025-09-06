@@ -60,6 +60,7 @@ class CK_Adapter {
         const { CK_COMPUTE } = payload;
         if (CK_COMPUTE) {
           const { unit } = payload;
+          //console.log("compute unit", unit);
           this.computeUnit(unit);
         }
       }

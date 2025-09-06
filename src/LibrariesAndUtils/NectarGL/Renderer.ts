@@ -1,5 +1,6 @@
 import compile from "./compile";
 import Graphics from "./Graphics";
+import { DynamicTexture } from "./Resources";
 
 type RenderStateObject = {
     [key: string]: {
@@ -23,6 +24,7 @@ class NectarRenderer {
     private sourceId: string | undefined;
     setSource(sourceId: string, source: any) {
         this.sourceId = sourceId;
+        //console.log(sourceId, source);
         if (!this.gfx) {
             this.gfx = compile(source, this.gl);
         } else {
@@ -43,6 +45,7 @@ class NectarRenderer {
             if (existing && existing.versionId === versionId) {
                 continue;
             } else {
+                console.log("Executing commands for", key, state[key].commands);
                 this.gfx.executeCommands(state[key].commands);
             }
         }
@@ -51,6 +54,8 @@ class NectarRenderer {
 
     frame() {
         if (!this.gfx) return;
+        if (!this.gfx.screenTexture) return;
+        (this.gfx.resources.get(this.gfx.screenTexture) as DynamicTexture).updateTextureData();
         this.gfx.refreshScreen();
     };
 }

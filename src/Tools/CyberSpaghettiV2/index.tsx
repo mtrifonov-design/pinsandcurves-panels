@@ -54,7 +54,10 @@ export function CyberSpaghettiControlsInterior({
 
   const update = (patch: Partial<NewControls>) => {
     const nextUIState = { ...state, ...patch };
-    const nextState = { uiState: nextUIState, sourceId: "start", renderState: renderStateReducer(nextUIState) }
+    const nextState = { uiState: nextUIState, 
+      sourceId: "start", 
+      renderState: renderStateReducer(nextUIState),
+    }
     controls.setData(nextState);
   };
 
@@ -377,6 +380,7 @@ export function CyberSpaghettiControlsInterior({
 function CyberSpaghettiExterior() {
   const jsonAssets = useJSONAssets();
   const ready = jsonAssets && jsonAssets["default.controls"];
+  console.log(jsonAssets)
   if (!ready) {
     return <FullscreenLoader />
   }
@@ -413,7 +417,7 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
   );
 }
 
-export default function CyberSpaghettiControls() {
+function CyberSpaghettiControlsInt() {
 
   const [image,setImage] = useState<any|null>(null);
   useEffect(() => {
@@ -430,11 +434,14 @@ export default function CyberSpaghettiControls() {
     return <FullscreenLoader />;
   }
 
-  return <AssetProvider>
-    <JSONAssetProvider
+  return <JSONAssetProvider
       defaultName="default.controls"
       shouldCreate={true}
-      defaultData={defaultControls}
+      defaultData={{
+        uiState: defaultControls,
+        sourceId: "start",
+        renderState: renderStateReducer(defaultControls)
+      }}
     >
       <JSONAssetProvider
         defaultName="default.image"
@@ -451,5 +458,11 @@ export default function CyberSpaghettiControls() {
         </TimelineProvider>
       </JSONAssetProvider>
     </JSONAssetProvider>
+}
+
+export default function CyberSpaghettiControls() {
+
+  return <AssetProvider>
+          <CyberSpaghettiControlsInt />
   </AssetProvider>;
 }

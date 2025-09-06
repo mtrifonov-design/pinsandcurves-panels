@@ -19,22 +19,28 @@ export default class Graphics {
         });
     }
 
-    executeCommands(commands: Array<{ resource: string, type: string, payload: any[] }>) {
+    executeCommands(commands: Array<{ resource?: string, type: string, payload: any[] }>) {
         commands.forEach(command => {
-            const resource = this.resources.get(command.resource);
-            if (!resource) {
-                console.warn(`Resource not found: ${command.resource}`);
-                return;
-            }
-            if (command.type in resource) {
-                resource[command.type](...command.payload);
+            if (!command.resource) {
+                this[command.type](...command.payload);
             } else {
-                console.warn(`Unknown command type: ${command.type}`);
+                const resource = this.resources.get(command.resource);
+                if (!resource) {
+                    console.warn(`Resource not found: ${command.resource}`);
+                    return;
+                }
+                if (command.type in resource) {
+                    resource[command.type](...command.payload);
+                } else {
+                    console.warn(`Unknown command type: ${command.type}`);
+                }
             }
         });
     }
 
+    screenTexture: string | null = null;
     setScreen(resourceName: string) {
+        this.screenTexture = resourceName;
         const gl = this.gl;
 
         // ---- lazy init program (once) ----

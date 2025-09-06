@@ -17,6 +17,7 @@ class UnitManager {
         };
     }
     processUnit(unit: any, workload:any): void {
+        //console.log("Processing unit:", unit, this.unitProcessors);
         for (let i = 0; i < this.unitProcessors.length; i++) {
             const { selector, reactor } = this.unitProcessors[i];
             if (selector(unit)) {
