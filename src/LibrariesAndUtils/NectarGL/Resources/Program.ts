@@ -12,17 +12,18 @@ export class Program extends PersistentResource {
         this.programProvider = new ProgramProvider(gl, {
             vertexShader: data.vertexShader,
             fragmentShader: data.fragmentShader,
-            uniformProviderSignature: (() => {
-                if (data.globalSignature) {
-                    const res = this.resources.get(data.globalSignature) as undefined | ResourceClass;
-                    if (!res) throw new Error(`Global signature ${data.globalSignature} not found for program ${id}`);
+            uniformProviderSignatures: (() => {
+                return Object.keys(data.globalSignatures).map(signatureKey => {
+                    const signature = data.globalSignatures[signatureKey];
+                    const res = this.resources.get(signature) as undefined | ResourceClass;
+                    if (!res) throw new Error(`Global signature ${signature} not found for program ${id}`);
                     const sig = res.data as GlobalSignatureData;
                     const uniformStructure = [];
                     for (const [name, type] of Object.entries(sig)) {
                         uniformStructure.push({ name, type });
                     }
-                    return { uniformProviderName: data.globalSignature, uniformStructure };
-                } else return undefined;
+                    return { uniformProviderName: signatureKey, uniformStructure };
+                });
             })(),
             vertexProviderSignature: (() => {
                 const res = this.resources.get(data.vertexSignature) as undefined | ResourceClass;

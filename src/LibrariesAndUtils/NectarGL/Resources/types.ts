@@ -38,7 +38,9 @@ type StaticTextureData = {
 type ProgramData = {
     vertexSignature: string;
     instanceSignature?: string;
-    globalSignature?: string;
+    globalSignatures: {
+        [key:string]: string;
+    };
     textures: {
         [key: string]: {
             filter: "nearest" | "linear";
@@ -52,7 +54,9 @@ type DrawOperation = {
     program: string;
     vertex: string;
     instance?: string;
-    global?: string;
+    globals: {
+        [key: string]: string;
+    };
     textures: {
         [key: string]: string;
     };

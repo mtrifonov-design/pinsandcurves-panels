@@ -167,9 +167,9 @@ export class DynamicTexture extends VariableResource {
         if (!program) throw new Error("Something went wrong.");
         this.gl.useProgram(program.programProvider.program!);
 
-        if (drawOp.global) {
-            SetupUniforms(this.gl, this.resources, drawOp.global, program.programProvider.program!);
-        }
+
+        SetupUniforms(this.gl, this.resources, drawOp.globals, program);
+        
         // set up textures
         SetupTextures(this.gl, this.resources, drawOp.textures, program.data, program.programProvider.program!);
         // perform draw call

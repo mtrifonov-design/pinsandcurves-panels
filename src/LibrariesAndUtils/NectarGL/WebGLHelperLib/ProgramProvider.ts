@@ -7,7 +7,7 @@ import type { InstanceProviderSignature } from "./InstanceProvider";
 type ProgramDescription = {
     vertexShader: string;
     fragmentShader: string;
-    uniformProviderSignature?: UniformProviderSignature;
+    uniformProviderSignatures: UniformProviderSignature[];
     vertexProviderSignature: VertexProviderSignature;
     instanceProviderSignature?: InstanceProviderSignature;
     textureNames: string[];
@@ -52,10 +52,13 @@ class ProgramProvider {
     }
 
     setup() {
+
+
+
         const vertexShaderSource = `#version 300 es
         precision mediump float;
         precision mediump int;
-        ${this.programDescription.uniformProviderSignature?generateUniformBlockString(this.programDescription.uniformProviderSignature):''}
+        ${this.programDescription.uniformProviderSignatures.map(sig => generateUniformBlockString(sig)).join('\n')}
         ${generateVertexBlockString(this.programDescription.vertexProviderSignature,this.programDescription.instanceProviderSignature)}
         ${this.programDescription.vertexShader}
         `;
@@ -64,7 +67,7 @@ class ProgramProvider {
         precision mediump float;
         precision mediump int;
         out vec4 outColor;
-        ${this.programDescription.uniformProviderSignature?generateUniformBlockString(this.programDescription.uniformProviderSignature):''}
+        ${this.programDescription.uniformProviderSignatures.map(sig => generateUniformBlockString(sig)).join('\n')}
         ${this.programDescription.textureNames.map(name => `uniform sampler2D ${name};`).join('\n')}
         ${this.programDescription.fragmentShader}
         `;

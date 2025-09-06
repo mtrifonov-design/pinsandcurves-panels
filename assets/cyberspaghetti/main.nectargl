@@ -48,6 +48,7 @@ blurred : Use {
 };
 
 p_put : Program {
+  globalSignatures: {},
   vertexSignature: <vsig>,
   vertexShader: <<<glsl
   out vec2 v_uv;
@@ -72,12 +73,14 @@ out : Texture {
       program: <p_put>,
       vertex: <v>,
       textures: { src: <raytunnel_out> },
+      globals: {},
     },
     {
       program: <p_put>,
       vertex: <v>,
       textures: { src: <blurred_out> },
-      blend: "add"
+      blend: "add",
+      globals: {},
     }
   ]
 }

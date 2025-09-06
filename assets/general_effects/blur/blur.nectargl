@@ -1,6 +1,6 @@
 p_blurX : Program {
   vertexSignature: <?vsig>,
-  globalSignature: <?gsig>,
+  globalSignatures: {g:<?gsig>},
   vertexShader: <<<glsl
   out vec2 v_uv;
   void main(){
@@ -33,7 +33,7 @@ p_blurX : Program {
 
 p_blurY : Program {
   vertexSignature: <?vsig>,
-  globalSignature: <?gsig>,
+  globalSignatures: {g:<?gsig>},
   vertexShader: <<<glsl
   out vec2 v_uv;
   void main(){
@@ -71,7 +71,7 @@ pass1 : Texture {
     {
       program: <p_blurX>,
       vertex: <?v>,
-      global: <?g>,
+      globals: {g:<?g>},
       textures: { src: <?input> },
     },
   ]
@@ -82,7 +82,7 @@ out : Texture {
     {
       program: <p_blurY>,
       vertex: <?v>,
-      global: <?g>,
+      globals: {g:<?g>},
       textures: { src: <pass1> },
     },
   ]
