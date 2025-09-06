@@ -1,5 +1,5 @@
 import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
-import React, { useSyncExternalStore } from 'react';
+import React, { useState, useSyncExternalStore, useEffect } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 
 import FullscreenLoader from '../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader';
@@ -10,10 +10,11 @@ import { useTimeline } from '../../LibrariesAndUtils/TimelineUtils/TimelineProvi
 import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';
 import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox';
 
-import JSONAssetController, { useJSONAssets } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
+import { useJSONAssets } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
 import JSONAssetProvider from '../../LibrariesAndUtils/JSONAsset/Provider.js';
 import defaultControls from './CyberSpaghettiControls.js';
-
+import build from '../../LibrariesAndUtils/NectarGL/build.js';
+import renderStateReducer from './renderStateReducer.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -35,6 +36,8 @@ function PresetButton({ text, presetConfig, update, updateLoop }: { text: string
 
 }
 
+
+
 export function CyberSpaghettiControlsInterior({
   controls,
 }: { controls: any }) {
@@ -42,7 +45,7 @@ export function CyberSpaghettiControlsInterior({
   const state = useSyncExternalStore(
     controls.subscribeInternal.bind(controls),
     controls.getSnapshot.bind(controls)
-  ) as NewControls;
+  )!.uiState as NewControls;
 
   const externalState = useSyncExternalStore(
     controls.subscribeToExternalState.bind(controls),
@@ -50,8 +53,9 @@ export function CyberSpaghettiControlsInterior({
   );
 
   const update = (patch: Partial<NewControls>) => {
-    const next = { ...state, ...patch };
-    controls.setData(next);
+    const nextUIState = { ...state, ...patch };
+    const nextState = { uiState: nextUIState, sourceId: "start", renderState: renderStateReducer(nextUIState) }
+    controls.setData(nextState);
   };
 
   const timeline = useTimeline();
@@ -410,17 +414,42 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 }
 
 export default function CyberSpaghettiControls() {
+
+  const [image,setImage] = useState<any|null>(null);
+  useEffect(() => {
+    const receiveImage = async () => {
+      const script = await build("/cyberspaghetti/main.nectargl", {
+          base: "http://localhost:3000"
+        });
+      setImage(script);
+    };
+    receiveImage();
+  }, []);
+
+  if (!image) {
+    return <FullscreenLoader />;
+  }
+
   return <AssetProvider>
     <JSONAssetProvider
       defaultName="default.controls"
       shouldCreate={true}
       defaultData={defaultControls}
     >
-      <TimelineProvider
-        defaultName={"default.timeline"}
+      <JSONAssetProvider
+        defaultName="default.image"
+        shouldCreate={true}
+        defaultData={{
+          sourceId: "start",
+          source: image
+        }}
       >
-        <CyberSpaghettiExterior />
-      </TimelineProvider>
+        <TimelineProvider
+          defaultName={"default.timeline"}
+        >
+          <CyberSpaghettiExterior />
+        </TimelineProvider>
+      </JSONAssetProvider>
     </JSONAssetProvider>
   </AssetProvider>;
 }

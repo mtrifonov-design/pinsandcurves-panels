@@ -2,9 +2,9 @@ import { ResourceType } from "./Resources";
 import type { DynamicTexture, ResourceClass, StaticTexture } from "./Resources";
 
 export default class Graphics {
-    resources: Map<string, typeof ResourceClass>;
+    resources: Map<string, ResourceClass>;
     private gl: WebGL2RenderingContext;
-    constructor(resources: Map<string, typeof ResourceClass>, gl: WebGL2RenderingContext) {
+    constructor(resources: Map<string, ResourceClass>, gl: WebGL2RenderingContext) {
         this.resources = resources;
         this.gl = gl;
     }
@@ -19,7 +19,7 @@ export default class Graphics {
         });
     }
 
-    executeCommands(commands: Array<{ resource: string, type: string, payload: any }>) {
+    executeCommands(commands: Array<{ resource: string, type: string, payload: any[] }>) {
         commands.forEach(command => {
             const resource = this.resources.get(command.resource);
             if (!resource) {
@@ -27,7 +27,7 @@ export default class Graphics {
                 return;
             }
             if (command.type in resource) {
-                resource[command.type](command.payload);
+                resource[command.type](...command.payload);
             } else {
                 console.warn(`Unknown command type: ${command.type}`);
             }

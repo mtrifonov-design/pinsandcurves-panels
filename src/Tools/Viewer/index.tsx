@@ -44,8 +44,6 @@ export default function Viewer() {
             >
                 <JSONAssetProvider
                     defaultName={"default.image"}
-                    shouldCreate={true}
-                    defaultData={"hello"}
                 >
                     <ViewerExterior />
                 </JSONAssetProvider>
