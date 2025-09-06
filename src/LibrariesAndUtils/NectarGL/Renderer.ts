@@ -55,6 +55,7 @@ class NectarRenderer {
     frame() {
         if (!this.gfx) return;
         if (!this.gfx.screenTexture) return;
+        //console.log("Updating texture data for", this.gfx.screenTexture);
         (this.gfx.resources.get(this.gfx.screenTexture) as DynamicTexture).updateTextureData();
         this.gfx.refreshScreen();
     };

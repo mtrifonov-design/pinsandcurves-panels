@@ -15,7 +15,7 @@ export class Global extends VariableResource {
             let isDependencyOf = false;
             const drawOps = texture.data.drawOps;
             for (const drawOp of drawOps) {
-                if (drawOp.global && drawOp.global === this.id) {
+                if (drawOp.globals && Object.values(drawOp.globals).includes(this.id)) {
                     isDependencyOf = true;
                     break;
                 }

@@ -36,13 +36,16 @@ export default function Interior({ timeline, controls, image }: any) {
             const containerHeight = container.clientHeight;
             const containerAspect = containerWidth / containerHeight;
             let dwidth, dheight;
-            if (containerAspect > aspectRatio) {
-                dheight = containerHeight;
-                dwidth = dheight * aspectRatio;
-            } else {
-                dwidth = containerWidth;
-                dheight = dwidth / aspectRatio;
-            }
+            // if (containerAspect > aspectRatio) {
+            //     dheight = containerHeight;
+            //     dwidth = dheight * aspectRatio;
+            // } else {
+            //     dwidth = containerWidth;
+            //     dheight = dwidth / aspectRatio;
+            // }
+            dwidth = containerWidth;
+            dheight = containerHeight;
+            console.log("dimensions", dwidth, dheight);
             canvas.style.width = `${dwidth}px`;
             canvas.style.height = `${dheight}px`;
             canvas.width = dwidth;

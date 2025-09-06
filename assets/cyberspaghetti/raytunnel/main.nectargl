@@ -43,7 +43,10 @@ draw_ray : Program {
     fragmentShader:<<<glsl
     #include "/cyberspaghetti/raytunnel/ray_fs.glsl";
     >>>,
-    globalSignatures: {g:<global_sig>},
+    globalSignatures: {
+        g:<global_sig>,
+        timeline: <?timeline_sig>,
+    },
     instanceSignature: <ray_sig>,
     vertexSignature: <quad_sig>,
     textures: {
@@ -64,7 +67,10 @@ out : Texture {
             program: <draw_ray>,
             vertex: <quad>,
             instance: <ray>,
-            globals: {g:<global>},
+            globals: {
+                g:<global>,
+                timeline: <?timeline>
+            },
             textures: {
                 colorTex: <colorTex>
             },

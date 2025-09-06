@@ -40,6 +40,8 @@ timeline : Global { signature: <timeline_sig> };
 raytunnel : Use {
   path: "/cyberspaghetti/raytunnel/main.nectargl",
   bind: {
+    timeline: <timeline>,
+    timeline_sig: <timeline_sig>,
   }
 };
 

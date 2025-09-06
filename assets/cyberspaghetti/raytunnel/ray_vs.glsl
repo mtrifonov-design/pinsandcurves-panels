@@ -84,7 +84,7 @@ out float progress_factor;
 void main() {
 
     uint instance_key = uint(gl_InstanceID);
-    ParticleParams ppar = ppar_for(instance_key,  time,  lifecycle);
+    ParticleParams ppar = ppar_for(instance_key,  playheadPosition,  lifecycle);
 
     float nearCircleDistance = tunnelData.x;
     float nearCircleRadius = tunnelData.y;
