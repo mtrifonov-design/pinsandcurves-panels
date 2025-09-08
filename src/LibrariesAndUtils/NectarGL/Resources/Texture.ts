@@ -107,7 +107,7 @@ export class DynamicTexture extends VariableResource {
         const res = this.resources.get(this.data.signature) as undefined | ResourceClass;
         if (!res) throw new Error("Missing signature data");
         const sig = res.data as TextureSignatureData;
-        this.gl.viewport(0, 0, sig.size[0], sig.size[1]);
+        this.gl.viewport(0, 0, sig.size[0], sig.size[1]); 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.textureProvider.framebuffer);
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
@@ -174,9 +174,6 @@ export class DynamicTexture extends VariableResource {
         SetupTextures(this.gl, this.resources, drawOp.textures, program.data, program.programProvider.program!);
         // perform draw call
 
-        // this.gl.bindBuffer(this.gl.ARRAY_BUFFER, vertex.vertexProvider.vertexBuffer);
-        // const bufferSize = this.gl.getBufferParameter(this.gl.ARRAY_BUFFER, this.gl.BUFFER_SIZE);
-        // console.log("Vertex buffer size (bytes):", bufferSize);
 
         const instanced = drawOp.instance !== undefined;
         if (instanced) {

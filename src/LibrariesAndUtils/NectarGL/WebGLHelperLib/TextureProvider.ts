@@ -97,8 +97,6 @@ class Texture {
             } else if (this.description.type === 'R32F' || this.description.type === 'RGBA32F') {
                 typedArray = new Float32Array(data);
             }
-            console.log(data);
-            console.log(typedArray);
             if (typedArray) {
                 gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, format, type, typedArray);
             }
