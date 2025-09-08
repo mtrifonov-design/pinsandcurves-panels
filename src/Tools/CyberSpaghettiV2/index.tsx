@@ -2,6 +2,8 @@ import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design
 import React, { useState, useSyncExternalStore, useEffect } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 
+  import Main from './graphics/main.js';
+
 import FullscreenLoader from '../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader';
 import TimelineProvider from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider';
 
@@ -418,6 +420,8 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 }
 
 function CyberSpaghettiControlsInt() {
+
+  console.log(Main()("test"));
 
   const [image,setImage] = useState<any|null>(null);
   useEffect(() => {
