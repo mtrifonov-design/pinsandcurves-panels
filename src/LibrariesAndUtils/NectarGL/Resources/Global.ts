@@ -6,6 +6,10 @@ import type { GlobalData, GlobalSignatureData } from "./types";
 
 
 export class Global extends VariableResource {
+    dispose() {
+        this.uniformProvider.dispose();
+    }
+
     type = "Global";
     declare data: GlobalData;
     computeDependencies() {

@@ -33,6 +33,13 @@ class InstanceProvider {
         layoutIdx: number;
     }[] = [];
 
+    dispose() {
+        if (this.instanceBuffer) {
+            this.gl.deleteBuffer(this.instanceBuffer);
+            this.instanceBuffer = null;
+        }
+    }
+
     setup() {
         this.instanceBuffer = this.gl.createBuffer();
         if (!this.instanceBuffer) {

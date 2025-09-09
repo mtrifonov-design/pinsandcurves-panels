@@ -5,6 +5,11 @@ import type { VertexData, VertexSignatureData } from "./types";
 
 export class Vertex extends VariableResource {
     type = "Vertex";
+
+    dispose() {
+        this.vertexProvider.dispose();
+    }
+
     declare data : VertexData;
     computeDependencies() {
         const resourceArray = Array.from(this.resources.values());

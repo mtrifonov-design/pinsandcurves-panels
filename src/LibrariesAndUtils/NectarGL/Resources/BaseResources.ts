@@ -14,6 +14,7 @@ abstract class PersistentResource {
         this.resources = resources;
         this.gl = gl;
     }
+    abstract dispose(): void;
 }
 
 abstract class VariableResource {
@@ -43,6 +44,7 @@ abstract class VariableResource {
             }
         }
     }
+    abstract dispose(): void;
 }
 
 export { VariableResource, PersistentResource };

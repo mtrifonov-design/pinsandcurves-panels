@@ -41,6 +41,17 @@ class Texture {
         this.setup();
     }
 
+    dispose() {
+        if (this.framebuffer) {
+            this.gl.deleteFramebuffer(this.framebuffer);
+            this.framebuffer = null;
+        }
+        if (this.texture) {
+            this.gl.deleteTexture(this.texture);
+            this.texture = null;
+        }
+    }
+
     framebuffer: WebGLFramebuffer | null = null;
     texture: WebGLTexture | null = null;
     setup() {

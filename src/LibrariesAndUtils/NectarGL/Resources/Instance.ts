@@ -5,6 +5,10 @@ import type { InstanceData, InstanceSignatureData
  import type { ResourceClass } from ".";
 
 export class Instance extends VariableResource {
+    dispose() {
+        this.instanceProvider.dispose();
+    }
+
     type = "Instance";
     declare data : InstanceData;
     computeDependencies() {

@@ -5,6 +5,11 @@ import ProgramProvider from "../WebGLHelperLib/ProgramProvider";
 
 export class Program extends PersistentResource {
     type = "Program";
+
+    dispose() {
+        this.programProvider.dispose();
+    }
+
     declare data: ProgramData;
     programProvider: ProgramProvider;
     constructor(resources: Map<string, ResourceClass>, id: string, data: ProgramData, gl: WebGL2RenderingContext) {

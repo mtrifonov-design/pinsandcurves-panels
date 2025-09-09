@@ -51,6 +51,13 @@ class ProgramProvider {
         this.setup();
     }
 
+    dispose() {
+        if (this.program) {
+            this.gl.deleteProgram(this.program);
+            this.program = null;
+        }
+    }
+
     setup() {
 
 

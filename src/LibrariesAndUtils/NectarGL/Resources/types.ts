@@ -62,9 +62,11 @@ type DrawOperation = {
     };
 };
 type DynamicTextureData = {
+    screen? : boolean;
     signature: string;
     drawOps: DrawOperation[];
 };
+
 export type {
     WebGLPrimitiveType,
     VertexSignatureData,

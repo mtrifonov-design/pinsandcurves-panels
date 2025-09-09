@@ -45,6 +45,13 @@ class UniformProvider {
     }
 
 
+    dispose() {
+        if (this.buffer) {
+            this.gl.deleteBuffer(this.buffer);
+            this.buffer = null;
+        }
+    }
+
     buffer: WebGLBuffer | null = null;
     setup() {
         const buffer = this.gl.createBuffer();

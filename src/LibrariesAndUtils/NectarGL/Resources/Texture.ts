@@ -9,6 +9,11 @@ import type { DrawOperation, DynamicTextureData, StaticTextureData, TextureSigna
 
 export class StaticTexture extends VariableResource {
     type = "StaticTexture";
+
+    dispose() {
+        this.textureProvider.dispose();
+    }
+
     declare data : StaticTextureData;
     computeDependencies() { "do nothing" };
     textureProvider : TextureProvider;
@@ -37,6 +42,11 @@ export class StaticTexture extends VariableResource {
 
 export class DynamicTexture extends VariableResource {
     type = "DynamicTexture";
+
+    dispose() {
+        this.textureProvider.dispose();
+    }
+
     declare data : DynamicTextureData;
     computeDependencies() {
         // compute dependsOn
@@ -76,9 +86,11 @@ export class DynamicTexture extends VariableResource {
     ) {
         super(resources,id,data,gl);
         const res = this.resources.get(this.data.signature) as undefined | ResourceClass;
-        console.log(id)
         if (!res) throw new Error("Missing signature data");
         const sig = res.data as TextureSignatureData;
+        if (this.data.screen && sig.type !== "RGBA8") {
+            throw new Error("Screen textures must be of type RGBA8");
+        }
         this.textureProvider = new TextureProvider(gl, {
             shape: sig.size,
             type: sig.type,
@@ -107,8 +119,15 @@ export class DynamicTexture extends VariableResource {
         const res = this.resources.get(this.data.signature) as undefined | ResourceClass;
         if (!res) throw new Error("Missing signature data");
         const sig = res.data as TextureSignatureData;
-        this.gl.viewport(0, 0, sig.size[0], sig.size[1]); 
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.textureProvider.framebuffer);
+        if (this.data.screen) {
+            const canvas = (this.gl.canvas as HTMLCanvasElement);
+            this.gl.viewport(0, 0, canvas.width, canvas.height);
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        } else {
+            this.gl.viewport(0, 0, sig.size[0], sig.size[1]); 
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.textureProvider.framebuffer);
+        }
+
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.disable(this.gl.DEPTH_TEST);

@@ -28,6 +28,17 @@ class VertexProvider {
         this.setup();
     }
 
+    dispose() {
+        if (this.vertexBuffer) {
+            this.gl.deleteBuffer(this.vertexBuffer);
+            this.vertexBuffer = null;
+        }
+        if (this.indexBuffer) {
+            this.gl.deleteBuffer(this.indexBuffer);
+            this.indexBuffer = null;
+        }
+    }
+
     vertexBuffer: WebGLBuffer | null = null;
     indexBuffer: WebGLBuffer | null = null;
     vertexStructureObject: {
@@ -35,7 +46,6 @@ class VertexProvider {
         type: VertexType;
         layoutIdx: number;
     }[] = [];
-
     setup() {
         this.vertexBuffer = this.gl.createBuffer();
         this.indexBuffer = this.gl.createBuffer();
