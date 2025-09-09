@@ -1,4 +1,3 @@
-import compile from "./compile";
 import Graphics from "./Graphics";
 import { DynamicTexture } from "./Resources";
 
@@ -16,21 +15,19 @@ type RenderStateObject = {
 class NectarRenderer {
 
     private gl: WebGL2RenderingContext;
+    private gfx : Graphics;
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
+        this.gfx = new Graphics(gl);
     }
 
-    private gfx : Graphics | undefined;
+
     private sourceId: string | undefined;
     setSource(sourceId: string, source: any) {
-        this.sourceId = sourceId;
-        //console.log(sourceId, source);
-        if (!this.gfx) {
-            this.gfx = compile(source, this.gl);
-        } else {
-            this.gfx.dispose();
+        if (sourceId !== this.sourceId) {
+            this.gfx.compile(source);
             this.state = {};
-            this.gfx = compile(source, this.gl);
+            this.sourceId = sourceId;
         }
     };
 
@@ -38,7 +35,6 @@ class NectarRenderer {
     setState(sourceId: string, state: RenderStateObject) {
         if (!this.gfx) return;
         if (sourceId !== this.sourceId) return;
-
         for (const key in state) {
             const versionId = state[key].versionId;
             const existing = this.state[key];
@@ -54,10 +50,11 @@ class NectarRenderer {
 
     frame() {
         if (!this.gfx) return;
-        if (!this.gfx.screenTexture) return;
-        //console.log("Updating texture data for", this.gfx.screenTexture);
-        (this.gfx.resources.get(this.gfx.screenTexture) as DynamicTexture).updateTextureData();
-        this.gfx.refreshScreen();
+        const screenTexture = Array.from(this.gfx.resources.values()).find(t => t.data.screen) as DynamicTexture;
+        //console.log(screenTexture)
+        if (screenTexture) {
+            screenTexture.updateTextureData();
+        }
     };
 }
 export default NectarRenderer;

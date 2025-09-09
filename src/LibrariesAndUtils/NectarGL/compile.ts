@@ -41,7 +41,9 @@ function processResources(resources: Map<string,any>, unprocessedResources: Unpr
     for (const unprocessedResource of unprocessedResources) {
         const resource = resources.get(unprocessedResource.id);
         if (!resource) throw new Error(`Resource ${unprocessedResource.id} not found`);
-        resource.markDirtyAndPropagate();
+        if ("markDirtyAndPropogate" in resource) {
+            resource.markDirtyAndPropagate();
+        }
     };
     return resources;
 }

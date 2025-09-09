@@ -12,14 +12,11 @@ import { build,
     exportResources,
     external
  } from "../../../LibrariesAndUtils/NectarGL/Builder"
-import RayTunnel from "./raytunnel";
 
-const exported = exportResources(RayTunnel({ timeline: external("timeline"), timeline_sig:  external("timeline_sig") }));
-console.log(exported)
 
 function Main() {
     return build((ref: any) => ({
-        vsig: VertexSignature({
+        quadSig: VertexSignature({
             attributes: {
                 position: 'vec2',
             },
@@ -31,31 +28,49 @@ function Main() {
             numberOfFrames: 'float',
             rendering: 'int'
         }),
-        isig: InstanceSignature({
-            attributes: {
-                col: 'vec4',
-                instancePosition: 'vec2',
-                radius: 'float'
+        drawDefault: Program({
+            vertexShader: `
+                out vec2 uv;
+                void main() {
+                    gl_Position = vec4(position.xy, 0.0, 1.0);
+                    uv = position.xy;
+                }
+            `,
+            fragmentShader: `
+                in vec2 uv;
+                void main() {
+                    float l = length(uv);
+                    float radius = (playheadPosition / numberOfFrames) * 0.2;
+                    float val = smoothstep(radius, radius + 0.1, l);
+                    outColor = vec4(val, 0.0, 0.0, 1.0);
+                }
+            `,
+            vertexSignature: ref('quadSig'),
+            globalSignatures: {
+                timeline: ref('timeline_sig')
             },
-            maxInstanceCount: 64,
-        }),
-        gsig: GlobalSignature({
-            screenSize: 'vec2',
-            blurScale: 'float',
+            textures: {},
         }),
         tsig: TextureSignature({
             type: 'RGBA8',
             size: [1920, 1080],
         }),
-        v: Vertex({ signature: ref('vsig') }),
-        i: Instance({ signature: ref('isig') }),
-        g: Global({ signature: ref('gsig') }),
+        quad: Vertex({ signature: ref('quadSig') }),
         timeline: Global({signature: ref('timeline_sig')}),
-        //raytunnel: RayTunnel({ timeline: ref('timeline'), timeline_sig: ref('timeline_sig') }),
-        raytunnel: Use(exported, {
-            timeline: ref('timeline'),
-            timeline_sig: ref('timeline_sig')
-        })
+        out: Texture({ 
+            signature: ref('tsig'),
+            screen: true,
+            drawOps: [
+                {
+                    program: ref('drawDefault'),
+                    vertex: ref('quad'),
+                    globals: {
+                        timeline: ref('timeline')
+                    },
+                    textures: {}
+                }
+            ]
+        }),
 
         // raytunnel: RayTunnel('raytunnel', { timeline: ref('timeline')}),
         // blur: Use(blurBuild),

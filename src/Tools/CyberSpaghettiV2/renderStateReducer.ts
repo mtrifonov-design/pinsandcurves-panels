@@ -85,7 +85,7 @@ function renderStateReducer(state: any) {
             versionId: "default",
             commands: [
                 {
-                    resource: "raytunnel_quad",
+                    resource: "_quad",
                     type: "setVertices",
                     payload: [
                         {
@@ -102,66 +102,6 @@ function renderStateReducer(state: any) {
                         ],
                         2
                     ]
-                },
-                {
-                    resource: "v",
-                    type: "setVertices",
-                    payload: [
-                        {
-                            position: [
-                                -1, -1,
-                                1, -1,
-                                -1, 1,
-                                1, 1
-                            ]
-                        },
-                        [
-                            0, 1, 2, 2, 1, 3
-                        ],
-                        2
-                    ]
-                },
-                {
-                    resource: "g",
-                    type: "setGlobals",
-                    payload: [{
-                        screenSize: [1920, 1080],
-                        blurScale: [4],
-                    }]
-                },
-                {
-                    resource: "raytunnel_colorTex",
-                    type: "setTextureData",
-                    payload: [colorBuffer]
-                },
-                {
-                    resource: "raytunnel_global",
-                    type: "setGlobals",
-                    payload: [{
-                        tunnelData: [-0.1, Math.sqrt(0.5), 100, 0],
-                        rayData: [1, 0.01, 0.2, 0.2],
-                        time: [5],
-                        colorVarianceFactor: [0.6],
-                        chaos: [0.5]
-                    }]
-                },
-                {
-                    resource: "raytunnel_ray",
-                    type: "setInstanceData",
-                    payload: [{
-                        seed: instances
-                    }, instances.length]
-                }
-
-            ]
-        },
-        setupStream: {
-            version: "0",
-            commands: [
-                {
-                    resource: undefined,
-                    type: "setScreen",
-                    payload: ["out"]
                 }
             ]
         },

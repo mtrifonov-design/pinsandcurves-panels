@@ -104,7 +104,7 @@ export default function Interior({ timeline, controls, image }: any) {
             versionId: crypto.randomUUID(),
             commands: [
                 {
-                    resource: "timeline",
+                    resource: "_timeline",
                     type: "setGlobals",
                     payload: [{
                         playheadPosition: [timelineProject.timelineData.playheadPosition],

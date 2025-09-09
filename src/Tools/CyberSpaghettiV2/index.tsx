@@ -420,24 +420,6 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 }
 
 function CyberSpaghettiControlsInt() {
-
-  console.log(Main()("test"));
-
-  const [image,setImage] = useState<any|null>(null);
-  useEffect(() => {
-    const receiveImage = async () => {
-      const script = await build("/cyberspaghetti/main.nectargl", {
-          base: "http://localhost:3000"
-        });
-      setImage(script);
-    };
-    receiveImage();
-  }, []);
-
-  if (!image) {
-    return <FullscreenLoader />;
-  }
-
   return <JSONAssetProvider
       defaultName="default.controls"
       shouldCreate={true}
@@ -452,7 +434,7 @@ function CyberSpaghettiControlsInt() {
         shouldCreate={true}
         defaultData={{
           sourceId: "start",
-          source: image
+          source: Main()("")
         }}
       >
         <TimelineProvider
