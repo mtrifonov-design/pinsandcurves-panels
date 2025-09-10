@@ -43,7 +43,7 @@ class NectarRenderer {
             if (existing && existing.versionId === versionId) {
                 continue;
             } else {
-                //console.log("Executing commands for", key, state[key].commands);
+                console.log("Executing commands for", key, state[key].commands);
                 this.gfx.executeCommands(state[key].commands);
             }
         }
@@ -53,7 +53,7 @@ class NectarRenderer {
     frame() {
         if (!this.gfx) return;
         //console.log(this.state)
-        const screenTexture = Array.from(this.gfx.resources.values()).find(t => t.data.screen) as DynamicTexture;
+        const screenTexture = Array.from(this.gfx.resources.values()).find(t => t.data.screen === true) as DynamicTexture;
         //console.log(screenTexture)
         if (screenTexture) {
             screenTexture.updateTextureData();

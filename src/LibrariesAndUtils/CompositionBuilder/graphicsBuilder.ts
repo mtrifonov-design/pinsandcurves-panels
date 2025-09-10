@@ -1,8 +1,8 @@
-import { build, Texture, TextureSignature, Use } from "../NectarGL/Builder";
+import { build, Global, GlobalSignature, Texture, TextureSignature, Use, Vertex, VertexSignature } from "../NectarGL/Builder";
 import { CompositionDescription, GraphicAsset } from "./types";
 
 
-function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc: CompositionDescription, viewportRenderer: (s: string) => any) {
+function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc: CompositionDescription, viewportRenderer: (s: any) => any) {
     const effectInstanceIds = [];
     for (const layer of compDesc.layers) {
         for (const effect of layer.effects) {
@@ -13,14 +13,43 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
     const gfx = build((ref: any) => {
         const resources = {
         };
-        const __layerSig = TextureSignature({
+        const __canvasSig = TextureSignature({
             type: "RGBA8",
-            size: [1024, 1024]
+            size: [1920, 1080]
         })
-        const __initialInput = Texture({
-            signature: ref("__layerSig")
+        const __compositionGlobalSig = GlobalSignature({
+            screen: 'vec2',
+            canvas: 'vec2',
+            playheadPosition: 'float',
+            numberOfFrames: 'float',
+        });
+        const __compositionGlobal = Global({
+            signature: ref("__compositionGlobalSig"),
+            exportName: "compositionGlobal"
+        });
+        const __quadSig = VertexSignature({
+            attributes: {
+                position: "vec2",
+            },
+            maxTriangleCount: 1024,
+            maxVertexCount: 1024
+        });
+        const __quad = Vertex({
+            signature: ref("__quadSig"),
+            exportName: "quad"
         });
         let inputName = "__initialInput";
+        const externalBundle = {
+            inputTexture: ref(inputName),
+            compositionGlobal: ref("__compositionGlobal"),
+            quad: ref("__quad"),
+            canvasSig: ref("__canvasSig"),
+            compositionGlobalSig: ref("__compositionGlobalSig"),
+            quadSig: ref("__quadSig")
+        }
+        const __initialInput = Texture({
+            signature: ref("__canvasSig")
+        });
         for (const instanceId of effectInstanceIds) {
             const foundAssetEntry = graphicsAssetsEntries.find(([id, asset]) => {
                 if (!id.endsWith(".graphics")) return false;
@@ -30,18 +59,21 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             if (foundAssetEntry) {
                 if (!foundAssetEntry[0].endsWith(".graphics")) continue;
                 const processedId = foundAssetEntry[0].replace(".graphics", "");
-                resources[processedId] = Use(foundAssetEntry[1].source,
-                    {
-                        input: ref(inputName)
-                    });
+                resources[processedId] = Use(foundAssetEntry[1].source,externalBundle);
                 inputName = processedId + "_out";
+                externalBundle.inputTexture = ref(inputName);
             }
         }
-        const __viewportRenderer = "test" // viewportRenderer(ref(inputName));
+
+        const __viewportRenderer = viewportRenderer(externalBundle);
         return {
-            __layerSig,
+            __canvasSig,
             __initialInput,
-            //__viewportRenderer,
+            __viewportRenderer,
+            __compositionGlobalSig,
+            __compositionGlobal,
+            __quadSig,
+            __quad,
             ...resources
         };
     })

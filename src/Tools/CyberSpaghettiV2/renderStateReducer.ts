@@ -81,30 +81,6 @@ for (let i = 0; i < 100; i++) {
 
 function renderStateReducer(state: any) {
     const renderState = {
-        defaultStream: {
-            versionId: "default",
-            commands: [
-                {
-                    resource: "quad",
-                    type: "setVertices",
-                    payload: [
-                        {
-                            position:
-                                [
-                                    -1, -1,
-                                    1, -1,
-                                    -1, 1,
-                                    1, 1
-                                ]
-                        },
-                        [
-                            0, 1, 2, 2, 1, 3
-                        ],
-                        2
-                    ]
-                }
-            ]
-        },
     };
     return renderState;
 }

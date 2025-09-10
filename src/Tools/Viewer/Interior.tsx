@@ -9,6 +9,7 @@ import NectarRenderer from '../../LibrariesAndUtils/NectarGL/Renderer.js';
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import buildGraphics from '../../LibrariesAndUtils/CompositionBuilder/graphicsBuilder.js';
 import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBuilder.js';
+import Viewport from './graphics/main.js';
 const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
 
 export default function Interior({ timeline, controls, graphics, composition }: any) {
@@ -23,44 +24,24 @@ export default function Interior({ timeline, controls, graphics, composition }: 
     const timelineProject : TimelineController.Project = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
-    const { canvasWidth: width, canvasHeight: height } = controlsSnapshot;
 
     const { recordEvent } = useTracker(defaultEvent);
 
-    useEffect(() => {
-        if (!canvasRef.current) return;
-        const canvas = canvasRef.current;
-        canvas.width = width;
-        canvas.height = height;
-    }, [width, height, canvasRef])
+    const [dimensions, setDimensions] = useState([1920,1080]);
 
     useEffect(() => {
-        function resizeCanvasToFit(container, canvas, aspectRatio) {
+        function resizeCanvasToFit(container, canvas) {
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
-            const containerAspect = containerWidth / containerHeight;
-            let dwidth, dheight;
-            // if (containerAspect > aspectRatio) {
-            //     dheight = containerHeight;
-            //     dwidth = dheight * aspectRatio;
-            // } else {
-            //     dwidth = containerWidth;
-            //     dheight = dwidth / aspectRatio;
-            // }
-            dwidth = containerWidth;
-            dheight = containerHeight;
-            console.log("dimensions", dwidth, dheight);
-            canvas.style.width = `${dwidth}px`;
-            canvas.style.height = `${dheight}px`;
-            canvas.width = dwidth;
-            canvas.height = dheight;
+            canvas.width = containerWidth;
+            canvas.height = containerHeight;
+            setDimensions([containerWidth, containerHeight])
         }
         const handleResize = () => {
             if (canvasRef.current && containerRef.current) {
                 const container = containerRef.current;
                 const canvas = canvasRef.current;
-                const aspectRatio = width / height;
-                resizeCanvasToFit(container, canvas, aspectRatio);
+                resizeCanvasToFit(container, canvas);
             }
         }
         window.addEventListener('resize', handleResize);
@@ -68,15 +49,15 @@ export default function Interior({ timeline, controls, graphics, composition }: 
         return () => {
             window.removeEventListener('resize', handleResize);
         }
-    }, [width, height])
+    }, [canvasRef])
 
     const frameSaverRef = useRef(new FrameSaver({
         timeline,
-        width,
-        height,
+        width: dimensions[0],
+        height: dimensions[1],
     }));
     const frameSaver = frameSaverRef.current;
-    frameSaver.setSize(width, height);
+    frameSaver.setSize(dimensions[0], dimensions[1]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -98,7 +79,7 @@ export default function Interior({ timeline, controls, graphics, composition }: 
 
     useEffect(() => {
         if (!renderer || !graphicsSnapshot || !compositionSnapshot) return;
-        const { registry: newRegistry, gfx } = buildGraphics(graphicsSnapshot,compositionSnapshot, null)
+        const { registry: newRegistry, gfx } = buildGraphics(graphicsSnapshot,compositionSnapshot, Viewport)
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
@@ -108,26 +89,52 @@ export default function Interior({ timeline, controls, graphics, composition }: 
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot) return;
-        const timelineStateStream = {
+        const compositionGlobalStream = {
             versionId: crypto.randomUUID(),
             commands: [
                 {
-                    resource: "timeline",
+                    resource: "compositionGlobal",
                     type: "setGlobals",
                     payload: [{
                         playheadPosition: [timelineProject.timelineData.playheadPosition],
                         numberOfFrames: [timelineProject.timelineData.numberOfFrames],
-                        rendering: [frameSaver.getStatus().rendering ? 1 : 0]
+                        screen: [dimensions[0], dimensions[1]],
+                        canvas: [1920,1080],
                     }]
                 }
             ],
         }
+        const quadStream = {
+            versionId: "default",
+            commands: [
+                {
+                    resource: "quad",
+                    type: "setVertices",
+                    payload: [
+                        {
+                            position:
+                                [
+                                    -1, -1,
+                                    1, -1,
+                                    -1, 1,
+                                    1, 1
+                                ]
+                        },
+                        [
+                            0, 1, 2, 2, 1, 3
+                        ],
+                        2
+                    ]
+                }
+            ]
+        }
         const renderState = {
             ...buildControls(controlsSnapshot, registry),
-            timeline: timelineStateStream,
+            compositionGlobal: compositionGlobalStream,
+            quadStream,
         };
         renderer.setState(registry.currentSourceId, renderState);
-    }, [renderer, controls, timelineProject, frameSaver, registry]);
+    }, [renderer, controls, timelineProject, frameSaver, registry, dimensions]);
 
     if (!timeline) {
         return <div>No timeline found</div>

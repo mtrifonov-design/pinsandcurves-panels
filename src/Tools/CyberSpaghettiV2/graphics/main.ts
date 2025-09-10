@@ -16,24 +16,6 @@ import { build,
 
 function Main() {
     return build((ref: any) => ({
-        quadSig: VertexSignature({
-            attributes: {
-                position: 'vec2',
-            },
-            maxVertexCount: 1024,
-            maxTriangleCount: 2048,
-        }),
-        timeline_sig: GlobalSignature({
-            playheadPosition: 'float',
-            numberOfFrames: 'float',
-            rendering: 'int'
-        }),
-        screen_sig: GlobalSignature({
-            screenResolution: 'vec2',
-        }),
-        composite_sig: GlobalSignature({
-            compositeResolution: 'vec2',
-        }),
         drawDefault: Program({
             vertexShader: `
                 out vec2 uv;
@@ -51,33 +33,20 @@ function Main() {
                     outColor = vec4(val, 0.0, 0.0, 1.0);
                 }
             `,
-            vertexSignature: ref('quadSig'),
+            vertexSignature: external('quadSig'),
             globalSignatures: {
-                timeline: ref('timeline_sig'),
-                screen: ref('screen_sig'),
-                composite: ref('composite_sig'),
+                timeline: external('compositionGlobalSig'),
             },
             textures: {},
         }),
-        tsig: TextureSignature({
-            type: 'RGBA8',
-            size: [1920, 1080],
-        }),
-        quad: Vertex({ signature: ref('quadSig'), exportName: "quad" }),
-        timeline: Global({signature: ref('timeline_sig'), exportName: "timeline"}),
-        screenGlobal: Global({signature: ref('screen_sig')}),
-        compositeGlobal: Global({signature: ref('composite_sig')}),
         out: Texture({
-            signature: ref('tsig'),
-            screen: true,
+            signature: external('canvasSig'),
             drawOps: [
                 {
                     program: ref('drawDefault'),
-                    vertex: ref('quad'),
+                    vertex: external('quad'),
                     globals: {
-                        timeline: ref('timeline'),
-                        screen: ref('screenGlobal'),
-                        composite: ref('compositeGlobal'),
+                        timeline: external('compositionGlobal')
                     },
                     textures: {}
                 }
