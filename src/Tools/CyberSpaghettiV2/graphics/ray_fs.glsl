@@ -8,7 +8,7 @@ float gaussian(float x, float sigma) {
 
 void main() {
 
-    float color_variance_factor = colorVarianceFactor;
+    float color_variance_factor = 1.;
     float final_color_factor = progress_factor + color_variance_factor * (texture_sample_factor - color_variance_factor / 2.);
     final_color_factor = clamp(final_color_factor, 0.0, 1.0);
 

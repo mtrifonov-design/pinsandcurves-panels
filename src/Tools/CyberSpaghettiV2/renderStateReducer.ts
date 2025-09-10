@@ -8,7 +8,7 @@ import rayInstanceStream from "./graphics/streams/rayInstanceStream";
 function renderStateReducer(state: any) {
     const cyberspag_globalStream = globalStream();
     const cyberspag_rayInstanceStream = rayInstanceStream();
-    const cyberspag_colorTextureStream = colorTextureStream();
+    const cyberspag_colorTextureStream = colorTextureStream(state);
     const renderState = {
         cyberspag_global: cyberspag_globalStream,
         cyberspag_ray: cyberspag_rayInstanceStream,

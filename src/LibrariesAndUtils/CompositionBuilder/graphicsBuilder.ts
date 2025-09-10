@@ -9,7 +9,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             effectInstanceIds.push(effect.instanceId);
         }
     };
-    console.log("buildGraphics")
+    //console.log("buildGraphics")
     const gfx = build((ref: any) => {
         const resources = {
         };

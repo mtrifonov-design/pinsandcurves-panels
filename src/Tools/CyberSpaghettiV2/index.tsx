@@ -1,7 +1,8 @@
 import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
-import React, { useState, useSyncExternalStore, useEffect } from 'react';
+import React, { useState, useSyncExternalStore, useEffect, useRef } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
-
+import { GradientPicker } from '@mtrifonov-design/pinsandcurves-design';
+import { throttle } from 'lodash'; 
 import Main from './graphics/main.js';
 import hexToRgb, { rgbToHex } from './hexToRgb';
 import { useTimeline } from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider';
@@ -47,12 +48,16 @@ export function CyberSpaghettiControlsInterior() {
 
   const state = local;
 
-  const update = (patch: Partial<NewControls>) => {
+
+  const updateRef = useRef((patch: Partial<NewControls>) => {
     const nextLocal = { ...state, ...patch };
     const nextControls = renderStateReducer(nextLocal);
     updateLocal(nextLocal);
     updateControls(nextControls);
-  };
+  });
+
+
+  const update = updateRef.current;
 
   const timeline = useTimeline();
 
@@ -294,7 +299,7 @@ export function CyberSpaghettiControlsInterior() {
             { label: 'Additive', value: 'additive' },
           ]} value={state.blendMode} onChange={v => update({ blendMode: v as NewControls['blendMode'] })} />
         </div>
-        <div>
+        {/* <div>
           <span style={{ display: 'block', marginBottom: 4, color: 'var(--gray6)', fontWeight: 500 }}>Colors</span>
           <div style={colorBoxStyle}>
             {state.rayColors.map((color, i) => (
@@ -305,7 +310,21 @@ export function CyberSpaghettiControlsInterior() {
             ))}
             <Button text={"+ add color"} onClick={addColor} />
           </div>
+        </div> */}
+        <div>
+          <span style={{ display: 'block', marginBottom: 4, color: 'var(--gray6)', fontWeight: 500 }}>Colors</span>
+          <GradientPicker
+            stops={state.colorStops}
+            onChange={(colors) => {
+              update({ colorStops: colors });
+            }}
+            style={{
+              width: '100%',
+              height: '200px',
+            }}
+          />
         </div>
+
         <div style={labelRowStyle}>
           <span>Stroke Middle Thickness</span>
           <NumberInput initialValue={state.thickness} min={0} max={0.2} step={0.001} onChange={v => update({ thickness: v })} />

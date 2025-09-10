@@ -47,7 +47,7 @@ function ViewerExterior() {
     if (!initialized || !composition || !timeline) {
         return <FullscreenLoader />
     }
-    console.log(composition)
+    //console.log(composition)
     return <Setup timeline={timeline} composition={composition.data} controls={controls} graphics={graphics} />;
 }
 

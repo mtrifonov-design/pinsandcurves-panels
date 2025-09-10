@@ -31,6 +31,16 @@ type ControlsData = {
     innerRadiusRandomization: number; // [0.0, 1.0]
     outerRadiusRandomization: number; // [0.0, 1.0]
     strokeCap: number; // [0.0, 1.0] - 0.0 = butt, 0.5 = round, 1.0 = square
+
+    colorStops: {
+        color: {
+            r: number;
+            g: number;
+            b: number;
+        };
+        position: number;
+        id: string;        
+    }[];
 }
 
 
@@ -65,6 +75,21 @@ const defaultControls = {
     innerRadiusRandomization: 0.1,
     outerRadiusRandomization: 0.1,
     strokeCap: 0.5,
+
+
+    colorStops: [
+            {
+                color: { r: 1, g: 0, b: 0 },
+                position: 0.0,
+                id: crypto.randomUUID(),
+            },
+            {
+                color: { r: 0, g: 0, b: 1 },
+                position: 0.5,
+                id: crypto.randomUUID(),
+            }
+    ],
+
 }
 
 export type {ControlsData};

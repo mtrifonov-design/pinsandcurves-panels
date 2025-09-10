@@ -83,7 +83,7 @@ export default function Interior({ timeline, controls, graphics, composition }: 
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        console.log(gfx(""))
+        //console.log(gfx(""))
         renderer.setSource(registry.currentSourceId, gfx(""));
     }, [renderer, graphics, composition, registry]);
 

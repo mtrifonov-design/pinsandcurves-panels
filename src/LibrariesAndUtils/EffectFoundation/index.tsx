@@ -73,7 +73,7 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
   && jsonAssets[`${effectInstanceName}.controls`]
   && jsonAssets[`${effectInstanceName}.graphics`]
   && jsonAssets[`${effectInstanceName}.local`];
-  console.log(jsonAssets)
+  //console.log(jsonAssets)
   if (!ready) {
     return <FullscreenLoader />
   }

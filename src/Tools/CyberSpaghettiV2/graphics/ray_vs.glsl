@@ -16,6 +16,7 @@ float lifecycle = 120.;
 
 mat4 generateRayPositions(float nCD, float nCR, float fCD, float fCR, float angle, float ray_length, float ray_progress, float ray_thickness, vec3 chaos_vector) {
     vec3 nearPoint = vec3(nCR * sin(radians(angle)), nCR * cos(radians(angle)), nCD);
+    float chaos = 0.0;
     fCR += fCR * chaos * chaos_vector.x;
     vec3 farPoint = vec3(fCR * sin(radians(angle)), fCR * cos(radians(angle)), fCD);
     vec3 delta = -(farPoint - nearPoint);
@@ -86,25 +87,22 @@ void main() {
     uint instance_key = uint(gl_InstanceID);
     ParticleParams ppar = ppar_for(instance_key,  playheadPosition,  lifecycle);
 
-    float nearCircleDistance = tunnelData.x;
-    float nearCircleRadius = tunnelData.y;
-    float farCircleDistance = tunnelData.z;
-    float farCircleRadius = tunnelData.w;
+    float nearCircleDistance = -0.1;
+    float nearCircleRadius = sqrt(2.);
+    float farCircleDistance = -20.;
+    float farCircleRadius = 0.;
     mat4 t = translation(vec3(0.0, 0.5, 0.0));
     mat4 r = rotation(vec3(.0, 1.0, 0.0), 15.0);
     mat4 p = perspective_projection(16.0/9.0, 45.0, -nearCircleDistance, -farCircleDistance);
-    //gl_Position = p * r * vec4(position, -5.0, 1.0);
 
-
-    float ray_length = rayData.x;
-    float ray_thickness = rayData.y;
+    float ray_length = 0.1;
+    float ray_thickness = 0.03;
 
 
     float final_ray_length = clamp(ray_length * (1.0 + ppar.ray_length_variation_factor * ray_length_variation - ray_length_variation / 2.),0.,1.);
     float final_ray_thickness = clamp(ray_thickness * (1.0 + ppar.ray_thickness_variation_factor * ray_thickness_variation - ray_thickness_variation / 2.),0.,1.);
     mat4 rayPositions = generateRayPositions(nearCircleDistance, nearCircleRadius, farCircleDistance, farCircleRadius, ppar.angle, final_ray_length, ppar.progress, final_ray_thickness,normalize(ppar.chaos_vector));
 
-    //mat4 rayPositions = debugPositions();
     int idx = positionToIndex(position);
     gl_Position = p * rayPositions[idx];
     uv = (position / vec2(2.0, 2.0)) + vec2(0.5);

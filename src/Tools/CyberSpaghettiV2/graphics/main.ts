@@ -42,14 +42,6 @@ function Main() {
         out: Texture({
             signature: external('canvasSig'),
             drawOps: [
-                // {
-                //     program: ref('drawDefault'),
-                //     vertex: external('quad'),
-                //     globals: {
-                //         timeline: external('compositionGlobal')
-                //     },
-                //     textures: {}
-                // },
                 {
                     program: ref('raytunnel_draw_ray'),
                     vertex: external('quad'),
