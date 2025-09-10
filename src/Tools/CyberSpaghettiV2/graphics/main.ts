@@ -28,6 +28,12 @@ function Main() {
             numberOfFrames: 'float',
             rendering: 'int'
         }),
+        screen_sig: GlobalSignature({
+            screenResolution: 'vec2',
+        }),
+        composite_sig: GlobalSignature({
+            compositeResolution: 'vec2',
+        }),
         drawDefault: Program({
             vertexShader: `
                 out vec2 uv;
@@ -47,7 +53,9 @@ function Main() {
             `,
             vertexSignature: ref('quadSig'),
             globalSignatures: {
-                timeline: ref('timeline_sig')
+                timeline: ref('timeline_sig'),
+                screen: ref('screen_sig'),
+                composite: ref('composite_sig'),
             },
             textures: {},
         }),
@@ -57,7 +65,9 @@ function Main() {
         }),
         quad: Vertex({ signature: ref('quadSig') }),
         timeline: Global({signature: ref('timeline_sig')}),
-        out: Texture({ 
+        screenGlobal: Global({signature: ref('screen_sig')}),
+        compositeGlobal: Global({signature: ref('composite_sig')}),
+        out: Texture({
             signature: ref('tsig'),
             screen: true,
             drawOps: [
@@ -65,7 +75,9 @@ function Main() {
                     program: ref('drawDefault'),
                     vertex: ref('quad'),
                     globals: {
-                        timeline: ref('timeline')
+                        timeline: ref('timeline'),
+                        screen: ref('screenGlobal'),
+                        composite: ref('compositeGlobal'),
                     },
                     textures: {}
                 }

@@ -2,7 +2,8 @@ import { ProjectDataStructure, TimelineController } from '@mtrifonov-design/pins
 import TimelineProvider, { useTimeline } from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider.js';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider.js';
 import Setup from './Setup.js';
-import JSONAssetProvider, { useJSONAssets } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
+import { useJSONAssets, JSONAssetCreator } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
+import FullscreenLoader from '../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader.js';
 
 const pb = new ProjectDataStructure.ProjectBuilder();
 pb.setTimelineData(3500, 30, 45);
@@ -26,10 +27,24 @@ const defaultProject = () => {
 }
 function ViewerExterior() {
     const timeline = useTimeline();
-    const jsonAssets = useJSONAssets();
-    const controls = jsonAssets ? jsonAssets["default.controls"] : undefined;
-    const image = jsonAssets ? jsonAssets["default.image"] : undefined;
-    return <Setup timeline={timeline} controls={controls} image={image} />;
+    const { initialized, assets: jsonAssets } = useJSONAssets((id: string, metadata: any) => {
+        if (metadata.type === "controls") {
+            return true;
+        }
+        if (metadata.type === "graphics") {
+            return true;
+        }
+        if (id === "default.composition" && metadata.type === "composition") {
+            return true;
+        }
+        return false;
+    });
+    const composition = initialized ? jsonAssets["default.composition"] : undefined;
+    if (!initialized || !composition || !timeline) {
+        return <FullscreenLoader />
+    }
+    console.log(composition)
+    return <Setup timeline={timeline} composition={composition.data} controls={jsonAssets.filter(asset => asset.type === "controls")} graphics={jsonAssets.filter(asset => asset.type === "graphics")} />;
 }
 
 export default function Viewer() {
@@ -39,15 +54,7 @@ export default function Viewer() {
             defaultName={"default.timeline"}
             shouldCreate={true}
         >
-            <JSONAssetProvider
-                defaultName={"default.controls"}
-            >
-                <JSONAssetProvider
-                    defaultName={"default.image"}
-                >
                     <ViewerExterior />
-                </JSONAssetProvider>
-            </JSONAssetProvider>
         </TimelineProvider>
     </AssetProvider>
 }

@@ -2,21 +2,14 @@ import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design
 import React, { useState, useSyncExternalStore, useEffect } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 
-  import Main from './graphics/main.js';
-
-import FullscreenLoader from '../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader';
-import TimelineProvider from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider';
-
+import Main from './graphics/main.js';
 import hexToRgb, { rgbToHex } from './hexToRgb';
 import { useTimeline } from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider';
 import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';
 import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox';
-
-import { useJSONAssets } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
-import JSONAssetProvider from '../../LibrariesAndUtils/JSONAsset/Provider.js';
 import defaultControls from './CyberSpaghettiControls.js';
-import build from '../../LibrariesAndUtils/NectarGL/build.js';
 import renderStateReducer from './renderStateReducer.js';
+import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -40,27 +33,24 @@ function PresetButton({ text, presetConfig, update, updateLoop }: { text: string
 
 
 
-export function CyberSpaghettiControlsInterior({
-  controls,
-}: { controls: any }) {
+export function CyberSpaghettiControlsInterior() {
   type NewControls = ReturnType<any>;
-  const state = useSyncExternalStore(
-    controls.subscribeInternal.bind(controls),
-    controls.getSnapshot.bind(controls)
-  )!.uiState as NewControls;
+  const {
+    controls,
+    graphics,
+    local,
+    updateControls,
+    updateGraphics,
+    updateLocal
+  } = useEffectFoundation();
 
-  const externalState = useSyncExternalStore(
-    controls.subscribeToExternalState.bind(controls),
-    controls.getExternalState.bind(controls)
-  );
+  const state = local;
 
   const update = (patch: Partial<NewControls>) => {
-    const nextUIState = { ...state, ...patch };
-    const nextState = { uiState: nextUIState, 
-      sourceId: "start", 
-      renderState: renderStateReducer(nextUIState),
-    }
-    controls.setData(nextState);
+    const nextLocal = { ...state, ...patch };
+    const nextControls = renderStateReducer(nextLocal);
+    updateLocal(nextLocal);
+    updateControls(nextControls);
   };
 
   const timeline = useTimeline();
@@ -379,15 +369,6 @@ export function CyberSpaghettiControlsInterior({
   );
 }
 
-function CyberSpaghettiExterior() {
-  const jsonAssets = useJSONAssets();
-  const ready = jsonAssets && jsonAssets["default.controls"];
-  console.log(jsonAssets)
-  if (!ready) {
-    return <FullscreenLoader />
-  }
-  return <CyberSpaghettiControlsInterior controls={jsonAssets["default.controls"]} />
-}
 
 interface SingleSelectOption<T> {
   label: string;
@@ -419,36 +400,12 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
   );
 }
 
-function CyberSpaghettiControlsInt() {
-  return <JSONAssetProvider
-      defaultName="default.controls"
-      shouldCreate={true}
-      defaultData={{
-        uiState: defaultControls,
-        sourceId: "start",
-        renderState: renderStateReducer(defaultControls)
-      }}
-    >
-      <JSONAssetProvider
-        defaultName="default.image"
-        shouldCreate={true}
-        defaultData={{
-          sourceId: "start",
-          source: Main()("")
-        }}
-      >
-        <TimelineProvider
-          defaultName={"default.timeline"}
-        >
-          <CyberSpaghettiExterior />
-        </TimelineProvider>
-      </JSONAssetProvider>
-    </JSONAssetProvider>
-}
-
 export default function CyberSpaghettiControls() {
-
-  return <AssetProvider>
-          <CyberSpaghettiControlsInt />
-  </AssetProvider>;
+  return <EffectFoundation
+    defaultControls={renderStateReducer(defaultControls)}
+    defaultGraphics={Main()("")}
+    defaultLocal={defaultControls}
+  >
+    <CyberSpaghettiControlsInterior />
+  </EffectFoundation>;
 }

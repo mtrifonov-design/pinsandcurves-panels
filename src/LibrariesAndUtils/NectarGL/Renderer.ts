@@ -41,7 +41,7 @@ class NectarRenderer {
             if (existing && existing.versionId === versionId) {
                 continue;
             } else {
-                console.log("Executing commands for", key, state[key].commands);
+                //console.log("Executing commands for", key, state[key].commands);
                 this.gfx.executeCommands(state[key].commands);
             }
         }

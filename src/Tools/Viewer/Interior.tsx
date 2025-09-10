@@ -11,11 +11,11 @@ import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
 
 
-export default function Interior({ timeline, controls, image }: any) {
+export default function Interior({ timeline, controls, graphics }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [renderer, setRenderer] = useState<NectarRenderer | null>(null);
-    const imageSnapshot: any = useSyncExternalStore(image.subscribeInternal.bind(image), image.getSnapshot.bind(image));
+    const graphicsSnapshot: any = useSyncExternalStore(graphics.subscribeInternal.bind(graphics), graphics.getSnapshot.bind(graphics));
     const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const timelineProject : TimelineController.Project = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
 
@@ -94,9 +94,9 @@ export default function Interior({ timeline, controls, image }: any) {
     }, [frameSaver]);
 
     useEffect(() => {
-        if (!renderer || !imageSnapshot) return;
-        renderer.setSource(imageSnapshot.sourceId, imageSnapshot.source);
-    }, [renderer, imageSnapshot]);
+        if (!renderer || !graphicsSnapshot) return;
+        renderer.setSource(graphicsSnapshot.sourceId, graphicsSnapshot.source);
+    }, [renderer, graphicsSnapshot]);
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot) return;
