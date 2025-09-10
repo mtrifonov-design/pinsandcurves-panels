@@ -56,31 +56,31 @@ function Interior({ controls, graphics, local, children } : {
     </InteriorContext.Provider>
 }
 
-function Exterior({children}: {children?: React.ReactNode}) {
+function Exterior({children, effectInstanceName}: {children?: React.ReactNode, effectInstanceName: string}) {
   const { initialized, assets: jsonAssets} = useJSONAssets((id: string, metadata: any) => {
-    if (id === "default.controls" && metadata.type === "controls") {
+    if (id === `${effectInstanceName}.controls` && metadata.type === "controls") {
       return true;
     }
-    if (id === "default.graphics" && metadata.type === "graphics") {
+    if (id === `${effectInstanceName}.graphics` && metadata.type === "graphics") {
       return true;
     }
-    if (id === "default.local" && metadata.type === "local") {
+    if (id === `${effectInstanceName}.local` && metadata.type === "local") {
       return true;
     }
     return false;
   });
   const ready = initialized 
-  && jsonAssets["default.controls"]
-  && jsonAssets["default.graphics"]
-  && jsonAssets["default.local"];
+  && jsonAssets[`${effectInstanceName}.controls`]
+  && jsonAssets[`${effectInstanceName}.graphics`]
+  && jsonAssets[`${effectInstanceName}.local`];
   console.log(jsonAssets)
   if (!ready) {
     return <FullscreenLoader />
   }
   return <Interior 
-    controls={jsonAssets["default.controls"].data} 
-    graphics={jsonAssets["default.graphics"].data}
-    local={jsonAssets["default.local"].data}
+    controls={jsonAssets[`${effectInstanceName}.controls`].data} 
+    graphics={jsonAssets[`${effectInstanceName}.graphics`].data}
+    local={jsonAssets[`${effectInstanceName}.local`].data}
   >
     {children}
   </Interior>;
@@ -114,7 +114,16 @@ export default function EffectFoundation({
         <JSONAssetCreator
             defaultName="default.composition"
             defaultData={{
-                
+                layers: [
+                    {
+                        effects: [
+                            {
+                                instanceId: "Something"
+                            }
+                        ]
+                    }
+                ]
+
             }}
             defaultType="composition"
         >
@@ -142,7 +151,9 @@ export default function EffectFoundation({
                     <TimelineProvider
                         defaultName={"default.timeline"}
                     >
-                        <Exterior>
+                        <Exterior
+                            effectInstanceName={effectInstanceName}
+                        >
                             {children}
                         </Exterior>
                     </TimelineProvider>

@@ -46,7 +46,7 @@ function Main() {
                 in vec2 uv;
                 void main() {
                     float l = length(uv);
-                    float radius = (playheadPosition / numberOfFrames) * 0.2;
+                    float radius = (playheadPosition / numberOfFrames) * 1.2;
                     float val = smoothstep(radius, radius + 0.1, l);
                     outColor = vec4(val, 0.0, 0.0, 1.0);
                 }
@@ -63,8 +63,8 @@ function Main() {
             type: 'RGBA8',
             size: [1920, 1080],
         }),
-        quad: Vertex({ signature: ref('quadSig') }),
-        timeline: Global({signature: ref('timeline_sig')}),
+        quad: Vertex({ signature: ref('quadSig'), exportName: "quad" }),
+        timeline: Global({signature: ref('timeline_sig'), exportName: "timeline"}),
         screenGlobal: Global({signature: ref('screen_sig')}),
         compositeGlobal: Global({signature: ref('composite_sig')}),
         out: Texture({

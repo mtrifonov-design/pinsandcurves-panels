@@ -25,6 +25,7 @@ class NectarRenderer {
     private sourceId: string | undefined;
     setSource(sourceId: string, source: any) {
         if (sourceId !== this.sourceId) {
+            //console.log("source",source)
             this.gfx.compile(source);
             this.state = {};
             this.sourceId = sourceId;
@@ -34,6 +35,7 @@ class NectarRenderer {
     private state: RenderStateObject = {};
     setState(sourceId: string, state: RenderStateObject) {
         if (!this.gfx) return;
+        //console.log(sourceId,state);
         if (sourceId !== this.sourceId) return;
         for (const key in state) {
             const versionId = state[key].versionId;
@@ -50,6 +52,7 @@ class NectarRenderer {
 
     frame() {
         if (!this.gfx) return;
+        //console.log(this.state)
         const screenTexture = Array.from(this.gfx.resources.values()).find(t => t.data.screen) as DynamicTexture;
         //console.log(screenTexture)
         if (screenTexture) {

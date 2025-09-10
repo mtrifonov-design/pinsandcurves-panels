@@ -4,20 +4,24 @@ import FrameSaver from './FrameSaver/FrameSaver.js';
 import FrameSaverScreen from './FrameSaver/FrameSaverScreen.js';
 import useTracker from '../../LibrariesAndUtils/hooks/useTracker.js';
 import TimelineBar from './TimelineBar.js';
-import build from '../../LibrariesAndUtils/NectarGL/build.js';
-import compile from '../../LibrariesAndUtils/NectarGL/compile.js';
+
 import NectarRenderer from '../../LibrariesAndUtils/NectarGL/Renderer.js';
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
+import buildGraphics from '../../LibrariesAndUtils/CompositionBuilder/graphicsBuilder.js';
+import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBuilder.js';
 const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
 
-
-export default function Interior({ timeline, controls, graphics }: any) {
+export default function Interior({ timeline, controls, graphics, composition }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [renderer, setRenderer] = useState<NectarRenderer | null>(null);
-    const graphicsSnapshot: any = useSyncExternalStore(graphics.subscribeInternal.bind(graphics), graphics.getSnapshot.bind(graphics));
-    const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
+    // const graphicsSnapshot: any = useSyncExternalStore(graphics.subscribeInternal.bind(graphics), graphics.getSnapshot.bind(graphics));
+    // const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
+    const graphicsSnapshot = graphics.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
+    const controlsSnapshot = controls.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
+    const compositionSnapshot: any = useSyncExternalStore(composition.subscribeInternal.bind(composition), composition.getSnapshot.bind(composition));
     const timelineProject : TimelineController.Project = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
+    const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
     const { canvasWidth: width, canvasHeight: height } = controlsSnapshot;
 
@@ -89,14 +93,18 @@ export default function Interior({ timeline, controls, graphics }: any) {
             window.requestAnimationFrame(draw);
         };
         draw();
-
         return () => { };
     }, [frameSaver]);
 
     useEffect(() => {
-        if (!renderer || !graphicsSnapshot) return;
-        renderer.setSource(graphicsSnapshot.sourceId, graphicsSnapshot.source);
-    }, [renderer, graphicsSnapshot]);
+        if (!renderer || !graphicsSnapshot || !compositionSnapshot) return;
+        const { registry: newRegistry, gfx } = buildGraphics(graphicsSnapshot,compositionSnapshot, null)
+        if (newRegistry.currentSourceId !== registry.currentSourceId) {
+            setRegistry(newRegistry);
+        }
+        console.log(gfx(""))
+        renderer.setSource(registry.currentSourceId, gfx(""));
+    }, [renderer, graphics, composition, registry]);
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot) return;
@@ -104,7 +112,7 @@ export default function Interior({ timeline, controls, graphics }: any) {
             versionId: crypto.randomUUID(),
             commands: [
                 {
-                    resource: "_timeline",
+                    resource: "timeline",
                     type: "setGlobals",
                     payload: [{
                         playheadPosition: [timelineProject.timelineData.playheadPosition],
@@ -115,11 +123,11 @@ export default function Interior({ timeline, controls, graphics }: any) {
             ],
         }
         const renderState = {
-            ...controlsSnapshot.renderState,
+            ...buildControls(controlsSnapshot, registry),
             timeline: timelineStateStream,
         };
-        renderer.setState(controlsSnapshot.sourceId, renderState);
-    }, [renderer, controlsSnapshot, timelineProject, frameSaver]);
+        renderer.setState(registry.currentSourceId, renderState);
+    }, [renderer, controls, timelineProject, frameSaver, registry]);
 
     if (!timeline) {
         return <div>No timeline found</div>

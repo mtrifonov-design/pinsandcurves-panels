@@ -85,7 +85,7 @@ function renderStateReducer(state: any) {
             versionId: "default",
             commands: [
                 {
-                    resource: "_quad",
+                    resource: "quad",
                     type: "setVertices",
                     payload: [
                         {

@@ -25,15 +25,19 @@ type TextureSignatureData = {
 };
 type VertexData = {
     signature: string;
+    exportName?: string;
 };
 type InstanceData = {
     signature: string;
+    exportName?: string;
 };
 type GlobalData = {
     signature: string;
+    exportName?: string;
 };
 type StaticTextureData = {
     signature: string;
+    exportName?: string;
 };
 type ProgramData = {
     vertexSignature: string;
@@ -49,6 +53,7 @@ type ProgramData = {
     };
     vertexShader: string;
     fragmentShader: string;
+    exportName?: string;
 };
 type DrawOperation = {
     program: string;
@@ -65,6 +70,7 @@ type DynamicTextureData = {
     screen? : boolean;
     signature: string;
     drawOps: DrawOperation[];
+    exportName?: string;
 };
 
 export type {

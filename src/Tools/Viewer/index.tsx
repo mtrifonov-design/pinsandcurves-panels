@@ -27,7 +27,7 @@ const defaultProject = () => {
 }
 function ViewerExterior() {
     const timeline = useTimeline();
-    const { initialized, assets: jsonAssets } = useJSONAssets((id: string, metadata: any) => {
+    const { initialized, assets: jsonAssets, index } = useJSONAssets((id: string, metadata: any) => {
         if (metadata.type === "controls") {
             return true;
         }
@@ -40,11 +40,15 @@ function ViewerExterior() {
         return false;
     });
     const composition = initialized ? jsonAssets["default.composition"] : undefined;
+    const controlsIds = initialized ? index ? Object.keys(index.data).filter(id => index.data[id].type === "controls") : [] : [];
+    const graphicsIds = initialized ? index ? Object.keys(index.data).filter(id => index.data[id].type === "graphics") : [] : [];
+    const controls = Object.entries(jsonAssets).filter(([id, asset]) => controlsIds.includes(id));
+    const graphics = Object.entries(jsonAssets).filter(([id, asset]) => graphicsIds.includes(id));
     if (!initialized || !composition || !timeline) {
         return <FullscreenLoader />
     }
     console.log(composition)
-    return <Setup timeline={timeline} composition={composition.data} controls={jsonAssets.filter(asset => asset.type === "controls")} graphics={jsonAssets.filter(asset => asset.type === "graphics")} />;
+    return <Setup timeline={timeline} composition={composition.data} controls={controls} graphics={graphics} />;
 }
 
 export default function Viewer() {

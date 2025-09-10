@@ -67,6 +67,7 @@ function build(
             if (typeof obj !== "function" && obj.type === "Use") {
                 let data = deepBind(obj.data.resources, obj.data.bindings);
                 data = deepReplace(data, `${self}_${id}`);
+                //console.log("d data", data)
                 expandedResources.push(...data);
                 indicesToDelete.push(i);
             }

@@ -139,7 +139,7 @@ function useJSONAssets(
     const registeredAssets = indexInitialized ? Object.entries(index.data)
         .filter(([id, metadata]) => assetFilter(id, metadata))
         .map(([assetId]) => ({ assetId, assetController: new Controller() })) : [];
-    return useAssets(registeredAssets);
+    return {...useAssets(registeredAssets), index};
 }
 
 //export default JSONAssetProvider;

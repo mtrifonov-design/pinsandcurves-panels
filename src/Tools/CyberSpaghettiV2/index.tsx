@@ -10,6 +10,7 @@ import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox';
 import defaultControls from './CyberSpaghettiControls.js';
 import renderStateReducer from './renderStateReducer.js';
 import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
+import { exportResources } from '../../LibrariesAndUtils/NectarGL/Builder/index.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -403,8 +404,9 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 export default function CyberSpaghettiControls() {
   return <EffectFoundation
     defaultControls={renderStateReducer(defaultControls)}
-    defaultGraphics={Main()("")}
+    defaultGraphics={exportResources(Main())}
     defaultLocal={defaultControls}
+    effectInstanceName='Something'
   >
     <CyberSpaghettiControlsInterior />
   </EffectFoundation>;

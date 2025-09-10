@@ -27,7 +27,12 @@ export default class Graphics {
             if (!command.resource) {
                 this[command.type](...command.payload);
             } else {
-                const resource = this.resources.get(command.resource);
+                const resource = Array.from(this.resources.values()).find(r => {
+                    if (r.data && "exportName" in r.data) {
+                        return r.data.exportName === command.resource;
+                    }
+                    return false;
+                });
                 if (!resource) {
                     console.warn(`Resource not found: ${command.resource}`);
                     return;

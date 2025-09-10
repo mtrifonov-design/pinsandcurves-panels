@@ -100,7 +100,6 @@ export class DynamicTexture extends VariableResource {
     updateTextureData() {
         //console.log(this.dirty, this.id)
         if (!this.dirty) return;
-        //console.log("Updating dynamic texture", this.id);
         //console.log(this.dependsOn);
         for (const dep of this.dependsOn) {
             const res = this.resources.get(dep) as undefined | ResourceClass;

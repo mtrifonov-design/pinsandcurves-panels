@@ -2,10 +2,10 @@ import React from 'react';
 import FullscreenLoader from '../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader.js';
 import Interior from './Interior.js';
 
-export default function Setup({ timeline, controls, graphics }) {
-    const ready = timeline && controls && graphics;
+export default function Setup({ timeline, controls, graphics, composition }) {
+    const ready = timeline && controls && graphics && composition;
     if (!ready) {
         return <FullscreenLoader />
     }
-    return <Interior controls={controls} timeline={timeline} graphics={graphics} />
+    return <Interior controls={controls} timeline={timeline} graphics={graphics} composition={composition} />
 }
