@@ -12,7 +12,7 @@ import { build,
     exportResources,
     external
  } from "../../../LibrariesAndUtils/NectarGL/Builder"
-
+import RayTunnel from "./raytunnel";
 
 function Main() {
     return build((ref: any) => ({
@@ -42,18 +42,33 @@ function Main() {
         out: Texture({
             signature: external('canvasSig'),
             drawOps: [
+                // {
+                //     program: ref('drawDefault'),
+                //     vertex: external('quad'),
+                //     globals: {
+                //         timeline: external('compositionGlobal')
+                //     },
+                //     textures: {}
+                // },
                 {
-                    program: ref('drawDefault'),
+                    program: ref('raytunnel_draw_ray'),
                     vertex: external('quad'),
+                    instance: ref('raytunnel_ray'),
                     globals: {
-                        timeline: external('compositionGlobal')
+                        g: ref('raytunnel_global'),
+                        t: external('compositionGlobal')
                     },
-                    textures: {}
+                    textures: {
+                        colorTex: ref('raytunnel_colorTex')
+                    },
+                    blend: "add",
                 }
             ]
         }),
-
-        // raytunnel: RayTunnel('raytunnel', { timeline: ref('timeline')}),
+        raytunnel: RayTunnel({ 
+            timeline_sig: external('compositionGlobalSig'),
+            quadSig: external('quadSig')
+        }),
         // blur: Use(blurBuild),
     }));
 }

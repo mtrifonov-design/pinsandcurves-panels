@@ -8,14 +8,19 @@ import { build,
     Instance,
     Global,
     Texture,
+    external,
     Use
  } from "../../../LibrariesAndUtils/NectarGL/Builder"
+import ray_fs from './ray_fs.glsl';
+import ray_vs from './ray_vs.glsl';
+
 
 function RayTunnel({
-    timeline, timeline_sig
+    timeline_sig,
+    quadSig
 }: {
-    timeline: string,
-    timeline_sig: string
+    timeline_sig: string,
+    quadSig: string
 }) {
     return build((ref: any) => ({
         global_sig: GlobalSignature({
@@ -31,21 +36,13 @@ function RayTunnel({
             },
             maxInstanceCount: 50000
         }),
-        quad_sig: VertexSignature({
-            attributes: {
-                position: 'vec2',
-            },
-            maxTriangleCount: 1024,
-            maxVertexCount: 1024,
-        }),
         global: Global({
             signature: ref('global_sig'),
+            exportName: 'cyberspag_globals'
         }),
         ray: Instance({
             signature: ref('ray_sig'),
-        }),
-        quad: Vertex({
-            signature: ref('quad_sig'),
+            exportName: 'cyberspag_ray'
         }),
         colorTex_sig : TextureSignature({
             type: 'RGBA32F',
@@ -53,44 +50,23 @@ function RayTunnel({
         }),
         colorTex: Texture({
             signature: ref('colorTex_sig'),
+            exportName: 'cyberspag_colorTexture'
         }),
         draw_ray: Program({
-            vertexShader: '',
-            fragmentShader: '',
+            vertexShader: ray_vs,
+            fragmentShader: ray_fs,
             globalSignatures: {
                 g: ref('global_sig'),
                 t: timeline_sig
             },
             instanceSignature: ref('ray_sig'),
-            vertexSignature: ref('quad_sig'),
+            vertexSignature: quadSig,
             textures: {
                 colorTex: {
                     filter: 'nearest',
                     clamp: 'wrap',
                 }
             }
-        }),
-        out_sig: TextureSignature({
-            type: 'RGBA8',
-            size: [1920,1080],
-        }),
-        out: Texture({
-            signature: ref('out_sig'),
-            drawOps: [
-            {
-                program: ref('draw_ray'),
-                vertex: ref('quad'),
-                instance: ref('ray'),
-                globals: {
-                    g: ref('global'),
-                    timeline: timeline
-                },
-                textures: {
-                    colorTex: ref('colorTex')
-                },
-                blend: "add",
-            }
-            ]
         })
     }));
 }
