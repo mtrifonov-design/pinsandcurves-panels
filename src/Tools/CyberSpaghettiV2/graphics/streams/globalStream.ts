@@ -26,7 +26,14 @@ function globalStream(state: ControlsData) {
                 temperature: [state.temperature],
                 pressure: [state.pressure]
             }]
-        }]
+        }, {
+            resource: "cyberspag_blur",
+            type: "setGlobals",
+            payload: [{
+                amount: [state.temperature]
+            }]
+        }
+        ],
     };
     return cache;
 }

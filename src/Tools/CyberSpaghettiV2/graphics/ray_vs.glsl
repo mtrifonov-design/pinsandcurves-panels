@@ -8,12 +8,13 @@ float radius2 = 0.5;
 
 
 
-mat4 generateRayPositions(float nCD, float nCR, float fCD, float fCR, float angle, float ray_length, float ray_progress, float ray_thickness, vec3 chaos_vector) {
-    nCR -= nCR * .99 * chaos_vector.y;
+mat4 generateRayPositions(vec2 origin, float nCD, float nCR, float fCD, float fCR, float angle, float ray_length, float ray_progress, float ray_thickness, vec3 chaos_vector) {
+    float minDistanceFactor = mix(10.,1.,temperature);
+    nCR -= nCR * (1. - minDistanceFactor / 100.) * chaos_vector.y;
     vec3 nearPoint = vec3(nCR * sin(radians(angle)), nCR * cos(radians(angle)), nCD);
     fCR -= fCR * chaos_vector.x;
 
-    vec3 farPoint = vec3(fCR * sin(radians(angle)), fCR * cos(radians(angle)), fCD);
+    vec3 farPoint = vec3(origin,0.) + vec3(fCR * sin(radians(angle)), fCR * cos(radians(angle)), fCD);
     vec3 delta = -(farPoint - nearPoint);
     float ray_full_length = length(delta);
     float computed_progress = ray_progress * (1. + ray_length) - ray_length;
@@ -99,7 +100,8 @@ void main() {
 
     float nearCircleDistance = -.01;
     float nearCircleRadius = minNearRadius(nearCircleDistance, 45.0, canvas.x/canvas.y) * 100.;
-    float farCircleDistance = -15.;
+    float farCircleDistance = mix(-5.,-35.,origin.z);
+    float farMinRadius = minNearRadius(farCircleDistance, 45.0, canvas.x/canvas.y);
     float farCircleRadius = .5;
     mat4 t = translation(vec3(0.0, 0.5, 0.0));
     mat4 r = rotation(vec3(.0, 1.0, 0.0), 15.0);
@@ -110,7 +112,8 @@ void main() {
 
     float final_ray_length = clamp(ray_length * (1.0 + ppar.ray_length_variation_factor * RAY_LENGTH_VARIATION - RAY_LENGTH_VARIATION / 2.),0.,1.);
     float final_ray_thickness = clamp(ray_thickness * (1.0 + ppar.ray_thickness_variation_factor * RAY_THICKNESS_VARIATION - RAY_THICKNESS_VARIATION / 2.),0.,1.);
-    mat4 rayPositions = generateRayPositions(nearCircleDistance, nearCircleRadius, farCircleDistance, farCircleRadius, ppar.angle, final_ray_length, ppar.progress, final_ray_thickness,normalize(ppar.chaos_vector));
+    
+    mat4 rayPositions = generateRayPositions((origin.xy * 2. - vec2(1.)) * farMinRadius, nearCircleDistance, nearCircleRadius, farCircleDistance, farCircleRadius, ppar.angle, final_ray_length, ppar.progress, final_ray_thickness,normalize(ppar.chaos_vector));
 
     int idx = positionToIndex(position);
     gl_Position = p * rayPositions[idx];

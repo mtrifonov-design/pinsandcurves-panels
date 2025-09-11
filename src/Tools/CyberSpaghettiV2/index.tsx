@@ -1,17 +1,14 @@
 import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
 import React, { useState, useSyncExternalStore, useEffect, useRef, useCallback } from 'react';
-import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import { GradientPicker } from '@mtrifonov-design/pinsandcurves-design';
-import { throttle } from 'lodash'; 
+import { throttle } from 'lodash';
 import Main from './graphics/main.js';
-import hexToRgb, { rgbToHex } from './hexToRgb';
-import { useTimeline } from '../../LibrariesAndUtils/TimelineUtils/TimelineProvider';
-import { spaghetti, speed_lines, star_field, star_shimmer, warp_speed } from './presets';
 import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox';
 import defaultControls from './CyberSpaghettiControls.js';
 import renderStateReducer from './renderStateReducer.js';
 import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
 import { exportResources } from '../../LibrariesAndUtils/NectarGL/Builder/index.js';
+import { JSONAssetCreator } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -41,13 +38,15 @@ export function CyberSpaghettiControlsInterior() {
   const {
     controls,
     graphics,
+    index,
     local,
     timeline,
+    composition,
     updateControls,
     updateGraphics,
-    updateLocal
+    updateLocal,
+    updateComposition
   } = useEffectFoundation();
-
   const state = local;
   //console.log(timeline);
   //console.log(JSON.stringify(state.colorStops[1].position, null, 2))
@@ -57,13 +56,23 @@ export function CyberSpaghettiControlsInterior() {
     if (focusRange[1] !== 300) {
       timeline.projectTools.updateFocusRange([0, 300], true);
     }
-  },[timeline])
+  }, [timeline])
 
-  const updateCb = useCallback(throttle((state, patch: Partial<NewControls>) => {
+  const dimensionsRef = useRef([-1, -1]);
+
+
+
+
+  const updateCb = useCallback(throttle((state, patch: Partial<NewControls>, composition) => {
     const nextLocal = { ...state, ...patch };
     const nextControls = renderStateReducer(nextLocal);
     //console.log("origin!", nextLocal.colorStops[1].position, null, 2);
     updateLocal(nextLocal);
+
+    if (nextLocal.canvasWidth !== dimensionsRef.current[0] || nextLocal.canvasHeight !== dimensionsRef.current[1]) {
+      dimensionsRef.current = [nextLocal.canvasWidth, nextLocal.canvasHeight];
+      updateComposition({ ...composition, canvasDimensions: [nextLocal.canvasWidth, nextLocal.canvasHeight] });
+    }
 
     //console.log(JSON.stringify(nextControls).length);
     //console.log(JSON.stringify(nextLocal).length);
@@ -71,8 +80,9 @@ export function CyberSpaghettiControlsInterior() {
   }, 50), []);
 
   const update = (patch: Partial<NewControls>) => {
-    updateCb(state, patch);
+    updateCb(state, patch, composition);
   };
+
 
   const determineFocusRange = (rayLife, numCycles, includeFadeInOut) => {
     const cycles = numCycles === 1 ? 2 : numCycles + 2;
@@ -145,15 +155,15 @@ export function CyberSpaghettiControlsInterior() {
         <div style={groupedRowStyle}>
           <span>Canvas Size</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onChange={v => update({ canvasWidth: v })} />
+            <NumberInput initialValue={state.canvasWidth} min={0} max={3840} step={10} onCommit={v => update({ canvasWidth: v })} />
             <span style={{ margin: '0 0.5rem' }}>x</span>
-            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onChange={v => update({ canvasHeight: v })} />
+            <NumberInput initialValue={state.canvasHeight} min={0} max={3840} step={10} onCommit={v => update({ canvasHeight: v })} />
           </div>
         </div>
       </CollapsibleSection>
       {/* --- Rays - Appearance --- */}
       <CollapsibleSection iconName="shower" title="Showerhead" defaultOpen={true}>
-                <span style={{ display: 'block', marginBottom: 4, color: 'var(--gray6)', fontWeight: 500 }}>Colors</span>
+        <span style={{ display: 'block', marginBottom: 4, color: 'var(--gray6)', fontWeight: 500 }}>Colors</span>
         <div style={{
           paddingLeft: '1rem',
           paddingRight: '1rem',
@@ -178,7 +188,7 @@ export function CyberSpaghettiControlsInterior() {
           <span>Temperature</span>
           <NumberInput initialValue={state.temperature} min={0} max={1} step={0.01} onChange={v => update({ temperature: v })} />
         </div>
-                <div style={groupedRowStyle}>
+        <div style={groupedRowStyle}>
           <span>Position</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} />
@@ -233,12 +243,36 @@ function SingleSelectButtonGroup<T extends string | number>({ options, value, on
 }
 
 export default function CyberSpaghettiControls() {
+
+  const [loadedImage, setLoadedImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = `/pinsandcurves-panels/neonshower/showerhead.png`;
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx?.drawImage(img, 0, 0);
+      const dataUrl = canvas.toDataURL();
+      setLoadedImage(dataUrl);
+    };
+  }, []);
+
   return <EffectFoundation
     defaultControls={renderStateReducer(defaultControls)}
     defaultGraphics={exportResources(Main())}
     defaultLocal={defaultControls}
     effectInstanceName='Something'
   >
-    <CyberSpaghettiControlsInterior />
+    <>
+      <CyberSpaghettiControlsInterior />
+      {loadedImage && <JSONAssetCreator
+        defaultName="showerhead.png"
+        defaultData={loadedImage}
+        defaultType={"png"}
+      ><></></JSONAssetCreator>}
+    </>
   </EffectFoundation>;
 }

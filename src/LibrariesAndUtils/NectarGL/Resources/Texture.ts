@@ -15,7 +15,30 @@ export class StaticTexture extends VariableResource {
     }
 
     declare data : StaticTextureData;
-    computeDependencies() { "do nothing" };
+    computeDependencies() { 
+
+        // compute isDependencyOf
+        const dynamicTextures = Array.from(this.resources.values()).filter(r => r.type === "DynamicTexture");
+        //console.log("self",this.id)
+        for (const texture of dynamicTextures) {
+            let isDependencyOf = false;
+            //console.log(texture.id)
+            const textureDrawOps = texture.data.drawOps;
+            for (const drawOp of textureDrawOps) {
+                //console.log(Object.values(drawOp.textures))
+                //console.log(Object.values(drawOp.textures).includes(this.id))
+                if (Object.values(drawOp.textures).includes(this.id)) {
+                    isDependencyOf = true;
+                    break;
+                }
+            }
+            if (isDependencyOf) {
+                this.isDependencyOf.push(texture.id);
+            }
+        }
+
+
+    };
     textureProvider : TextureProvider;
     constructor(resources: Map<string, ResourceClass>,
         id: string,
@@ -33,10 +56,25 @@ export class StaticTexture extends VariableResource {
         })
     }
 
-    setTextureData(textureData: HTMLImageElement | Float32Array | Uint8Array) {
-        this.textureProvider.setData(textureData);
-        this.markAndPropagateDirty();
-        this.dirty = false;
+    setTextureData(textureData: HTMLImageElement | Float32Array | Uint8Array | string) {
+        if (typeof textureData === "string") {
+            const img = new Image();
+            img.src = textureData;
+            textureData = img;
+            img.onload = () => {
+                if (this.textureProvider) {
+                    //console.log("setting texture")
+                    this.textureProvider.setData(img);
+                    this.markAndPropagateDirty();
+                    this.dirty = false;
+                }
+            }
+        } else {
+            this.textureProvider.setData(textureData);
+            this.markAndPropagateDirty();
+            this.dirty = false;
+        }
+
     }
 };
 

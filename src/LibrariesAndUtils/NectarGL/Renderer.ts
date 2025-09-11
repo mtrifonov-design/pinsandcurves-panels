@@ -32,21 +32,41 @@ class NectarRenderer {
         }
     };
 
+    private assets = new Map<string, any>();
+    attachAssets(assets: [string, any][]) {
+        assets.forEach(([id, asset]) => {
+            this.assets.set(id, asset);
+        });
+    }
+
     private state: RenderStateObject = {};
     setState(sourceId: string, state: RenderStateObject) {
         if (!this.gfx) return;
         //console.log(sourceId,state);
         if (sourceId !== this.sourceId) return;
+        const skippedKeys: string[] = [];
         for (const key in state) {
             const versionId = state[key].versionId;
             const existing = this.state[key];
             if (existing && existing.versionId === versionId) {
                 continue;
             } else {
-                this.gfx.executeCommands(state[key].commands);
+                // find asset dependencies in commands:
+                const textureDataWrites = state[key].commands.filter(c => c.type === "setTextureData" && typeof c.payload[0] === "string" && c.payload[0].startsWith("asset://"));
+                const textureAssets = textureDataWrites.map(c => c.payload[0].replace("asset://", ""));
+                // check if all assets are available
+                const allAssetsAvailable = textureAssets.every(asset => this.assets.has(asset));
+                if (!allAssetsAvailable) {
+                    skippedKeys.push(key);
+                    continue;
+                }
+                this.gfx.executeCommands(state[key].commands, this.assets);
             }
         }
-        this.state = state;
+        const filteredState = Object.fromEntries(
+            Object.entries(state).filter(([key]) => !skippedKeys.includes(key))
+        );
+        this.state = filteredState;
     };
 
     frame() {

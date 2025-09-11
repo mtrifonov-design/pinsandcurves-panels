@@ -22,7 +22,7 @@ export default class Graphics {
         processResources(this.resources, toAdd, this.gl);
     }
 
-    executeCommands(commands: Array<{ resource?: string, type: string, payload: any[] }>) {
+    executeCommands(commands: Array<{ resource?: string, type: string, payload: any[] }>, assets?: Map<string, any>) {
         commands.forEach(command => {
             if (!command.resource) {
                 this[command.type](...command.payload);
@@ -38,7 +38,15 @@ export default class Graphics {
                     return;
                 }
                 if (command.type in resource) {
-                    resource[command.type](...command.payload);
+                    if (command.type === "setTextureData" && typeof command.payload[0] === "string" && command.payload[0].startsWith("asset://")) {
+                        const processedPath = command.payload[0].replace("asset://", "");
+                        const asset = assets?.get(processedPath);
+                        if (asset) {
+                            resource[command.type](asset);
+                        }
+                    } else {
+                        resource[command.type](...command.payload);
+                    }
                 } else {
                     console.warn(`Unknown command type: ${command.type}`);
                 }

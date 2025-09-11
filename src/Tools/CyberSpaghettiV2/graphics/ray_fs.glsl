@@ -2,6 +2,7 @@ in vec2 uv;
 in float texture_sample_factor;
 in float progress_factor;
 
+
 float gaussian(float x, float sigma) {
     return exp(-pow(x - 0.5, 2.0) / (2.0 * pow(sigma, 2.0)));
 }

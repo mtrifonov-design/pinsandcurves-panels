@@ -37,18 +37,23 @@ function ViewerExterior() {
         if (id === "default.composition" && metadata.type === "composition") {
             return true;
         }
+        if (metadata.type === "png" || metadata.type === "jpg") {
+            return true;
+        }
         return false;
     });
     const composition = initialized ? jsonAssets["default.composition"] : undefined;
     const controlsIds = initialized ? index ? Object.keys(index.data).filter(id => index.data[id].type === "controls") : [] : [];
     const graphicsIds = initialized ? index ? Object.keys(index.data).filter(id => index.data[id].type === "graphics") : [] : [];
+    const imagesIds = initialized ? index ? Object.keys(index.data).filter(id => index.data[id].type === "png" || index.data[id].type === "jpg") : [] : [];
     const controls = Object.entries(jsonAssets).filter(([id, asset]) => controlsIds.includes(id));
     const graphics = Object.entries(jsonAssets).filter(([id, asset]) => graphicsIds.includes(id));
+    const images = Object.entries(jsonAssets).filter(([id, asset]) => imagesIds.includes(id));
     if (!initialized || !composition || !timeline) {
         return <FullscreenLoader />
     }
     //console.log(composition)
-    return <Setup timeline={timeline} composition={composition.data} controls={controls} graphics={graphics} />;
+    return <Setup timeline={timeline} composition={composition.data} controls={controls} graphics={graphics} images={images} />;
 }
 
 export default function Viewer() {

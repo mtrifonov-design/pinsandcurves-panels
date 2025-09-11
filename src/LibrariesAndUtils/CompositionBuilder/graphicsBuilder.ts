@@ -15,7 +15,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
         };
         const __canvasSig = TextureSignature({
             type: "RGBA8",
-            size: [1920, 1080]
+            size: [compDesc.canvasDimensions[0], compDesc.canvasDimensions[1]],
         })
         const __compositionGlobalSig = GlobalSignature({
             screen: 'vec2',

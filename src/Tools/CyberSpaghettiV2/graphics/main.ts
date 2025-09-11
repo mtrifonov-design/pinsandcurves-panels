@@ -12,34 +12,21 @@ import { build,
     exportResources,
     external
  } from "../../../LibrariesAndUtils/NectarGL/Builder"
+import Blur from "./blur";
 import RayTunnel from "./raytunnel";
+import fog from './fog_fs.glsl';
 
 function Main() {
     return build((ref: any) => ({
-        drawDefault: Program({
-            vertexShader: `
-                out vec2 uv;
-                void main() {
-                    gl_Position = vec4(position.xy, 0.0, 1.0);
-                    uv = position.xy;
-                }
-            `,
-            fragmentShader: `
-                in vec2 uv;
-                void main() {
-                    float l = length(uv);
-                    float radius = (playheadPosition / numberOfFrames) * 1.2;
-                    float val = smoothstep(radius, radius + 0.1, l);
-                    outColor = vec4(val, 0.0, 0.0, 1.0);
-                }
-            `,
-            vertexSignature: external('quadSig'),
-            globalSignatures: {
-                timeline: external('compositionGlobalSig'),
-            },
-            textures: {},
+        showerhead_tex_sig: TextureSignature({
+            size: [1000,1000],
+            type: "RGBA8",
         }),
-        out: Texture({
+        showerhead_tex: Texture({
+            signature: ref('showerhead_tex_sig'),
+            exportName: "cyberspag_showerhead"
+        }),
+        raytunnel_tex: Texture({
             signature: external('canvasSig'),
             drawOps: [
                 {
@@ -57,10 +44,86 @@ function Main() {
                 }
             ]
         }),
+        blur: Blur({
+            quad: external('quad'),
+            quadSig: external('quadSig'),
+            inputTexture: ref('raytunnel_tex'),
+            canvasSig: external('canvasSig'),
+            compositionGlobal: external("compositionGlobal"),
+            compositionGlobalSig: external("compositionGlobalSig")
+        }),
         raytunnel: RayTunnel({ 
             timeline_sig: external('compositionGlobalSig'),
             quadSig: external('quadSig')
         }),
+        p_fog: Program({
+            vertexShader: `
+                out vec2 uv;
+                void main() {
+                    gl_Position = vec4(position.xy, 0.0, 1.0);
+                    uv = position.xy * 0.5 + 0.5;
+                }
+            `,
+            fragmentShader: fog,
+            vertexSignature: external('quadSig'),
+            globalSignatures: {
+                c: external('compositionGlobalSig'),
+                g: ref('raytunnel_global_sig'),
+            },
+            textures: {
+                src: {
+                    filter: "linear",
+                    wrap: "repeat"
+                }
+            },
+        }),
+        out: Texture({
+                signature: external("canvasSig"),
+                drawOps: [
+
+                    {
+                        program: ref("blur_p_drawTex"),
+                        vertex: external("quad"),
+                        globals: {
+                        },
+                        textures: {
+                            src: ref("raytunnel_tex")
+                        },
+                    },
+                    // {
+                    //     program: ref("p_fog"),
+                    //     vertex: external("quad"),
+                    //     globals: {
+                    //         g: ref('raytunnel_global'),
+                    //         c: external('compositionGlobal')
+                    //     },
+                    //     textures: {
+                    //         src: ref("blur_out")
+                    //     },
+                    //     blend: "add"
+                    // },
+                    {
+                        program: ref("blur_p_drawTex"),
+                        vertex: external("quad"),
+                        globals: {
+                        },
+                        textures: {
+                            src: ref("blur_out")
+                        },
+                        blend: "add"
+                    },
+                    {
+                        program: ref("blur_p_drawTex"),
+                        vertex: external("quad"),
+                        globals: {
+                        },
+                        textures: {
+                            src: ref("showerhead_tex")
+                        },
+                        blend: "add"
+                    },
+                ],
+            }),
         // blur: Use(blurBuild),
     }));
 }

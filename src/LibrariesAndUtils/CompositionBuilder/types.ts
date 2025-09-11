@@ -12,6 +12,7 @@ type ControlsAsset = {
 
 type CompositionDescription = {
     layers: LayerDescription[];
+    canvasDimensions: [number, number];
 }
 
 

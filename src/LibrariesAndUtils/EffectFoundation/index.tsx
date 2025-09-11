@@ -8,17 +8,22 @@ const InteriorContext = createContext<{
     graphics: any;
     controls: any;
     local: any;
+    composition: any;
     timeline: any;
+    index: any;
     updateGraphics: (newGraphics: any) => void;
     updateControls: (newControls: any) => void;
     updateLocal: (newLocal: any) => void;
+    updateComposition: (newComposition: any) => void;
 }>(null);
 
-function Interior({ controls, graphics, local, timeline, children } : {
+function Interior({ controls, graphics, local, composition, timeline, index, children } : {
     controls: any;
     graphics: any;
     local: any;
+    composition: any;
     timeline: any;
+    index: any;
     children: React.ReactNode;
 }) {
     const [graphicsState, setGraphicsState] = useState<string>("start");
@@ -38,6 +43,8 @@ function Interior({ controls, graphics, local, timeline, children } : {
     const graphicsSnapshot = graphics.getSnapshot();
     const controlsSnapshot = controls.getSnapshot();
     const localSnapshot = local.getSnapshot();
+    const compositionSnapshot = composition.getSnapshot();
+    const indexSnapshot = index.getSnapshot();
 
     const updateGraphics = (newGraphics: any) => {
         setGraphicsState(newGraphics);
@@ -50,11 +57,18 @@ function Interior({ controls, graphics, local, timeline, children } : {
     const updateLocal = (newLocal: any) => {
         local.setData(newLocal);
     }
+    const updateComposition = (newComposition: any) => {
+        composition.setData(newComposition);
+    }
+
     return <InteriorContext.Provider value={{
         graphics: graphicsSnapshot,
         controls: controlsSnapshot,
         local: localSnapshot,
         timeline,
+        index: indexSnapshot,
+        composition: compositionSnapshot,
+        updateComposition,
         updateGraphics,
         updateControls,
         updateLocal
@@ -64,7 +78,7 @@ function Interior({ controls, graphics, local, timeline, children } : {
 }
 
 function Exterior({children, effectInstanceName}: {children?: React.ReactNode, effectInstanceName: string}) {
-  const { initialized, assets: jsonAssets} = useJSONAssets((id: string, metadata: any) => {
+  const { initialized, index, assets: jsonAssets} = useJSONAssets((id: string, metadata: any) => {
     if (id === `${effectInstanceName}.controls` && metadata.type === "controls") {
       return true;
     }
@@ -72,6 +86,9 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
       return true;
     }
     if (id === `${effectInstanceName}.local` && metadata.type === "local") {
+      return true;
+    }
+        if (id === `default.composition` && metadata.type === "composition") {
       return true;
     }
     return false;
@@ -82,6 +99,7 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
   && jsonAssets[`${effectInstanceName}.controls`]
   && jsonAssets[`${effectInstanceName}.graphics`]
   && jsonAssets[`${effectInstanceName}.local`]
+  && jsonAssets[`default.composition`]
   && timeline;
   //console.log(JSON.stringify(jsonAssets[`${effectInstanceName}.local`], null, 2));
   if (!ready) {
@@ -91,7 +109,9 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
     controls={jsonAssets[`${effectInstanceName}.controls`].data} 
     graphics={jsonAssets[`${effectInstanceName}.graphics`].data}
     local={jsonAssets[`${effectInstanceName}.local`].data}
+    composition={jsonAssets[`default.composition`].data}
     timeline={timeline}
+    index={index}
   >
     {children}
   </Interior>;
@@ -125,6 +145,7 @@ export default function EffectFoundation({
         <JSONAssetCreator
             defaultName="default.composition"
             defaultData={{
+                canvasDimensions: [1920, 1080],
                 layers: [
                     {
                         effects: [

@@ -12,7 +12,7 @@ import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBu
 import Viewport from './graphics/main.js';
 const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
 
-export default function Interior({ timeline, controls, graphics, composition }: any) {
+export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [renderer, setRenderer] = useState<NectarRenderer | null>(null);
@@ -20,7 +20,8 @@ export default function Interior({ timeline, controls, graphics, composition }: 
     // const controlsSnapshot: any = useSyncExternalStore(controls.subscribeInternal.bind(controls), controls.getSnapshot.bind(controls));
     const graphicsSnapshot = graphics.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
     const controlsSnapshot = controls.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
-    const compositionSnapshot: any = useSyncExternalStore(composition.subscribeInternal.bind(composition), composition.getSnapshot.bind(composition));
+    const imagesSnapshot = images.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
+    const compositionSnapshot = composition.getSnapshot();
     const timelineProject : TimelineController.Project = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
@@ -83,12 +84,12 @@ export default function Interior({ timeline, controls, graphics, composition }: 
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        //console.log(gfx(""))
+        console.log(gfx(""))
         renderer.setSource(registry.currentSourceId, gfx(""));
     }, [renderer, graphics, composition, registry]);
 
     useEffect(() => {
-        if (!renderer || !controlsSnapshot) return;
+        if (!renderer || !controlsSnapshot || !compositionSnapshot || !imagesSnapshot) return;
         const compositionGlobalStream = {
             versionId: crypto.randomUUID(),
             commands: [
@@ -99,7 +100,7 @@ export default function Interior({ timeline, controls, graphics, composition }: 
                         playheadPosition: [timelineProject.timelineData.playheadPosition],
                         numberOfFrames: [timelineProject.timelineData.numberOfFrames],
                         screen: [dimensions[0], dimensions[1]],
-                        canvas: [1920,1080],
+                        canvas: [compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]],
                     }]
                 }
             ],
@@ -133,8 +134,9 @@ export default function Interior({ timeline, controls, graphics, composition }: 
             compositionGlobal: compositionGlobalStream,
             quadStream,
         };
+        renderer.attachAssets(imagesSnapshot);
         renderer.setState(registry.currentSourceId, renderState);
-    }, [renderer, controls, timelineProject, frameSaver, registry, dimensions]);
+    }, [renderer, controls, timelineProject, frameSaver, registry, dimensions, composition, images]);
 
     if (!timeline) {
         return <div>No timeline found</div>

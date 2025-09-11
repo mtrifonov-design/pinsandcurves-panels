@@ -22,6 +22,12 @@ function getResourceType(typeStr: string, data: any): ResourceType {
 }
 
 function processResources(resources: Map<string,any>, unprocessedResources: UnprocessedResource[], gl: WebGL2RenderingContext) {
+    // sort unprocessed resources such that type="Program" comes last
+    unprocessedResources.sort((a, b) => {
+        if (a.type === "Program" && b.type !== "Program") return 1;
+        if (a.type !== "Program" && b.type === "Program") return -1;
+        return 0;
+    });
     for (const unprocessedResource of unprocessedResources) {
         const type = getResourceType(unprocessedResource.type, unprocessedResource.data);
         const resource = new ResourceDict[type](resources, 

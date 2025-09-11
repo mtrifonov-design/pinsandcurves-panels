@@ -19,7 +19,7 @@ function rayInstanceStream(state: ControlsData) {
         commands: [{
             resource: "cyberspag_ray",
             type: "setInstanceData",
-            payload: [{}, 200 + 1200 * state.pressure]
+            payload: [{}, 200 + 600 * state.pressure]
         }]
     }
     return cache;

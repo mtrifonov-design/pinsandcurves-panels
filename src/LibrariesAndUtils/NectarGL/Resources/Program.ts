@@ -21,6 +21,7 @@ export class Program extends PersistentResource {
                 return Object.keys(data.globalSignatures).map(signatureKey => {
                     const signature = data.globalSignatures[signatureKey];
                     const res = this.resources.get(signature) as undefined | ResourceClass;
+                    //console.log(res,signature,this.resources)
                     if (!res) throw new Error(`Global signature ${signature} not found for program ${id}`);
                     const sig = res.data as GlobalSignatureData;
                     const uniformStructure = [];
