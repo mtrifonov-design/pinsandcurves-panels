@@ -17,10 +17,10 @@ void main() {
 
     // gaussian function for y
     float gaussian_hor_1 = gaussian(uv.x, 0.1);
-    float gaussian_ver_1 = gaussian(uv.y, 0.2);
+    float gaussian_ver_1 = gaussian(uv.y, 0.1 + temperature * 0.1);
     float col_intensity = gaussian_hor_1 * gaussian_ver_1;
     float gaussian_hor_2 = gaussian(uv.x, 0.05);
-    float gaussian_ver_2 = gaussian(uv.y, 0.1);
+    float gaussian_ver_2 = gaussian(uv.y, 0.05 + temperature * 0.05);
     float light_intensity = gaussian_hor_2 * gaussian_ver_2;
     float col_brightness = dot(color.rgb,vec3(1.)) / 3.0;
     bool use_light = col_brightness > 0.3;

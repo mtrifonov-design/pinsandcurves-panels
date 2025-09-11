@@ -1,19 +1,34 @@
-function globalStream() {
-    return {
-        versionId: "default",
+import { ControlsData } from "../../CyberSpaghettiControls";
+
+let cache;
+let sliceCache;
+function globalStream(state: ControlsData) {
+    const stateSlice = {
+        centerX: state.centerX,
+        centerY: state.centerY,
+        centerZ: state.centerZ,
+        temperature: state.temperature,
+        pressure: state.pressure
+    }
+
+    if (JSON.stringify(stateSlice) === sliceCache) {
+        return cache;
+    }
+
+    sliceCache = JSON.stringify(stateSlice);
+    cache = {
+        versionId: crypto.randomUUID(),
         commands: [{
             resource: "cyberspag_globals",
             type: "setGlobals",
             payload: [{
-                tunnelData: [-0.1, Math.sqrt(0.5), -10, 0.5],
-                rayData: [0.5, 0.5, 0.2, 0.2],
-                time: [0],
-                colorVarianceFactor: [0.5],
-                chaos: [0.5]
+                origin: [state.centerX, state.centerY, state.centerZ, 0],
+                temperature: [state.temperature],
+                pressure: [state.pressure]
             }]
         }]
     };
-
+    return cache;
 }
 
 export default globalStream;

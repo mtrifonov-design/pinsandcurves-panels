@@ -24,11 +24,9 @@ function RayTunnel({
 }) {
     return build((ref: any) => ({
         global_sig: GlobalSignature({
-            tunnelData: 'vec4',
-            rayData: 'vec4',
-            time: 'float',
-            colorVarianceFactor: 'float',
-            chaos: 'float',
+            origin: 'vec4',
+            temperature: 'float',
+            pressure: 'float',
         }),
         ray_sig: InstanceSignature({
             attributes: {

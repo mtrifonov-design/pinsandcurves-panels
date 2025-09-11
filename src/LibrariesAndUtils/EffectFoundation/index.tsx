@@ -2,21 +2,23 @@ import { createContext, useContext, useState, useSyncExternalStore } from "react
 import { AssetProvider } from "../../AssetManager/context/AssetProvider";
 import FullscreenLoader from "../FullscreenLoader/FullscreenLoader";
 import { JSONAssetCreator, useJSONAssets } from "../JSONAsset/Provider";
-import TimelineProvider from "../TimelineUtils/TimelineProvider";
+import TimelineProvider, { useTimeline } from "../TimelineUtils/TimelineProvider";
 
 const InteriorContext = createContext<{
     graphics: any;
     controls: any;
     local: any;
+    timeline: any;
     updateGraphics: (newGraphics: any) => void;
     updateControls: (newControls: any) => void;
     updateLocal: (newLocal: any) => void;
 }>(null);
 
-function Interior({ controls, graphics, local, children } : {
+function Interior({ controls, graphics, local, timeline, children } : {
     controls: any;
     graphics: any;
     local: any;
+    timeline: any;
     children: React.ReactNode;
 }) {
     const [graphicsState, setGraphicsState] = useState<string>("start");
@@ -52,6 +54,7 @@ function Interior({ controls, graphics, local, children } : {
         graphics: graphicsSnapshot,
         controls: controlsSnapshot,
         local: localSnapshot,
+        timeline,
         updateGraphics,
         updateControls,
         updateLocal
@@ -73,10 +76,13 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
     }
     return false;
   });
+
+  const timeline = useTimeline();
   const ready = initialized 
   && jsonAssets[`${effectInstanceName}.controls`]
   && jsonAssets[`${effectInstanceName}.graphics`]
-  && jsonAssets[`${effectInstanceName}.local`];
+  && jsonAssets[`${effectInstanceName}.local`]
+  && timeline;
   //console.log(JSON.stringify(jsonAssets[`${effectInstanceName}.local`], null, 2));
   if (!ready) {
     return <FullscreenLoader />
@@ -85,6 +91,7 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
     controls={jsonAssets[`${effectInstanceName}.controls`].data} 
     graphics={jsonAssets[`${effectInstanceName}.graphics`].data}
     local={jsonAssets[`${effectInstanceName}.local`].data}
+    timeline={timeline}
   >
     {children}
   </Interior>;
