@@ -21,18 +21,22 @@ function Interior({ controls, graphics, local, children } : {
 }) {
     const [graphicsState, setGraphicsState] = useState<string>("start");
 
-    const graphicsSnapshot = useSyncExternalStore(
-        graphics.subscribeInternal.bind(graphics),
-        graphics.getSnapshot.bind(graphics)
-    );
-    const controlsSnapshot = useSyncExternalStore(
-        controls.subscribeInternal.bind(controls),
-        controls.getSnapshot.bind(controls)
-    );
-    const localSnapshot = useSyncExternalStore(
-        local.subscribeInternal.bind(local),
-        local.getSnapshot.bind(local)
-    );
+    // const graphicsSnapshot = useSyncExternalStore(
+    //     graphics.subscribeInternal.bind(graphics),
+    //     graphics.getSnapshot.bind(graphics)
+    // );
+    // const controlsSnapshot = useSyncExternalStore(
+    //     controls.subscribeInternal.bind(controls),
+    //     controls.getSnapshot.bind(controls)
+    // );
+    // const localSnapshot = useSyncExternalStore(
+    //     local.subscribeInternal.bind(local),
+    //     local.getSnapshot.bind(local)
+    // );
+    const graphicsSnapshot = graphics.getSnapshot();
+    const controlsSnapshot = controls.getSnapshot();
+    const localSnapshot = local.getSnapshot();
+
     const updateGraphics = (newGraphics: any) => {
         setGraphicsState(newGraphics);
         graphics.setData({sourceId: graphicsState, source: newGraphics});
@@ -73,7 +77,7 @@ function Exterior({children, effectInstanceName}: {children?: React.ReactNode, e
   && jsonAssets[`${effectInstanceName}.controls`]
   && jsonAssets[`${effectInstanceName}.graphics`]
   && jsonAssets[`${effectInstanceName}.local`];
-  //console.log(jsonAssets)
+  //console.log(JSON.stringify(jsonAssets[`${effectInstanceName}.local`], null, 2));
   if (!ready) {
     return <FullscreenLoader />
   }

@@ -10,7 +10,7 @@ function rayInstanceStream() {
         commands: [{
             resource: "cyberspag_ray",
             type: "setInstanceData",
-            payload: [{ seed: instances}, instances.length]
+            payload: [{}, 1000]
         }]
     }
 };

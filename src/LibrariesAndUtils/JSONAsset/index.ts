@@ -44,7 +44,7 @@ class JSONAsset {
         }
     }
     #notifyInternalSubscribers() {
-        console.log("Internal subscribers count:", this.#internalSubscribers);
+        //console.log("Internal subscribers count:", this.#internalSubscribers);
         this.#internalSubscribers.forEach((cb) => cb());
     }
 

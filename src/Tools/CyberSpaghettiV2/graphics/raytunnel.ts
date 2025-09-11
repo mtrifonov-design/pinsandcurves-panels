@@ -32,7 +32,6 @@ function RayTunnel({
         }),
         ray_sig: InstanceSignature({
             attributes: {
-                seed: 'float',
             },
             maxInstanceCount: 50000
         }),

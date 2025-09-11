@@ -94,13 +94,16 @@ export class Asset {
             (unit, workload) => {
                 if (unit.payload.receiveUpdate) {
                     const update = unit.payload.receiveUpdate.update;
+                    //console.log("update", update)
                     controller.receiveUpdate(update);
                 } else if (unit.payload.receiveMetadataUpdate) {
                     const metadataUpdate = unit.payload.receiveMetadataUpdate.metadata;
+                    //console.log("metadata", metadataUpdate)
                     controller.receiveMetadataUpdate(metadataUpdate);
                 } else if (unit.payload.getAssetResponse) {
                     const assetData = unit.payload.getAssetResponse.asset_data;
                     a.initialized = true;
+                    //console.log("getdata", assetData)
                     controller.load(assetData);
                 }
                 notifySubscribers();

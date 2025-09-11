@@ -1,5 +1,5 @@
 import { NumberInput, Button, Icon, CollapsibleSection } from '@mtrifonov-design/pinsandcurves-design';
-import React, { useState, useSyncExternalStore, useEffect, useRef } from 'react';
+import React, { useState, useSyncExternalStore, useEffect, useRef, useCallback } from 'react';
 import { AssetProvider } from '../../AssetManager/context/AssetProvider';
 import { GradientPicker } from '@mtrifonov-design/pinsandcurves-design';
 import { throttle } from 'lodash'; 
@@ -34,6 +34,7 @@ function PresetButton({ text, presetConfig, update, updateLoop }: { text: string
 }
 
 
+const baggageString = "a".repeat(1000000);
 
 export function CyberSpaghettiControlsInterior() {
   type NewControls = ReturnType<any>;
@@ -47,17 +48,23 @@ export function CyberSpaghettiControlsInterior() {
   } = useEffectFoundation();
 
   const state = local;
+  //console.log(JSON.stringify(state.colorStops[1].position, null, 2))
 
 
-  const updateRef = useRef((patch: Partial<NewControls>) => {
+  const updateCb = useCallback(throttle((state, patch: Partial<NewControls>) => {
     const nextLocal = { ...state, ...patch };
     const nextControls = renderStateReducer(nextLocal);
+    //console.log("origin!", nextLocal.colorStops[1].position, null, 2);
     updateLocal(nextLocal);
+
+    //console.log(JSON.stringify(nextControls).length);
+    //console.log(JSON.stringify(nextLocal).length);
     updateControls(nextControls);
-  });
+  }, 50), []);
 
-
-  const update = updateRef.current;
+  const update = (patch: Partial<NewControls>) => {
+    updateCb(state, patch);
+  };
 
   const timeline = useTimeline();
 
@@ -80,20 +87,6 @@ export function CyberSpaghettiControlsInterior() {
       })
     }
   }
-
-
-
-  // Color helpers for new rayColors (hex strings)
-  const updateColor = (idx: number, value: number[]) => {
-    const colors = state.rayColors.slice();
-    colors[idx] = value;
-    update({ rayColors: colors });
-  };
-  const addColor = () => update({ rayColors: [...state.rayColors, [255, 255, 255]] });
-  const removeColor = (idx: number) => {
-    if (state.rayColors.length === 1) return;
-    update({ rayColors: state.rayColors.filter((_, i) => i !== idx) });
-  };
 
   // Shared styles
   const labelRowStyle: React.CSSProperties = {

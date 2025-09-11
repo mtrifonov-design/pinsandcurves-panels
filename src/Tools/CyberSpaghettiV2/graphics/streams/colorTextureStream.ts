@@ -44,6 +44,11 @@ function colorTextureStream(state: ControlsData) {
 
         };
     }
+    // since we only need 0 - 255, we need to make sure that the numbers, when serialized, don't have many decimals. so we need to somehow trim them already here
+    // the colors are saved 0 - 1, so we just need to get rid of some precision
+    colorBuffer.forEach((value, index) => {
+        colorBuffer[index] = Math.floor(value * 1000) / 1000;
+    });
     const response = {
         versionId: crypto.randomUUID(),
         commands: [{
@@ -52,6 +57,7 @@ function colorTextureStream(state: ControlsData) {
             payload: [colorBuffer]
         }]
     };
+    //console.log(response);
     cache = response;
     return response;
 }
