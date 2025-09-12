@@ -60,6 +60,7 @@ class NectarRenderer {
                     skippedKeys.push(key);
                     continue;
                 }
+                //console.log(state[key].commands)
                 this.gfx.executeCommands(state[key].commands, this.assets);
             }
         }

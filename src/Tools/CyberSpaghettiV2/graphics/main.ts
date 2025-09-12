@@ -32,7 +32,7 @@ function Main() {
             fragmentShader: `
                 in vec2 uv;
                 void main() {
-                    outColor = texture(src, uv) * vec4(0.,1.,1.,1.) * 0.85 * showUI;
+                    outColor = texture(src, uv) * vec4(1.) * 0.85 * showUI;
                 }
             `,
             vertexSignature: external('quadSig'),
@@ -63,7 +63,7 @@ function Main() {
             },
             textures: {
                 src: {
-                    filter: "linear",
+                    filter: "nearest",
                     wrap: "repeat"
                 }
             },
@@ -155,18 +155,6 @@ function Main() {
                         },
                         blend: "add",
                     },
-                    // {
-                    //     program: ref("p_fog"),
-                    //     vertex: external("quad"),
-                    //     globals: {
-                    //         g: ref('raytunnel_global'),
-                    //         c: external('compositionGlobal')
-                    //     },
-                    //     textures: {
-                    //         src: ref("blur_out")
-                    //     },
-                    //     blend: "add"
-                    // },
                     {
                         program: ref("blur_p_drawTex"),
                         vertex: external("quad"),
@@ -176,17 +164,7 @@ function Main() {
                             src: ref("blur_out")
                         },
                         blend: "add"
-                    },
-                    {
-                        program: ref("blur_p_drawTex"),
-                        vertex: external("quad"),
-                        globals: {
-                        },
-                        textures: {
-                            src: ref("raytunnel_colorTex")
-                        },
-                        blend: "overlay"
-                    },
+                    }
 
                 ],
             }),

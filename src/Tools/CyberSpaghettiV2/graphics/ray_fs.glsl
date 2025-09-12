@@ -25,5 +25,5 @@ void main() {
     bool use_light = col_brightness > 0.3;
     light_intensity = use_light ? light_intensity : 0.0;
     vec3 col = color.rgb * col_intensity + vec3(1.0) * light_intensity;
-    outColor = showUI < 0.5 ? vec4(col, 1.) : vec4(vec3(0.0,col_intensity,col_intensity),1.0) * 0.5;
+    outColor = showUI < 0.5 ? vec4(col, 1.) : vec4(col, 1.) * 0.5;
 }
