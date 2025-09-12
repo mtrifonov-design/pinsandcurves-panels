@@ -203,6 +203,7 @@ export class DynamicTexture extends VariableResource {
 
         this.gl.disable(this.gl.BLEND);
         if (capture) {
+            //console.log(sig.size[0], sig.size[1], this.data.signature);
             const pixels = new Uint8Array(sig.size[0] * sig.size[1] * 4);
             this.gl.readPixels(0, 0, sig.size[0], sig.size[1], this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
             return pixels;

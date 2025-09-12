@@ -57,6 +57,8 @@ export async function imagesToMp4(
     throw new Error("WebCodecs VideoEncoder is not available in this environment.");
   }
 
+  //console.log("got here", frames, width, height);
+
   // H.264 is the only codec that will safely fit into MP4 on the web.
   // We probe a short list of common profiles and pick the first supported.
 //   const codecCandidates = [

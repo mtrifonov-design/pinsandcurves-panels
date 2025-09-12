@@ -27,7 +27,8 @@ class FrameSaver {
 
     setSize(width: number, height: number) {
         // make sure width and height are even
-        let cwidth, cheight;
+        let cwidth = width;
+        let cheight = height;
         if (width % 2 !== 0) {
             cwidth = width + 1;
         }
@@ -77,7 +78,8 @@ class FrameSaver {
             const data = this.#captureFrameCallback();
             const w = this.#width;
             const h = this.#height;
-            //console.log(data)
+            //console.log(w,h);
+
             const clamped =
                 data instanceof Uint8ClampedArray
                     ? data
@@ -89,7 +91,9 @@ class FrameSaver {
                 }
             const imageData = new ImageData(clamped, this.#width, this.#height);
             ctx.putImageData(imageData, 0, 0);
-            this.#frames.push(canvas.toDataURL());
+            const dataurl = canvas.toDataURL("image/png");
+            //console.log("dataurl", dataurl, canvas, canvas.width);
+            this.#frames.push(dataurl);
             this.#anticipatedFrame = currentFrame + 1;
             this.#timeline.projectTools.updatePlayheadPosition(currentFrame + 1, true);
             this.#status = {

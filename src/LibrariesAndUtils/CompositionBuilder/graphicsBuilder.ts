@@ -125,6 +125,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
         registry.instances[processedId] = asset.sourceId;
         currentSourceId += asset.sourceId;
     }
+    currentSourceId += JSON.stringify(compDesc);
     registry.currentSourceId = currentSourceId;
 
     return {

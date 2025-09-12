@@ -80,13 +80,14 @@ export default function Interior({ timeline, controls, graphics, composition, im
     }, [frameSaver]);
 
     useEffect(() => {
-        if (!renderer || !graphicsSnapshot || !compositionSnapshot) return;
+        //console.log("graphics or composition changed", graphicsSnapshot, compositionSnapshot);
+        if (!renderer || !graphicsSnapshot || !compositionSnapshot) return;
         const { registry: newRegistry, gfx } = buildGraphics(graphicsSnapshot,compositionSnapshot, Viewport)
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
         //console.log(graphicsSnapshot)
-        //console.log(gfx(""))
+        // console.log(gfx(""))
         frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
         frameSaver.setName(compositionSnapshot.compositionName);
         renderer.setSource(registry.currentSourceId, gfx(""));

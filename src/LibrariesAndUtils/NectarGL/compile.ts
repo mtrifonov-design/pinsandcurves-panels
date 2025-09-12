@@ -65,7 +65,9 @@ function getResourceChanges(newResources: UnprocessedResource[], oldResources: U
         const newContent = JSON.stringify(newResourceMap.get(key));
         if (oldResourceMap.has(key)) {
             const oldContent = JSON.stringify(oldResourceMap.get(key));
+            console.log(oldContent, newContent);
             if (oldContent !== newContent) {
+                console.log("Resource changed:", key);
                 toAdd.push(newResourceMap.get(key));
                 toDelete.push(oldResourceMap.get(key));
             }
