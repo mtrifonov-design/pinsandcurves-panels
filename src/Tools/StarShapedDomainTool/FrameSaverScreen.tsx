@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { Button, Icon } from '@mtrifonov-design/pinsandcurves-design';
-import { useCK } from '../CK_Adapter/CK_Provider';
-import { useRegisterUnitProcessor, useUnit } from '../CK_Adapter/CK_UnitProvider';
-import { CK_Circuit } from '../CK_Adapter/CK_Circuit';
+import { useCK } from '../../CK_Adapter/CK_Provider';
+import { useRegisterUnitProcessor, useUnit } from '../../CK_Adapter/CK_UnitProvider';
+import { CK_Circuit } from '../../CK_Adapter/CK_Circuit';
 import FrameSaver from './FrameSaver';
 
 function isBrowserKnownToWork(): boolean {

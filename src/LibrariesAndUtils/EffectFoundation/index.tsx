@@ -146,11 +146,12 @@ export default function EffectFoundation({
             defaultName="default.composition"
             defaultData={{
                 canvasDimensions: [1920, 1080],
+                compositionName: effectInstanceName,
                 layers: [
                     {
                         effects: [
                             {
-                                instanceId: "Something"
+                                instanceId: effectInstanceName
                             }
                         ]
                     }

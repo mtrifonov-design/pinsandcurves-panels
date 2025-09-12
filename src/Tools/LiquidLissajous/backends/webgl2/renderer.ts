@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { ParticleSystem } from '../../core/ParticleSystem.js';
-import { SimpleWebGL2 } from '../../../LibrariesAndUtils/SimpleWebGL2/index.js';
+import { SimpleWebGL2 } from '../../../../LibrariesAndUtils/SimpleWebGL2/index.js';
 import gradientObject, { gradientDraw } from './gradientObject.js';
 import circleObject, { circleDraw } from './circleObject.js';
 import { computeDepthFieldTexture } from '../../core/DepthField.js';

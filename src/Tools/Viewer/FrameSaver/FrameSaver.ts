@@ -10,6 +10,7 @@ class FrameSaver {
     #anticipatedFrame: number;
     #frames: any[] = [];
     #canvas: HTMLCanvasElement;
+    
 
     constructor({ timeline, width, height }) {
         //console.log('FrameSaver', timeline, width, height);
@@ -17,6 +18,11 @@ class FrameSaver {
         this.#width = width;
         this.#height = height;
         this.#canvas = document.createElement("canvas");
+    }
+
+    #compName : string = "untitled";
+    setName(name: string) {
+        this.#compName = name;
     }
 
     setSize(width: number, height: number) {
@@ -110,7 +116,7 @@ class FrameSaver {
                     const blobUrl = URL.createObjectURL(content);
                     const a = document.createElement('a');
                     a.href = blobUrl;
-                    a.download = 'frames.zip';
+                    a.download = `${this.#compName}.zip`;
                     a.click();
                     URL.revokeObjectURL(blobUrl);
                     this.#status = {
@@ -131,7 +137,7 @@ class FrameSaver {
                     const mp4BlobUrl = URL.createObjectURL(mp4Blob);
                     const a = document.createElement('a');
                     a.href = mp4BlobUrl;
-                    a.download = 'animation.mp4';
+                    a.download = `${this.#compName}.mp4`;
                     a.click();
                     URL.revokeObjectURL(mp4BlobUrl);
                     this.#status = {

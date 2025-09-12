@@ -1,5 +1,5 @@
 // TriMesh.ts
-import { SimpleWebGL2 } from '../../../LibrariesAndUtils/SimpleWebGL2/index.js';
+import { SimpleWebGL2 } from '../../../../LibrariesAndUtils/SimpleWebGL2/index.js';
 import Delaunator from 'delaunator';
 
 interface TriMesh {

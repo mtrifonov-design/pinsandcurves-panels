@@ -10,7 +10,7 @@ import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import buildGraphics from '../../LibrariesAndUtils/CompositionBuilder/graphicsBuilder.js';
 import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBuilder.js';
 import Viewport from './graphics/main.js';
-const defaultEvent = { path: "cyberspaghettiviewer-loaded", event: true }
+const defaultEvent = { path: "viewer-loaded", event: true }
 
 export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -85,8 +85,10 @@ export default function Interior({ timeline, controls, graphics, composition, im
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
+        //console.log(graphicsSnapshot)
         //console.log(gfx(""))
         frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
+        frameSaver.setName(compositionSnapshot.compositionName);
         renderer.setSource(registry.currentSourceId, gfx(""));
     }, [renderer, graphics, composition, registry,frameSaverRef]);
 
@@ -179,6 +181,6 @@ export default function Interior({ timeline, controls, graphics, composition, im
         }}>
             <TimelineBar timeline={timeline} />
         </div>
-        <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} />
+        <FrameSaverScreen frameSaver={frameSaver} recordEvent={recordEvent} compName={compositionSnapshot.compositionName} />
     </div>
 }

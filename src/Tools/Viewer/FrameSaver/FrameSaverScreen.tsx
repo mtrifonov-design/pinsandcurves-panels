@@ -23,9 +23,10 @@ function isBrowserKnownToWork(): boolean {
 interface FrameSaverScreenProps {
     frameSaver: FrameSaver;
     recordEvent: (event: { path: string; event: boolean }) => void;
+    compName: string;
 }
 
-export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaverScreenProps) {
+export default function FrameSaverScreen({ frameSaver, recordEvent, compName }: FrameSaverScreenProps) {
     const { rendering, totalFrames, renderedFrames } = React.useSyncExternalStore(
         frameSaver.subscribe.bind(frameSaver),
         frameSaver.getStatus.bind(frameSaver),
@@ -85,7 +86,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
                 await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
                 frameSaver.beginImSeq();
-                recordEvent({ path: "cyberspaghetti-renderframes", event: true });
+                recordEvent({ path: `${compName}-renderframes-imseq`, event: true });
                 setDisplayOverlay(true);
 
             }}
@@ -107,7 +108,7 @@ export default function FrameSaverScreen({ frameSaver, recordEvent }: FrameSaver
                 await c.instance(globalThis.CK_INSTANCE).call("beginRender");
                 c.complete();
                 frameSaver.beginMp4();
-                recordEvent({ path: "cyberspaghetti-renderframes", event: true });
+                recordEvent({ path: `${compName}-renderframes-mp4`, event: true });
                 setDisplayOverlay(true);
             }}
             text={"export as .mp4"}

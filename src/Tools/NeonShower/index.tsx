@@ -3,7 +3,7 @@ import React, { useState, useSyncExternalStore, useEffect, useRef, useCallback }
 import { GradientPicker } from '@mtrifonov-design/pinsandcurves-design';
 import { throttle } from 'lodash';
 import Main from './graphics/main.js';
-import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox';
+import FeedbackBox from '../../LibrariesAndUtils/FeedbackBox/FeedbackBox.js';
 import defaultControls from './CyberSpaghettiControls.js';
 import renderStateReducer from './renderStateReducer.js';
 import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
@@ -215,7 +215,7 @@ export function CyberSpaghettiControlsInterior() {
       <CollapsibleSection title="Give Feedback" iconName="favorite">
         <div style={{ marginBottom: "1rem", color: "var(--gray6)" }}>
 
-          <FeedbackBox preamble="[FEEDBACK FROM CYBERSPAGHETTI] " />
+          <FeedbackBox preamble="[FEEDBACK FROM NEONSHOWER] " />
 
         </div>
       </CollapsibleSection>
@@ -276,7 +276,7 @@ export default function CyberSpaghettiControls() {
     defaultControls={renderStateReducer(defaultControls)}
     defaultGraphics={exportResources(Main())}
     defaultLocal={defaultControls}
-    effectInstanceName='Something'
+    effectInstanceName='NeonShowerV0'
   >
     <>
       <CyberSpaghettiControlsInterior />
