@@ -4,7 +4,7 @@
 out vec2 uv;
 void main() {
     vec3 o_point = origin.xyz;
-    o_point.z = mix(-5.,-35.,origin.z);
+    o_point.z = mix(-10.,-28.,origin.z);
     o_point.xy = origin.xy * 2. - vec2(1.);
     o_point.xy *= minRadius(o_point.z, 45.0, canvas.x/canvas.y);
     mat4 t = translation(o_point);

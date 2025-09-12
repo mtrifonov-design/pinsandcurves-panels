@@ -3,28 +3,40 @@ import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 import JSZip from "jszip";
 import { imagesToMp4 } from "./imagesToMp4";
 
-
 class FrameSaver {
     #timeline: TimelineController.TimelineController;
     #width: number;
     #height: number;
-    #canvas: HTMLCanvasElement;
     #anticipatedFrame: number;
     #frames: any[] = [];
+    #canvas: HTMLCanvasElement;
+
     constructor({ timeline, width, height }) {
         //console.log('FrameSaver', timeline, width, height);
         this.#timeline = timeline;
         this.#width = width;
         this.#height = height;
+        this.#canvas = document.createElement("canvas");
     }
 
     setSize(width: number, height: number) {
+        // make sure width and height are even
+        let cwidth, cheight;
+        if (width % 2 !== 0) {
+            cwidth = width + 1;
+        }
+        if (height % 2 !== 0) {
+            cheight = height + 1;
+        }
         this.#width = width;
         this.#height = height;
+        this.#canvas.width = cwidth;
+        this.#canvas.height = cheight;
     }
 
-    addCanvas(canvas) {
-        this.#canvas = canvas;
+    #captureFrameCallback: (() => Uint8ClampedArray) | null = null;
+    attachCaptureFrame(callback: () => Uint8ClampedArray) {
+        this.#captureFrameCallback = callback;
     }
 
     #subscribers = [];
@@ -47,13 +59,30 @@ class FrameSaver {
     frame() {
         if (!this.#rendering) return;
         if (!this.#canvas) return;
+        if (!this.#captureFrameCallback) return;
         const project = this.#timeline.getProject();
         const currentFrame = project.timelineData.playheadPosition;
         if (currentFrame !== this.#anticipatedFrame) return;
         const focusRange = project.timelineData.focusRange;
         if (currentFrame < focusRange[1]) {
             // get p5js canvas
-            const canvas = document.querySelector('canvas');
+            const canvas = this.#canvas;
+            const ctx = canvas.getContext("2d");
+            const data = this.#captureFrameCallback();
+            const w = this.#width;
+            const h = this.#height;
+            //console.log(data)
+            const clamped =
+                data instanceof Uint8ClampedArray
+                    ? data
+                    : new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength);
+
+                // (optional) sanity check
+                if (clamped.length !== w * h * 4) {
+                throw new Error(`Bad length: got ${clamped.length}, expected ${w*h*4}`);
+                }
+            const imageData = new ImageData(clamped, this.#width, this.#height);
+            ctx.putImageData(imageData, 0, 0);
             this.#frames.push(canvas.toDataURL());
             this.#anticipatedFrame = currentFrame + 1;
             this.#timeline.projectTools.updatePlayheadPosition(currentFrame + 1, true);

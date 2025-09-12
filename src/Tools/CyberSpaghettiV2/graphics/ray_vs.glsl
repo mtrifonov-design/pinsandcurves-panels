@@ -96,15 +96,15 @@ void main() {
 
     float nearCircleDistance = -.01;
     float nearCircleRadius = minRadius(nearCircleDistance, 45.0, canvas.x/canvas.y) * 100.;
-    float farCircleDistance = mix(-5.,-35.,origin.z);
+    float farCircleDistance = mix(-10.,-28.,origin.z);
     float farMinRadius = minRadius(farCircleDistance, 45.0, canvas.x/canvas.y);
     float farCircleRadius = .5;
     mat4 t = translation(vec3(0.0, 0.5, 0.0));
     mat4 r = rotation(vec3(.0, 1.0, 0.0), 15.0);
     mat4 p = perspective_projection(canvas.x/canvas.y, 45.0, -nearCircleDistance, -farCircleDistance);
 
-    float ray_length = mix(0.1,0.4,pressure);
-    float ray_thickness = mix(0.05, 0.02, pressure);
+    float ray_length = mix(0.1,0.3,pressure);
+    float ray_thickness = mix(0.05, 0.032, pressure);
 
     float final_ray_length = clamp(ray_length * (1.0 + ppar.ray_length_variation_factor * RAY_LENGTH_VARIATION - RAY_LENGTH_VARIATION / 2.),0.,1.);
     float final_ray_thickness = clamp(ray_thickness * (1.0 + ppar.ray_thickness_variation_factor * RAY_THICKNESS_VARIATION - RAY_THICKNESS_VARIATION / 2.),0.,1.);

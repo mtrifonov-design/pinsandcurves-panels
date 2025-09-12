@@ -58,20 +58,21 @@ export default function Interior({ timeline, controls, graphics, composition, im
         height: dimensions[1],
     }));
     const frameSaver = frameSaverRef.current;
-    frameSaver.setSize(dimensions[0], dimensions[1]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        frameSaver.addCanvas(canvas);
+        
         const gl = canvas.getContext("webgl2");
         if (!gl) {
             throw new Error("WebGL2 not supported");
         }
         const r = new NectarRenderer(gl);
         setRenderer(r);
+        frameSaver.attachCaptureFrame(() => r.captureTexture("exportTexture")); 
         const draw = () => {
             r.frame();
+            frameSaver.frame();
             window.requestAnimationFrame(draw);
         };
         draw();
@@ -84,9 +85,10 @@ export default function Interior({ timeline, controls, graphics, composition, im
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        console.log(gfx(""))
+        //console.log(gfx(""))
+        frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
         renderer.setSource(registry.currentSourceId, gfx(""));
-    }, [renderer, graphics, composition, registry]);
+    }, [renderer, graphics, composition, registry,frameSaverRef]);
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot || !compositionSnapshot || !imagesSnapshot) return;

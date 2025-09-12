@@ -79,5 +79,14 @@ class NectarRenderer {
             screenTexture.updateTextureData();
         }
     };
+
+    captureTexture(id: string) {
+        if (!this.gfx) return undefined;
+        const resource = Array.from(this.gfx.resources.values()).find(r => r.data.exportName === id);
+        if (resource && resource.type === "DynamicTexture") {
+            return resource.updateTextureData(true);
+        }
+        return undefined;
+    }
 }
 export default NectarRenderer;

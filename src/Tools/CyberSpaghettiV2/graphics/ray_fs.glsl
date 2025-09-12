@@ -16,7 +16,7 @@ void main() {
     vec4 color = texture(colorTex, vec2(final_color_factor, 0.0));
     // gaussian function for y
     float gaussian_hor_1 = gaussian(uv.x, 0.1);
-    float gaussian_ver_1 = gaussian(uv.y, 0.1 + temperature * 0.1);
+    float gaussian_ver_1 = gaussian(uv.y, 0.1);
     float col_intensity = gaussian_hor_1 * gaussian_ver_1;
     float gaussian_hor_2 = gaussian(uv.x, 0.05);
     float gaussian_ver_2 = gaussian(uv.y, 0.05 + temperature * 0.05);
@@ -25,5 +25,5 @@ void main() {
     bool use_light = col_brightness > 0.3;
     light_intensity = use_light ? light_intensity : 0.0;
     vec3 col = color.rgb * col_intensity + vec3(1.0) * light_intensity;
-    outColor = showUI < 0.5 ? vec4(col, 1.) : vec4(col, 1.) * 0.5;
+    outColor = showUI < 0.5 ? vec4(col, 1.) : vec4(col, 1.) * vec4(vec3(0.5),1.0);
 }

@@ -135,7 +135,7 @@ export class DynamicTexture extends VariableResource {
             createFramebuffer: true,
         })
     }
-    updateTextureData() {
+    updateTextureData(capture?: boolean) {
         //console.log(this.dirty, this.id)
         if (!this.dirty) return;
         //console.log(this.dependsOn);
@@ -146,11 +146,12 @@ export class DynamicTexture extends VariableResource {
                 (res as DynamicTexture).updateTextureData();
             }
         }
-        this.performRenderPass();
+        const pixels = this.performRenderPass(capture);
         this.dirty = false;
+        return pixels;
     }
 
-    performRenderPass() {
+    performRenderPass(capture?: boolean) {
         //console.log("Performing render pass for", this.id);
         // Set up the texture we're drawing into.
         const res = this.resources.get(this.data.signature) as undefined | ResourceClass;
@@ -201,6 +202,11 @@ export class DynamicTexture extends VariableResource {
         }
 
         this.gl.disable(this.gl.BLEND);
+        if (capture) {
+            const pixels = new Uint8Array(sig.size[0] * sig.size[1] * 4);
+            this.gl.readPixels(0, 0, sig.size[0], sig.size[1], this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
+            return pixels;
+        }
     }
 
     performDrawOp(drawOp : DrawOperation) {
@@ -250,6 +256,8 @@ export class DynamicTexture extends VariableResource {
                 0
             );
         }
+
+
 
     }
 

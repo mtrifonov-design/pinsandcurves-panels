@@ -1,4 +1,4 @@
-import { build, Global, GlobalSignature, Texture, TextureSignature, Use, Vertex, VertexSignature } from "../NectarGL/Builder";
+import { build, Global, GlobalSignature, Program, Texture, TextureSignature, Use, Vertex, VertexSignature } from "../NectarGL/Builder";
 import { CompositionDescription, GraphicAsset } from "./types";
 
 
@@ -65,6 +65,42 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             }
         }
 
+        const __exportTexture = Texture({
+            signature: ref("__canvasSig"),
+            exportName: "exportTexture",
+            drawOps: [{
+                program: ref("__putTextureProgram"),
+                vertex: ref("__quad"),
+                globals: {},
+                textures: {
+                    src: externalBundle.inputTexture
+                },
+            }]
+        });
+        const __putTextureProgram = Program({
+            vertexShader: `
+                out vec2 uv;
+                void main() {
+                    gl_Position = vec4(position, 0.0, 1.0);
+                    uv = position * 0.5 + 0.5;
+                }
+            `,
+            fragmentShader: `
+                in vec2 uv;
+                void main() {
+                    outColor= texture(src, uv);
+                }
+            `,
+            textures: {
+                src: {
+                    filter: "linear",
+                    wrap: "repeat"
+                }
+            },
+            vertexSignature: ref("__quadSig"),
+            globalSignatures: {},
+        })
+
         const __viewportRenderer = viewportRenderer(externalBundle);
         return {
             __canvasSig,
@@ -74,6 +110,8 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             __compositionGlobal,
             __quadSig,
             __quad,
+            __putTextureProgram,
+            __exportTexture,
             ...resources
         };
     })

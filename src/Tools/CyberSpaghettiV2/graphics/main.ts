@@ -144,7 +144,6 @@ function Main() {
                             src: ref("showerhead_tex")
                         },
                     },
-
                     {
                         program: ref("blur_p_drawTex"),
                         vertex: external("quad"),
