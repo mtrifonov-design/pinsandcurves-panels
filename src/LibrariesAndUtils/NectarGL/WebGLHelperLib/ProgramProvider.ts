@@ -100,6 +100,7 @@ class ProgramProvider {
         if (!this.gl.getShaderParameter(fragmentShader, this.gl.COMPILE_STATUS)) {
             const error = this.gl.getShaderInfoLog(fragmentShader);
             this.gl.deleteShader(fragmentShader);
+            console.log(fragmentShaderSource)
             throw new Error(`Fragment shader compilation failed: ${error}`);
         }
        

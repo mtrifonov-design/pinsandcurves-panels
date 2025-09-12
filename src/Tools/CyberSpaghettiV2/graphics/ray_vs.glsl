@@ -4,6 +4,7 @@ float radius2 = 0.5;
 
 #include "./projection_rotation_translation.glsl";
 #include "./randomness.glsl";
+#include "./minRadius.glsl";
 
 
 
@@ -75,11 +76,6 @@ ParticleParams ppar_for(uint instance_key, float frame, float lifecycle) {
     vec3 chaos_vector = vec3(u01(stream(uvec3(instance_key, incarnation, 5u))), u01(stream(uvec3(instance_key, incarnation, 6u))), u01(stream(uvec3(instance_key, incarnation, 7u))));
     return ParticleParams(progress, incarnation, angle, ray_length_variation, ray_thickness_variation, texture_sample_factor, chaos_vector);
 }
-float minNearRadius(float nearAbs, float fovDeg, float aspect) {
-    float halfH = nearAbs * tan(radians(fovDeg) * 0.5);
-    float halfW = halfH * aspect;
-    return length(vec2(halfW, halfH)); // sqrt(halfW^2 + halfH^2)
-}
 
 
 // Constant factors
@@ -99,9 +95,9 @@ void main() {
     ParticleParams ppar = ppar_for(instance_key,  playheadPosition,  LIFECYCLE);
 
     float nearCircleDistance = -.01;
-    float nearCircleRadius = minNearRadius(nearCircleDistance, 45.0, canvas.x/canvas.y) * 100.;
+    float nearCircleRadius = minRadius(nearCircleDistance, 45.0, canvas.x/canvas.y) * 100.;
     float farCircleDistance = mix(-5.,-35.,origin.z);
-    float farMinRadius = minNearRadius(farCircleDistance, 45.0, canvas.x/canvas.y);
+    float farMinRadius = minRadius(farCircleDistance, 45.0, canvas.x/canvas.y);
     float farCircleRadius = .5;
     mat4 t = translation(vec3(0.0, 0.5, 0.0));
     mat4 r = rotation(vec3(.0, 1.0, 0.0), 15.0);

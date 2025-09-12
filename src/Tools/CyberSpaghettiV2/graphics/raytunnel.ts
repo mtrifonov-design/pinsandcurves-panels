@@ -27,6 +27,7 @@ function RayTunnel({
             origin: 'vec4',
             temperature: 'float',
             pressure: 'float',
+            showUI: 'float',
         }),
         ray_sig: InstanceSignature({
             attributes: {

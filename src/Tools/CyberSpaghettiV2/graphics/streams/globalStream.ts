@@ -8,7 +8,8 @@ function globalStream(state: ControlsData) {
         centerY: state.centerY,
         centerZ: state.centerZ,
         temperature: state.temperature,
-        pressure: state.pressure
+        pressure: state.pressure,
+        showUI: state.showUI
     }
 
     if (JSON.stringify(stateSlice) === sliceCache) {
@@ -24,7 +25,8 @@ function globalStream(state: ControlsData) {
             payload: [{
                 origin: [state.centerX, state.centerY, state.centerZ, 0],
                 temperature: [state.temperature],
-                pressure: [state.pressure]
+                pressure: [state.pressure],
+                showUI: [state.showUI]
             }]
         }, {
             resource: "cyberspag_blur",

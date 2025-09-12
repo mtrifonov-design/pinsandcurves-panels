@@ -182,20 +182,32 @@ export function CyberSpaghettiControlsInterior() {
         </div>
         <div style={labelRowStyle}>
           <span>Pressure</span>
-          <NumberInput initialValue={state.pressure} min={0} max={1} step={0.01} onChange={v => update({ pressure: v })} />
+          <NumberInput initialValue={state.pressure} min={0} max={1} step={0.01} 
+          onChange={v => update({ pressure: v, showUI: 1 })}
+          onCommit={v => update({ pressure: v, showUI: 0 })}
+          />
         </div>
         <div style={labelRowStyle}>
           <span>Temperature</span>
-          <NumberInput initialValue={state.temperature} min={0} max={1} step={0.01} onChange={v => update({ temperature: v })} />
+          <NumberInput initialValue={state.temperature} min={0} max={1} step={0.01} 
+          onChange={v => update({ temperature: v, showUI: 1 })} 
+          onCommit={v => update({ temperature: v, showUI: 0 })}
+          />
         </div>
         <div style={groupedRowStyle}>
           <span>Position</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v })} />
+            <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v, showUI: 1 })}
+              onCommit={v => update({ centerX: v, showUI: 0 })}
+            />
             <span style={{ margin: '0 0.5rem' }}>x</span>
-            <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v })} />
+            <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v, showUI: 1 })}
+              onCommit={v => update({ centerY: v, showUI: 0 })}
+            />
             <span style={{ margin: '0 0.5rem' }}>z</span>
-            <NumberInput initialValue={state.centerZ} min={0} max={1} step={0.01} onChange={v => update({ centerZ: v })} />
+            <NumberInput initialValue={state.centerZ} min={0} max={1} step={0.01} onChange={v => update({ centerZ: v, showUI: 1 })}
+              onCommit={v => update({ centerZ: v, showUI: 0 })}
+            />
           </div>
         </div>
       </CollapsibleSection>

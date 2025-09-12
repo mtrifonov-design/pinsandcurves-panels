@@ -6,6 +6,7 @@ type ControlsData = {
     centerZ: number;
     temperature: number,
     pressure: number,
+    showUI: number,
     colorStops: {
         color: {
             r: number;
@@ -27,6 +28,7 @@ const defaultControls = {
     centerZ: 0.5,
     temperature: 0.5,
     pressure: 0.5,
+    showUI: 0,
     colorStops: [
             {
                 color: { r: 1, g: 0, b: 0 },

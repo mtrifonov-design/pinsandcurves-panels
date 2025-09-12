@@ -165,7 +165,7 @@ export class DynamicTexture extends VariableResource {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.textureProvider.framebuffer);
         }
 
-        this.gl.clearColor(0, 0, 0, 1);
+        this.gl.clearColor(0, 0, 0, 0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
