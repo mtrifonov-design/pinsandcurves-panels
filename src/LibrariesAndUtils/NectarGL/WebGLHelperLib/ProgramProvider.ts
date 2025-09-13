@@ -67,6 +67,7 @@ class ProgramProvider {
         precision mediump int;
         ${this.programDescription.uniformProviderSignatures.map(sig => generateUniformBlockString(sig)).join('\n')}
         ${generateVertexBlockString(this.programDescription.vertexProviderSignature,this.programDescription.instanceProviderSignature)}
+        ${this.programDescription.textureNames.map(name => `uniform sampler2D ${name};`).join('\n')}
         ${this.programDescription.vertexShader}
         `;
 

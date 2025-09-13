@@ -45,7 +45,11 @@ function Main() {
                 src: {
                     filter: "linear",
                     wrap: "repeat"
-                }
+                },
+                data: {
+                    filter: "nearest",
+                    wrap: "clamp"
+                },
             },
         }),
         p_draw_bg: Program({
@@ -65,7 +69,7 @@ function Main() {
             textures: {
                 src: {
                     filter: "nearest",
-                    wrap: "repeat"
+                    wrap: "clamp"
                 }
             },
         }),
@@ -124,7 +128,9 @@ function Main() {
             compositionGlobal: external('compositionGlobal'),
             compositionGlobalSig: external('compositionGlobalSig'),
             quad: external('quad'),
-            quadSig: external('quadSig')
+            quadSig: external('quadSig'),
+            raytunnelGlobal: ref('raytunnel_global'),
+            raytunnelGlobalSig: ref('raytunnel_global_sig')
         }),
         out: Texture({
                 signature: external("canvasSig"),
@@ -138,7 +144,10 @@ function Main() {
                         },
                         textures: {
                             //src: ref("raytunnel_colorTex"),
-                            src: ref("tilt_out")
+                            src: {
+                                id:ref("tilt_out"),
+                                latency: 0
+                            }
                         },
                     },
                     {
@@ -149,29 +158,33 @@ function Main() {
                             c: external('compositionGlobal')
                         },
                         textures: {
-                            src: ref("showerhead_tex")
+                            src: ref("showerhead_tex"),
+                            data: {
+                                id:ref("tilt_out"),
+                                latency: 0
+                            }
                         },
                     },
-                    {
-                        program: ref("blur_p_drawTex"),
-                        vertex: external("quad"),
-                        globals: {
-                        },
-                        textures: {
-                            src: ref("raytunnel_tex")
-                        },
-                        blend: "add",
-                    },
-                    {
-                        program: ref("blur_p_drawTex"),
-                        vertex: external("quad"),
-                        globals: {
-                        },
-                        textures: {
-                            src: ref("blur_out")
-                        },
-                        blend: "add"
-                    }
+                    // {
+                    //     program: ref("blur_p_drawTex"),
+                    //     vertex: external("quad"),
+                    //     globals: {
+                    //     },
+                    //     textures: {
+                    //         src: ref("raytunnel_tex")
+                    //     },
+                    //     blend: "add",
+                    // },
+                    // {
+                    //     program: ref("blur_p_drawTex"),
+                    //     vertex: external("quad"),
+                    //     globals: {
+                    //     },
+                    //     textures: {
+                    //         src: ref("blur_out")
+                    //     },
+                    //     blend: "add"
+                    // }
 
                 ],
             }),

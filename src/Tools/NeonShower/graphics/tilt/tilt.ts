@@ -1,14 +1,19 @@
 import { TextureSignature, Texture, Program } from "../../../../LibrariesAndUtils/NectarGL/Builder";
 import build from "../../../../LibrariesAndUtils/NectarGL/Builder/build";
+import tilt_fs from './tilt_fs.glsl'
 
 function Tilt({
     compositionGlobalSig,
     compositionGlobal,
+    raytunnelGlobal,
+    raytunnelGlobalSig,
     quad,
     quadSig,
 } : {
     compositionGlobalSig: string,
     compositionGlobal: string,
+    raytunnelGlobal: string,
+    raytunnelGlobalSig: string;
     quad: string,
     quadSig: string,
 }) {
@@ -26,12 +31,7 @@ function Tilt({
                         gl_Position = vec4(position, 0.0, 1.0);
                     }
                 `,
-                fragmentShader: `
-                    in vec2 uv;
-                    void main() {
-                        outColor = texture(src,uv) + vec4(1.0 / (255. * 5.));
-                    }
-                `,
+                fragmentShader: tilt_fs,
                 textures: {
                     src: {
                         filter: "nearest",
@@ -40,6 +40,7 @@ function Tilt({
                 },
                 globalSignatures: {
                     g: compositionGlobalSig,
+                    r: raytunnelGlobalSig,
                 },
                 vertexSignature: quadSig,
             }),
@@ -49,7 +50,7 @@ function Tilt({
                 drawOps: [{
                     program: ref("p_compute"),
                     vertex: quad,
-                    globals: { g: compositionGlobal },
+                    globals: { g: compositionGlobal, r: raytunnelGlobal },
                     textures: {
                         src: {
                             id: ref("out"),

@@ -1,6 +1,26 @@
 #include "./projection_rotation_translation.glsl";
 #include "./minRadius.glsl";
 
+const float uStateWidth = 100.;    // pass 100.0
+const float SLOT_OUTPUT = 4.0;// where the update pass writes (xTilt,yTilt,speed,1)
+
+vec2 uvForSlot(float i) {
+    // center of texel i in a 100x1 strip
+    float u = (i + 0.5) / uStateWidth;
+    return vec2(u, 0.5);
+}
+
+vec3 getTiltAndSpeed_sampled() {
+    vec4 v = texture(data, uvForSlot(SLOT_OUTPUT));
+    return v.rgb; // xTilt, yTilt, speed
+}
+
+float getXTilt_sampled() { return texture(data, uvForSlot(SLOT_OUTPUT)).r; }
+float getYTilt_sampled() { return texture(data, uvForSlot(SLOT_OUTPUT)).g; }
+float getSpeed_sampled() { return texture(data, uvForSlot(SLOT_OUTPUT)).b; }
+
+
+
 out vec2 uv;
 void main() {
     vec3 o_point = origin.xyz;
@@ -22,7 +42,7 @@ void main() {
     mat4 t_ = position_relative;
     vec3 tiltXAxis = vec3(0.,1.,0.);
     vec3 tiltYAxis = vec3(1.,0.,0.);
-    mat4 tiltXMat = rotation(tiltXAxis,tiltX * 180.);
-    mat4 tiltYMat = rotation(tiltYAxis,tiltY * 180.);
+    mat4 tiltXMat = rotation(tiltXAxis,getXTilt_sampled() * 3600.);
+    mat4 tiltYMat = rotation(tiltYAxis,getYTilt_sampled() * 3600.);
     gl_Position = p * t * s * tiltXMat * tiltYMat * t_ * vec4(position.xy, 0.0, 1.0);
 }
