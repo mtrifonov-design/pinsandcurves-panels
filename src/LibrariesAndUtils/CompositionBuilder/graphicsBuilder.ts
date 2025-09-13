@@ -22,6 +22,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             canvas: 'vec2',
             playheadPosition: 'float',
             numberOfFrames: 'float',
+            TOTAL_FRAME: 'int',
         });
         const __compositionGlobal = Global({
             signature: ref("__compositionGlobalSig"),

@@ -4,6 +4,13 @@ type ControlsData = {
     centerX: number; 
     centerY: number; 
     centerZ: number;
+    centerXLast: number;
+    centerYLast: number;
+    tiltX: number;
+    tiltXLast: number;
+    tiltY: number;
+    tiltYLast: number;
+    lastTimestamp: number;
     temperature: number,
     pressure: number,
     showUI: number,
@@ -26,6 +33,13 @@ const defaultControls = {
     centerX: 0.5,
     centerY: 0.5,
     centerZ: 0.5,
+    centerXLast: 0.5,
+    centerYLast: 0.5,
+    tiltX: 0,
+    tiltXLast: 0,
+    tiltY: 0,
+    tiltYLast: 0,
+    lastTimestamp: Date.now(),
     temperature: 0.5,
     pressure: 0.5,
     showUI: 0,

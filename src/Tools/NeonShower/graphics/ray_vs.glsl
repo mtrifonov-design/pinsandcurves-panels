@@ -111,6 +111,8 @@ void main() {
     
     mat4 rayPositions = generateRayPositions((origin.xy * 2. - vec2(1.)) * farMinRadius, nearCircleDistance, nearCircleRadius, farCircleDistance, farCircleRadius, ppar.angle, final_ray_length, ppar.progress, final_ray_thickness,normalize(ppar.chaos_vector));
 
+
+
     int idx = positionToIndex(position);
     gl_Position = p * rayPositions[idx];
     uv = (position / vec2(2.0, 2.0)) + vec2(0.5);

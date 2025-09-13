@@ -9,6 +9,7 @@ import renderStateReducer from './renderStateReducer.js';
 import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
 import { exportResources } from '../../LibrariesAndUtils/NectarGL/Builder/index.js';
 import { JSONAssetCreator } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
+import updateDerived from './updateDerived.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -64,10 +65,12 @@ export function CyberSpaghettiControlsInterior() {
 
 
   const updateCb = useCallback(throttle((state, patch: Partial<NewControls>, composition) => {
-    const nextLocal = { ...state, ...patch };
-    const nextControls = renderStateReducer(nextLocal);
+    let nextLocal = { ...state, ...patch };
+
     //console.log("origin!", nextLocal.colorStops[1].position, null, 2);
+    nextLocal = updateDerived(state,nextLocal);
     updateLocal(nextLocal);
+    const nextControls = renderStateReducer(nextLocal);
 
     if (nextLocal.canvasWidth !== dimensionsRef.current[0] || nextLocal.canvasHeight !== dimensionsRef.current[1]) {
       dimensionsRef.current = [nextLocal.canvasWidth, nextLocal.canvasHeight];

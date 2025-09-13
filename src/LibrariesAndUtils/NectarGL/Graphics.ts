@@ -7,6 +7,7 @@ export default class Graphics {
     private gl: WebGL2RenderingContext;
     constructor(gl: WebGL2RenderingContext) {
         this.gl = gl;
+        gl.getExtension('EXT_color_buffer_float');
     }
 
     resourceBlueprint : { id: string, type: ResourceType, data: any }[] = [];

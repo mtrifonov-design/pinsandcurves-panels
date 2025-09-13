@@ -20,5 +20,9 @@ void main() {
     mat4 s = adjustScaleAndFlipY;
     mat4 position_relative = translation(vec3(0., .6, 0.));
     mat4 t_ = position_relative;
-    gl_Position = p * t * s * t_ * vec4(position.xy, 0.0, 1.0);
+    vec3 tiltXAxis = vec3(0.,1.,0.);
+    vec3 tiltYAxis = vec3(1.,0.,0.);
+    mat4 tiltXMat = rotation(tiltXAxis,tiltX * 180.);
+    mat4 tiltYMat = rotation(tiltYAxis,tiltY * 180.);
+    gl_Position = p * t * s * tiltXMat * tiltYMat * t_ * vec4(position.xy, 0.0, 1.0);
 }

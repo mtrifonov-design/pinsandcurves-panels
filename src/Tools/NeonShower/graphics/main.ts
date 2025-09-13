@@ -16,6 +16,7 @@ import Blur from "./blur";
 import RayTunnel from "./raytunnel";
 import fog from './fog_fs.glsl';
 import showerhead_vs from './showerhead_vs.glsl';
+import Tilt from './tilt/tilt'
 
 function Main() {
     return build((ref: any) => ({
@@ -119,6 +120,12 @@ function Main() {
                 }
             },
         }),
+        tilt: Tilt({
+            compositionGlobal: external('compositionGlobal'),
+            compositionGlobalSig: external('compositionGlobalSig'),
+            quad: external('quad'),
+            quadSig: external('quadSig')
+        }),
         out: Texture({
                 signature: external("canvasSig"),
                 drawOps: [
@@ -130,7 +137,8 @@ function Main() {
                             g: ref('raytunnel_global')
                         },
                         textures: {
-                            src: ref("raytunnel_colorTex")
+                            //src: ref("raytunnel_colorTex"),
+                            src: ref("tilt_out")
                         },
                     },
                     {

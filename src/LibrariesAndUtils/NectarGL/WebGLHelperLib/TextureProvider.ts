@@ -56,6 +56,7 @@ class Texture {
     texture: WebGLTexture | null = null;
     setup() {
         const { internalFormat, format, type } = getUploadInfo(this.description.type, this.gl);
+        //console.log(internalFormat, format, type)
         this.texture = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.texture);
         this.gl.pixelStorei(this.gl.UNPACK_ALIGNMENT, 1);
