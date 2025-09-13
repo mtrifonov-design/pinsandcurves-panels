@@ -80,9 +80,11 @@ export class StaticTexture extends VariableResource {
 
 export class DynamicTexture extends VariableResource {
     type = "DynamicTexture";
-
     dispose() {
-        this.textureProvider.dispose();
+        for (let i = 0; i < this.textureProviders.length; i++) {
+            const textureProvider = this.textureProviders[i];
+            textureProvider.dispose();
+        }
     }
 
     declare data : DynamicTextureData;
@@ -91,21 +93,22 @@ export class DynamicTexture extends VariableResource {
         const drawOps = this.data.drawOps;
         const dependsOn = [];
         for (const drawOp of drawOps) {
-            dependsOn.push(...Object.values(drawOp.textures));
+            dependsOn.push(
+                ...Object.values(drawOp.textures)
+                .map(texVal => typeof texVal === "string" ? texVal : texVal.id)
+                .filter(texId => texId !== this.id)
+            );
         }
         this.dependsOn = dependsOn;
 
         // compute isDependencyOf
-        const dynamicTextures = Array.from(this.resources.values()).filter(r => r.type === "DynamicTexture");
-        //console.log("self",this.id)
+        const dynamicTextures = Array.from(this.resources.values()).filter(r => r.type === "DynamicTexture")
+            .filter(tex => tex.id !== this.id);
         for (const texture of dynamicTextures) {
             let isDependencyOf = false;
-            //console.log(texture.id)
             const textureDrawOps = texture.data.drawOps;
             for (const drawOp of textureDrawOps) {
-                //console.log(Object.values(drawOp.textures))
-                //console.log(Object.values(drawOp.textures).includes(this.id))
-                if (Object.values(drawOp.textures).includes(this.id)) {
+                if (Object.values(drawOp.textures).map(texVal => typeof texVal === "string" ? texVal : texVal.id).includes(this.id)) {
                     isDependencyOf = true;
                     break;
                 }
@@ -116,7 +119,7 @@ export class DynamicTexture extends VariableResource {
         }
         //console.log("done",this.isDependencyOf)
     };
-    textureProvider: TextureProvider;
+    textureProviders: TextureProvider[];
     constructor(resources: Map<string, ResourceClass>,
         id: string,
         data: StaticTextureData,
@@ -129,11 +132,26 @@ export class DynamicTexture extends VariableResource {
         if (this.data.screen && sig.type !== "RGBA8") {
             throw new Error("Screen textures must be of type RGBA8");
         }
-        this.textureProvider = new TextureProvider(gl, {
-            shape: sig.size,
-            type: sig.type,
-            createFramebuffer: true,
-        })
+
+
+        if (this.data.historyLength !== undefined && this.data.screen !== undefined) {
+            throw new Error("A screen texture can't be stateful.")
+        }
+        let historyLength = this.data.historyLength;
+        if (historyLength === undefined) {
+            historyLength = 1;
+        }
+        const textureProviders = [];
+        for (let i = 0; i < historyLength; i++) {
+            textureProviders.push(
+                new TextureProvider(gl, {
+                    shape: sig.size,
+                    type: sig.type,
+                    createFramebuffer: true,
+                })
+            )
+        }
+        this.textureProviders = textureProviders;
     }
     updateTextureData(capture?: boolean) {
         //console.log(this.dirty, this.id)
@@ -151,6 +169,7 @@ export class DynamicTexture extends VariableResource {
         return pixels;
     }
 
+    //currentTextureIndex = 0;
     performRenderPass(capture?: boolean) {
         //console.log("Performing render pass for", this.id);
         // Set up the texture we're drawing into.
@@ -163,7 +182,11 @@ export class DynamicTexture extends VariableResource {
             this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         } else {
             this.gl.viewport(0, 0, sig.size[0], sig.size[1]); 
-            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.textureProvider.framebuffer);
+            //const textureProvider = this.textureProviders[this.currentTextureIndex];
+            //
+            const textureProvider = this.textureProviders[0];
+            this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, textureProvider.framebuffer);
+            //this.currentTextureIndex = (this.currentTextureIndex + 1) % this.textureProviders.length;
         }
 
         this.gl.clearColor(0, 0, 0, 0);
@@ -201,6 +224,11 @@ export class DynamicTexture extends VariableResource {
             this.performDrawOp(drawOp);
         }
 
+        if (!this.data.screen) {
+            const last = this.textureProviders.pop();
+            this.textureProviders.unshift(last);
+        }
+
         this.gl.disable(this.gl.BLEND);
         if (capture) {
             //console.log(sig.size[0], sig.size[1], this.data.signature);
@@ -234,6 +262,13 @@ export class DynamicTexture extends VariableResource {
         SetupUniforms(this.gl, this.resources, drawOp.globals, program);
         
         // set up textures
+        // make sure no texture references itself:
+        if (Object.values(drawOp.textures).includes(this.id)
+            || Object.values(drawOp.textures).filter(val => typeof val !== "string").filter(val => val.id === this.id && val.latency === 0).length > 0
+        ) {
+            throw new Error("Self references not allowed.")
+        }
+
         SetupTextures(this.gl, this.resources, drawOp.textures, program.data, program.programProvider.program!);
         // perform draw call
 

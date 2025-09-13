@@ -63,7 +63,7 @@ type DrawOperation = {
         [key: string]: string;
     };
     textures: {
-        [key: string]: string;
+        [key: string]: string | { id: string, latency: number };
     };
 };
 type DynamicTextureData = {
@@ -71,6 +71,7 @@ type DynamicTextureData = {
     signature: string;
     drawOps: DrawOperation[];
     exportName?: string;
+    historyLength?: number;
 };
 
 export type {

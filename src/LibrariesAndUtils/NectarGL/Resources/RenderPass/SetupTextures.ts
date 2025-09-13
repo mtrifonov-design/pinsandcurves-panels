@@ -9,8 +9,10 @@ export default function SetupTextures(
     program: WebGLProgram) {
 
         let slot = 0;
-        for (const [textureName, textureId] of Object.entries(textures)) {
-            SetupTexture(gl, resources, textureName, textureId, programData, program, slot);
+        for (const [textureName, textureValue] of Object.entries(textures)) {
+            const textureId = typeof textureValue === "string" ? textureValue : textureValue.id;
+            const latency = typeof textureValue === "string" ? undefined : textureValue.latency;
+            SetupTexture(gl, resources, textureName, textureId, programData, program, slot, latency);
             slot++;
         }
 
@@ -24,18 +26,20 @@ function SetupTexture(
     textureId: string,
     programData: ProgramData,
     program: WebGLProgram,
-    slot: number
+    slot: number,
+    latency?: number,
 ) {
     //console.log("Setting up textures", textureName, textureId);
     const texture = resources.get(textureId) as undefined | DynamicTexture | StaticTexture; 
     if (!texture) throw new Error("Something went wrong.");
     if (texture.type !== "StaticTexture" && texture.type !== "DynamicTexture") throw new Error("Something went wrong.");
 
-    
+    //console.log(texture.textureProviders, latency);
+    const textureProvider = texture.type === "StaticTexture" ? texture.textureProvider : latency === undefined ? texture.textureProviders[0] : texture.textureProviders[latency];
     const location = gl.getUniformLocation(program, textureName);
     if (location === null) throw new Error("Something went wrong.");
     gl.activeTexture(gl.TEXTURE0 + slot);
-    gl.bindTexture(gl.TEXTURE_2D, texture.textureProvider.texture);
+    gl.bindTexture(gl.TEXTURE_2D, textureProvider.texture);
     const texSettings = programData.textures[textureName];
     if (!texSettings) throw new Error("Something went wrong.");
     const filter = texSettings.filter === "linear" ? gl.LINEAR : gl.NEAREST;
