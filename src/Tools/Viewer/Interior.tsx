@@ -31,6 +31,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
     const { recordEvent } = useTracker(defaultEvent);
 
     const [dimensions, setDimensions] = useState([1920,1080]);
+    const [totalFrame, setTotalFrame] = useState(0);
 
     useEffect(() => {
         function resizeCanvasToFit(container, canvas) {
@@ -75,7 +76,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
         const draw = () => {
             r.frame();
             frameSaver.frame();
-            TOTAL_FRAME += 1;
+            setTotalFrame(tf => tf + 1);
             window.requestAnimationFrame(draw);
         };
         draw();
@@ -109,7 +110,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
                         numberOfFrames: [timelineProject.timelineData.numberOfFrames],
                         screen: [dimensions[0], dimensions[1]],
                         canvas: [compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]],
-                        TOTAL_FRAME: [TOTAL_FRAME]
+                        TOTAL_FRAME: [totalFrame]
                     }]
                 }
             ],
@@ -145,7 +146,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
         };
         renderer.attachAssets(imagesSnapshot);
         renderer.setState(registry.currentSourceId, renderState);
-    }, [renderer, controls, timelineProject, frameSaver, registry, dimensions, composition, images]);
+    }, [renderer, controls, timelineProject, frameSaver, registry, dimensions, composition, images,totalFrame]);
 
     if (!timeline) {
         return <div>No timeline found</div>

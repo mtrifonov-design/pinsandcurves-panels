@@ -23,7 +23,8 @@ void main() {
     mat4 t_ = position_relative;
     vec3 tiltXAxis = vec3(0.,1.,0.);
     vec3 tiltYAxis = vec3(1.,0.,0.);
-    mat4 tiltXMat = rotation(tiltXAxis,readSlot(0,data).r * 45.);
+    //mat4 tiltXMat = rotation(tiltXAxis,180.);
+    mat4 tiltXMat = rotation(tiltXAxis,readSlot(0,data).r * -80.);
     mat4 tiltYMat = rotation(tiltYAxis,readSlot(1,data).r * 45. + 180.);
     gl_Position = p * t * s * tiltXMat * tiltYMat * t_ * vec4(position.xy, 0.0, 1.0);
 }

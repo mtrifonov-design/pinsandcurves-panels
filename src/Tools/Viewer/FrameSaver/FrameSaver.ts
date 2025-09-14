@@ -188,6 +188,38 @@ class FrameSaver {
         this.#timeline.projectTools.updatePlayheadPosition(focusRange[0], true);
     }
 
+    saveFrame() {
+        const canvas = this.#canvas;
+        const ctx = canvas.getContext("2d");
+        const data = this.#captureFrameCallback();
+        const w = this.#width;
+        const h = this.#height;
+        //console.log(w,h);
+
+        const clamped =
+            data instanceof Uint8ClampedArray
+                ? data
+                : new Uint8ClampedArray(data.buffer, data.byteOffset, data.byteLength);
+
+            // (optional) sanity check
+            if (clamped.length !== w * h * 4) {
+            throw new Error(`Bad length: got ${clamped.length}, expected ${w*h*4}`);
+            }
+        const imageData = new ImageData(clamped, this.#width, this.#height);
+        ctx.scale(1, -1);
+        ctx.putImageData(imageData, 0, 0);
+        // flip image y
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.style.display = 'none';
+        a.download = 'frame.png';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
 }
 
 export default FrameSaver;

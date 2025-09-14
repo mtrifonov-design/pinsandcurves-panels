@@ -16,6 +16,7 @@ import Blur from "./blur";
 import RayTunnel from "./raytunnel";
 import fog from './fog_fs.glsl';
 import showerhead_vs from './showerhead_vs.glsl';
+import showerhead_fs from './showerhead_fs.glsl'
 import Tilt from './tilt/tilt'
 
 function Main() {
@@ -30,12 +31,7 @@ function Main() {
         }),
         p_draw_showerhead: Program({
             vertexShader: showerhead_vs,
-            fragmentShader: `
-                in vec2 uv;
-                void main() {
-                    outColor = texture(src, uv) * vec4(1.) * 0.85 * showUI;
-                }
-            `,
+            fragmentShader:showerhead_fs,
             vertexSignature: external('quadSig'),
             globalSignatures: {
                 c: external('compositionGlobalSig'),
@@ -50,6 +46,10 @@ function Main() {
                     filter: "nearest",
                     wrap: "clamp"
                 },
+                colorTex: {
+                    filter: "nearest",
+                    wrap: "clamp" 
+                }
             },
         }),
         p_draw_bg: Program({
@@ -143,11 +143,11 @@ function Main() {
                             g: ref('raytunnel_global')
                         },
                         textures: {
-                            //src: ref("raytunnel_colorTex"),
-                            src: {
-                                id:ref("tilt_out"),
-                                latency: 0
-                            }
+                            src: ref("raytunnel_colorTex"),
+                            // src: {
+                            //     id:ref("tilt_out"),
+                            //     latency: 0
+                            // }
                         },
                     },
                     {
@@ -162,29 +162,30 @@ function Main() {
                             data: {
                                 id:ref("tilt_out"),
                                 latency: 0
-                            }
+                            },
+                            colorTex: ref("raytunnel_colorTex"),
                         },
                     },
-                    // {
-                    //     program: ref("blur_p_drawTex"),
-                    //     vertex: external("quad"),
-                    //     globals: {
-                    //     },
-                    //     textures: {
-                    //         src: ref("raytunnel_tex")
-                    //     },
-                    //     blend: "add",
-                    // },
-                    // {
-                    //     program: ref("blur_p_drawTex"),
-                    //     vertex: external("quad"),
-                    //     globals: {
-                    //     },
-                    //     textures: {
-                    //         src: ref("blur_out")
-                    //     },
-                    //     blend: "add"
-                    // }
+                    {
+                        program: ref("blur_p_drawTex"),
+                        vertex: external("quad"),
+                        globals: {
+                        },
+                        textures: {
+                            src: ref("raytunnel_tex")
+                        },
+                        blend: "add",
+                    },
+                    {
+                        program: ref("blur_p_drawTex"),
+                        vertex: external("quad"),
+                        globals: {
+                        },
+                        textures: {
+                            src: ref("blur_out")
+                        },
+                        blend: "add"
+                    }
 
                 ],
             }),

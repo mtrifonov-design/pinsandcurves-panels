@@ -113,7 +113,17 @@ export default function FrameSaverScreen({ frameSaver, recordEvent, compName }: 
             }}
             text={"export as .mp4"}
             iconName="movie"
-        />}
+        />
+        
+        }
+        <Button
+            onClick={async () => {
+                recordEvent({ path: `${compName}-saveframe`, event: true });
+                frameSaver.saveFrame();
+            }}
+            text={"export frame"}
+            iconName="camera"
+        />
         {displayOverlay && <div style={{
             position: "absolute",
             top: "50%",
