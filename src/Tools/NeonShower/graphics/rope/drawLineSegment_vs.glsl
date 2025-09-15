@@ -6,12 +6,15 @@ float uHalfLengthScale = 20.;       // scales along the tangent (e.g. 0.5 makes 
 float uMaxHalfLength = 1.0;         // optional cap (set large if you don't want a cap)
 
 out vec2 uv;
+out float pos;
 void main() {
     vec2 aPos = position;
     uv = position;
   // Figure out how many particles we have (texture width).
   int W = textureSize(data, 0).x;
   int i = clamp(gl_InstanceID, 0, max(W - 1, 0));
+
+  pos = float(i) / float(W);
 
   // Helper to safely pick the neighbor index.
   int j = (i < W - 1) ? (i + 1) : max(i - 1, 0);
@@ -31,7 +34,7 @@ void main() {
 
   // Local quad -> world offset in XY, long axis along 'tangent'
   vec2 offsetXY = normal  * (aPos.x * uHalfWidth) +
-                  tangent * (aPos.y * halfLen);
+                  tangent * (aPos.y * uHalfWidth);
 
   vec3 worldPos = vec3(Pi.xy + offsetXY, Pi.z);
 
