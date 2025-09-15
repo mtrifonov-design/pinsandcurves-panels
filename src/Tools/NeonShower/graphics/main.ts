@@ -169,7 +169,8 @@ function Main() {
                         textures: {
                             data: ref("rope_outPos"),
                             colorTex: ref("raytunnel_colorTex"),
-                        }
+                        },
+                        blend: "add"
                     },
                     {
                         program: ref("p_draw_showerhead"),

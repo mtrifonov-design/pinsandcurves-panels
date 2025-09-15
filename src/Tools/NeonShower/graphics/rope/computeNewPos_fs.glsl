@@ -2,7 +2,7 @@
 #include "../minRadius.glsl";
 vec3 endPos = vec3(5.,-10.,-10.);
 float dt = 1. / 60.;         // e.g. 1.0/60.0
-float damping = 0.98;    // 0.98–0.995
+float damping = 0.5;    // 0.98–0.995
 vec3 gravity = vec3(0.,-12.,0.);     // e.g. vec3(0.0,-9.8,0.0) in your units
 in vec2 uv;
 void main() {
@@ -22,8 +22,16 @@ void main() {
   vec3 v     = (pCur - pPrev) * damping;
   vec3 pNew  = pCur + v + gravity * (dt * dt);
 
+  vec3 pNewOnPole = o_point + vec3(0.,-float(i) * 0.01, 0.);
+
   if (i == 0)      pNew = o_point;
   if (i == W - 1)  pNew = endPos;
+  // if (i < 100) {
+  //   pNew = mix(pNewOnPole,pNew, float(i) / float(100));
+  // } 
+  float x = float(i) / float(W);
+  pNew = mix(pNewOnPole,pNew, 1.- pow(1.-x,10.));
+  
 
   outColor = vec4(pNew, 1.0);
 }

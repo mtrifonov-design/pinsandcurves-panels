@@ -1,6 +1,6 @@
 #include "../projection_rotation_translation.glsl";
 float uHalfWidth = 0.18;             // half thickness of the ribbon (in world units)
-float uHalfLengthScale = 2.;       // scales along the tangent (e.g. 0.5 makes each quad span ~half a segment)
+float uHalfLengthScale = 20.;       // scales along the tangent (e.g. 0.5 makes each quad span ~half a segment)
 
 // If you want to clamp how long each quad is relative to neighbor distance:
 float uMaxHalfLength = 1.0;         // optional cap (set large if you don't want a cap)
@@ -38,3 +38,4 @@ void main() {
   mat4 p = perspective_projection(canvas.x/canvas.y, 45.0, 0.01, 100.0);
   gl_Position = p * vec4(worldPos, 1.0);
 }
+

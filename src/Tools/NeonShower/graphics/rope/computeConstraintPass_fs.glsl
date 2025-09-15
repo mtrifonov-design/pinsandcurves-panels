@@ -1,8 +1,8 @@
 #include "../minRadius.glsl";
 
 
-float restLength = 0.001;     // ropeRestLength / (N - 1)
-float omega = 1.0;          // 1.0 = plain Jacobi, 1.2–1.6 = over-relax
+float restLength = 0.01;     // ropeRestLength / (N - 1)
+float omega = 1.;          // 1.0 = plain Jacobi, 1.2–1.6 = over-relax
 float kLR = 0.2;            // 0..0.35 optional long-range nudge; 0 to disable
 in vec2 uv;
 vec3 endPos = vec3(5.0, -10.0, -10.0);
@@ -53,9 +53,9 @@ void main() {
   //   vec3 phat = mix(o_point, endPos, t);
   //   p += kLR * (phat - p) * t;
   // }
-  float t = float(i) / float(W-1);
-  t = smoothstep(0.2,1.0,1.-t);
-  p = mix(p,mix(p, o_point, 0.2),t);
+  // float t = float(i) / float(W-1);
+  // t = smoothstep(0.2,1.0,1.-t);
+  // p = mix(p,mix(p, o_point, 0.2),t);
 
   if (i == 0)      p = o_point;
   if (i == W - 1)  p = endPos;
