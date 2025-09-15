@@ -38,6 +38,11 @@ function globalStream(state: ControlsData) {
             payload: [{
                 amount: [state.temperature]
             }]
+        },
+        {
+            resource: "rope_seg_instance",
+            type: "setInstanceData",
+            payload: [{}, 1000]
         }
         ],
     };

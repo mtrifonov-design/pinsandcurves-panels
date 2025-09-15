@@ -95,7 +95,7 @@ export class DynamicTexture extends VariableResource {
         for (const drawOp of drawOps) {
             dependsOn.push(
                 ...Object.values(drawOp.textures)
-                .map(texVal => typeof texVal === "string" ? texVal : texVal.id)
+                .map(texVal => typeof texVal === "string" ? texVal : texVal.latency === 0 ? texVal.id : crypto.randomUUID())
                 .filter(texId => texId !== this.id)
             );
         }
@@ -108,7 +108,7 @@ export class DynamicTexture extends VariableResource {
             let isDependencyOf = false;
             const textureDrawOps = texture.data.drawOps;
             for (const drawOp of textureDrawOps) {
-                if (Object.values(drawOp.textures).map(texVal => typeof texVal === "string" ? texVal : texVal.id).includes(this.id)) {
+                if (Object.values(drawOp.textures).map(texVal => typeof texVal === "string" ? texVal : texVal.latency === 0 ? texVal.id : crypto.randomUUID()).includes(this.id)) {
                     isDependencyOf = true;
                     break;
                 }
@@ -193,6 +193,8 @@ export class DynamicTexture extends VariableResource {
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
+
+        console.log("WORKINGON",this.data, this.id);
 
         for (const drawOp of this.data.drawOps) {
             if (drawOp.blend) {

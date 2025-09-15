@@ -1,14 +1,14 @@
-
-uniform mat4 uWorldToClip;            // set to identity if your positions are already NDC
-float uHalfWidth = 0.1;             // half thickness of the ribbon (in world units)
-float uHalfLengthScale = 0.5;       // scales along the tangent (e.g. 0.5 makes each quad span ~half a segment)
+#include "../projection_rotation_translation.glsl";
+float uHalfWidth = 0.18;             // half thickness of the ribbon (in world units)
+float uHalfLengthScale = 2.;       // scales along the tangent (e.g. 0.5 makes each quad span ~half a segment)
 
 // If you want to clamp how long each quad is relative to neighbor distance:
 float uMaxHalfLength = 1.0;         // optional cap (set large if you don't want a cap)
 
-
+out vec2 uv;
 void main() {
     vec2 aPos = position;
+    uv = position;
   // Figure out how many particles we have (texture width).
   int W = textureSize(data, 0).x;
   int i = clamp(gl_InstanceID, 0, max(W - 1, 0));
@@ -35,5 +35,6 @@ void main() {
 
   vec3 worldPos = vec3(Pi.xy + offsetXY, Pi.z);
 
-  gl_Position = uWorldToClip * vec4(worldPos, 1.0);
+  mat4 p = perspective_projection(canvas.x/canvas.y, 45.0, 0.01, 100.0);
+  gl_Position = p * vec4(worldPos, 1.0);
 }

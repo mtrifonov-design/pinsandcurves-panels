@@ -18,6 +18,7 @@ import fog from './fog_fs.glsl';
 import showerhead_vs from './showerhead_vs.glsl';
 import showerhead_fs from './showerhead_fs.glsl'
 import Tilt from './tilt/tilt'
+import Rope from "./rope/rope";
 
 function Main() {
     return build((ref: any) => ({
@@ -99,6 +100,15 @@ function Main() {
             compositionGlobal: external("compositionGlobal"),
             compositionGlobalSig: external("compositionGlobalSig")
         }),
+        rope: Rope({
+            compositionGlobal: external("compositionGlobal"),
+            compositionGlobalSig: external("compositionGlobalSig"),
+            quad: external("quad"),
+            quadSig: external("quadSig"),
+            raytunnelGlobal: ref("raytunnel_global"),
+            raytunnelGlobalSig: ref("raytunnel_global_sig"),
+            canvasSig: external("canvasSig"),
+        }),
         raytunnel: RayTunnel({ 
             timeline_sig: external('compositionGlobalSig'),
             quadSig: external('quadSig')
@@ -144,11 +154,22 @@ function Main() {
                         },
                         textures: {
                             src: ref("raytunnel_colorTex"),
+                            //src: ref("rope_outPos"),
                             // src: {
                             //     id:ref("tilt_out"),
                             //     latency: 0
                             // }
                         },
+                    },
+                    {
+                        program: ref("rope_p_draw_rope"),
+                        vertex: external("quad"),
+                        instance: ref("rope_rope_seg_instance"),
+                        globals: {g:external("compositionGlobal"), r: ref("raytunnel_global")},
+                        textures: {
+                            data: ref("rope_outPos"),
+                            colorTex: ref("raytunnel_colorTex"),
+                        }
                     },
                     {
                         program: ref("p_draw_showerhead"),

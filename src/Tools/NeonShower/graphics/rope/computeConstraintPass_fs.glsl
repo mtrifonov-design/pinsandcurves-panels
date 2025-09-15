@@ -1,12 +1,21 @@
+#include "../minRadius.glsl";
 
-float restLength = 0.1;     // ropeRestLength / (N - 1)
+
+float restLength = 0.001;     // ropeRestLength / (N - 1)
 float omega = 1.0;          // 1.0 = plain Jacobi, 1.2–1.6 = over-relax
-float kLR = 0.;            // 0..0.35 optional long-range nudge; 0 to disable
+float kLR = 0.2;            // 0..0.35 optional long-range nudge; 0 to disable
 in vec2 uv;
+vec3 endPos = vec3(5.0, -10.0, -10.0);
 void main() {
+    vec3 o_point = origin.xyz;
+  o_point.z = mix(-10.,-28.,origin.z);
+  o_point.xy = origin.xy * 2. - vec2(1.);
+  o_point.xy *= minRadius(o_point.z, 45.0, canvas.x/canvas.y);
+  o_point.y -= 3.4;
+
   int W = textureSize(src, 0).x;
   float texel = 1.0 / float(W);
-  int i = int(floor(uv.x * float(W)));
+  int i = clamp(int(floor(uv.x * float(W))), 0, W-1);
   float u  = (float(i) + 0.5) * texel;
 
   vec3 p = texture(src, vec2(u, 0.5)).xyz;
@@ -32,17 +41,25 @@ void main() {
     corr   -= 0.5 * c;
   }
 
+  float maxStep = restLength; // or 0.5*restLength
+  float m = length(corr);
+  if (m > maxStep) corr *= (maxStep / (m + 1e-6));
   p += omega * corr;
 
   // Optional long-range nudge to tighten long ropes in 1 pass:
-  if (kLR > 0.0) {
-    float t = float(i) / float(W - 1);
-    vec3 phat = mix(startPos, endPos, t);
-    p += kLR * (phat - p);
-  }
+  // if (kLR > 0.0) {
+  //   float t = float(i) / float(W - 1);
+  //   float nearStartFactor = t;
+  //   vec3 phat = mix(o_point, endPos, t);
+  //   p += kLR * (phat - p) * t;
+  // }
+  float t = float(i) / float(W-1);
+  t = smoothstep(0.2,1.0,1.-t);
+  p = mix(p,mix(p, o_point, 0.2),t);
 
-  if (i == 0)      p = startPos;
+  if (i == 0)      p = o_point;
   if (i == W - 1)  p = endPos;
 
   outColor = vec4(p, 1.0);
+  //outColor = vec4(texture(src, vec2(u, 0.5)).xyz, 1.0);
 }
