@@ -153,8 +153,8 @@ function Main() {
                             g: ref('raytunnel_global')
                         },
                         textures: {
-                            src: ref("raytunnel_colorTex"),
-                            //src: ref("rope_outPos"),
+                            //src: ref("raytunnel_colorTex"),
+                            src: ref("rope_outPos"),
                             // src: {
                             //     id:ref("tilt_out"),
                             //     latency: 0
