@@ -12,8 +12,9 @@ import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBu
 import Viewport from './graphics/main.js';
 const defaultEvent = { path: "viewer-loaded", event: true }
 
-let TOTAL_FRAME = 0;
+import useRaf from './useRaf.js';
 
+let TOTAL_FRAME = 0;
 export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -62,10 +63,11 @@ export default function Interior({ timeline, controls, graphics, composition, im
     }));
     const frameSaver = frameSaverRef.current;
 
+
+    const renderLoopInitRef = useRef(false);
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-        
         const gl = canvas.getContext("webgl2");
         if (!gl) {
             throw new Error("WebGL2 not supported");
@@ -73,16 +75,27 @@ export default function Interior({ timeline, controls, graphics, composition, im
         const r = new NectarRenderer(gl);
         setRenderer(r);
         frameSaver.attachCaptureFrame(() => r.captureTexture("exportTexture")); 
-        const draw = () => {
-            r.frame();
+        // const draw = () => {
+        //     r.frame();
+        //     frameSaver.frame();
+        //     console.log("frame")
+        //     setTotalFrame(tf => tf + 1);
+        //     window.requestAnimationFrame(draw);
+        // };
+        // if (renderLoopInitRef.current !== true) {
+        //     draw()
+        //     renderLoopInitRef.current = true;
+        // };
+        // return () => { };
+    }, [frameSaver]);
+
+    useRaf(() => {
+        if (renderer) {
+            renderer.frame();
             frameSaver.frame();
             setTotalFrame(tf => tf + 1);
-            //console.log("frame");
-            window.requestAnimationFrame(draw);
-        };
-        draw();
-        return () => { };
-    }, [frameSaver]);
+        }
+    }, true);
 
     useEffect(() => {
         //console.log("graphics or composition changed", graphicsSnapshot, compositionSnapshot);
