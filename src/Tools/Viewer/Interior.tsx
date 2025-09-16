@@ -77,6 +77,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
             r.frame();
             frameSaver.frame();
             setTotalFrame(tf => tf + 1);
+            //console.log("frame");
             window.requestAnimationFrame(draw);
         };
         draw();

@@ -37,7 +37,7 @@ function SetupTexture(
     //console.log(texture.textureProviders, latency);
     const textureProvider = texture.type === "StaticTexture" ? texture.textureProvider : latency === undefined ? texture.textureProviders[0] : texture.textureProviders[latency];
     const location = gl.getUniformLocation(program, textureName);
-    console.log(textureName,programData,textureId);
+    //console.log(textureName,programData,textureId);
     if (location === null) throw new Error("Something went wrong.");
     gl.activeTexture(gl.TEXTURE0 + slot);
     gl.bindTexture(gl.TEXTURE_2D, textureProvider.texture);

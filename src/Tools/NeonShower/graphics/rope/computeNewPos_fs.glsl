@@ -1,6 +1,6 @@
 
 #include "../minRadius.glsl";
-vec3 endPos = vec3(5.,-10.,-10.);
+vec3 endPos = vec3(5.,-16.,-30.);
 float dt = 1. / 60.;         // e.g. 1.0/60.0
 float damping = 0.5;    // 0.98–0.995
 vec3 gravity = vec3(0.,-12.,0.);     // e.g. vec3(0.0,-9.8,0.0) in your units
@@ -10,7 +10,7 @@ void main() {
   o_point.z = mix(-10.,-28.,origin.z);
   o_point.xy = origin.xy * 2. - vec2(1.);
   o_point.xy *= minRadius(o_point.z, 45.0, canvas.x/canvas.y);
-  o_point.y -= 3.4;
+  o_point.y -= 3.2;
   int W = textureSize(curPosTex, 0).x;
   float texel = 1.0 / float(W);
   int i = int(floor(uv.x * float(W)));
@@ -30,8 +30,11 @@ void main() {
   //   pNew = mix(pNewOnPole,pNew, float(i) / float(100));
   // } 
   float x = float(i) / float(W);
-  pNew = mix(pNewOnPole,pNew, 1.- pow(1.-x,10.));
-  
+  pNew = mix(pNewOnPole,pNew, 1.- pow(1.-x,20.));
+  pNew = mix(pNewOnPole,pNew, smoothstep(0.04,0.12,x));
+  // if (x < 0.08) {
+  //   pNew = pNewOnPole;
+  // }
 
   outColor = vec4(pNew, 1.0);
 }

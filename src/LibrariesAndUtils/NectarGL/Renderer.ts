@@ -73,6 +73,9 @@ class NectarRenderer {
     frame() {
         if (!this.gfx) return;
         //console.log(this.state)
+        Array.from(this.gfx.resources.values()).filter(r => r.type === "DynamicTexture").forEach(r => r.rotateTextures());
+
+
         const screenTexture = Array.from(this.gfx.resources.values()).find(t => t.data.screen === true) as DynamicTexture;
         //console.log(screenTexture)
         if (screenTexture) {

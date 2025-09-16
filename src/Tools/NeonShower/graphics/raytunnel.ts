@@ -28,8 +28,6 @@ function RayTunnel({
             temperature: 'float',
             pressure: 'float',
             showUI: 'float',
-            tiltX: 'float',
-            tiltY: 'float',
         }),
         ray_sig: InstanceSignature({
             attributes: {

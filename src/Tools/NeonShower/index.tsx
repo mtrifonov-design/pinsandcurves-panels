@@ -9,7 +9,6 @@ import renderStateReducer from './renderStateReducer.js';
 import EffectFoundation, { useEffectFoundation } from '../../LibrariesAndUtils/EffectFoundation/index.js';
 import { exportResources } from '../../LibrariesAndUtils/NectarGL/Builder/index.js';
 import { JSONAssetCreator } from '../../LibrariesAndUtils/JSONAsset/Provider.js';
-import updateDerived from './updateDerived.js';
 
 
 function PresetButton({ text, presetConfig, update, updateLoop }: { text: string; presetConfig: ReturnType<Controls['getSnapshot']> }) {
@@ -68,7 +67,6 @@ export function CyberSpaghettiControlsInterior() {
     let nextLocal = { ...state, ...patch };
 
     //console.log("origin!", nextLocal.colorStops[1].position, null, 2);
-    nextLocal = updateDerived(state,nextLocal);
     updateLocal(nextLocal);
     const nextControls = renderStateReducer(nextLocal);
 
@@ -200,10 +198,11 @@ export function CyberSpaghettiControlsInterior() {
         <div style={groupedRowStyle}>
           <span>Position</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <span style={{ margin: '0 0.5rem' }}>x</span>
             <NumberInput initialValue={state.centerX} min={0} max={1} step={0.01} onChange={v => update({ centerX: v, showUI: 1 })}
               onCommit={v => update({ centerX: v, showUI: 0 })}
             />
-            <span style={{ margin: '0 0.5rem' }}>x</span>
+            <span style={{ margin: '0 0.5rem' }}>y</span>
             <NumberInput initialValue={state.centerY} min={0} max={1} step={0.01} onChange={v => update({ centerY: v, showUI: 1 })}
               onCommit={v => update({ centerY: v, showUI: 0 })}
             />

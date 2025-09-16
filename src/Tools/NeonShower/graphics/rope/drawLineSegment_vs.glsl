@@ -13,6 +13,7 @@ void main() {
   // Figure out how many particles we have (texture width).
   int W = textureSize(data, 0).x;
   int i = clamp(gl_InstanceID, 0, max(W - 1, 0));
+  i = W-i;
 
   pos = float(i) / float(W);
 

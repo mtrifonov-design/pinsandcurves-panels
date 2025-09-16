@@ -10,6 +10,7 @@ class FrameSaver {
     #anticipatedFrame: number;
     #frames: any[] = [];
     #canvas: HTMLCanvasElement;
+    #secondcanvas: HTMLCanvasElement;
     
 
     constructor({ timeline, width, height }) {
@@ -18,6 +19,8 @@ class FrameSaver {
         this.#width = width;
         this.#height = height;
         this.#canvas = document.createElement("canvas");
+        this.#secondcanvas = document.createElement("canvas");
+    
     }
 
     #compName : string = "untitled";
@@ -39,6 +42,9 @@ class FrameSaver {
         this.#height = height;
         this.#canvas.width = cwidth;
         this.#canvas.height = cheight;
+        this.#secondcanvas.width = cwidth;
+        this.#secondcanvas.height = cheight;
+
     }
 
     #captureFrameCallback: (() => Uint8ClampedArray) | null = null;
@@ -66,6 +72,7 @@ class FrameSaver {
     frame() {
         if (!this.#rendering) return;
         if (!this.#canvas) return;
+        if (!this.#secondcanvas) return;
         if (!this.#captureFrameCallback) return;
         const project = this.#timeline.getProject();
         const currentFrame = project.timelineData.playheadPosition;
@@ -74,6 +81,8 @@ class FrameSaver {
         if (currentFrame < focusRange[1]) {
             // get p5js canvas
             const canvas = this.#canvas;
+            const tmp = this.#secondcanvas;
+            const tmpCtx = tmp.getContext("2d");
             const ctx = canvas.getContext("2d");
             const data = this.#captureFrameCallback();
             const w = this.#width;
@@ -90,7 +99,10 @@ class FrameSaver {
                 throw new Error(`Bad length: got ${clamped.length}, expected ${w*h*4}`);
                 }
             const imageData = new ImageData(clamped, this.#width, this.#height);
-            ctx.putImageData(imageData, 0, 0);
+            tmpCtx.putImageData(imageData, 0, 0);
+            ctx.setTransform(1, 0, 0, -1, 0, h);
+            ctx.drawImage(tmp, 0, 0);
+            ctx?.setTransform(1, 0, 0, 1, 0, 0);
             const dataurl = canvas.toDataURL("image/png");
             //console.log("dataurl", dataurl, canvas, canvas.width);
             this.#frames.push(dataurl);
@@ -190,7 +202,9 @@ class FrameSaver {
 
     saveFrame() {
         const canvas = this.#canvas;
+        const tmp = this.#secondcanvas;
         const ctx = canvas.getContext("2d");
+        const tmpCtx = tmp.getContext("2d");
         const data = this.#captureFrameCallback();
         const w = this.#width;
         const h = this.#height;
@@ -206,8 +220,10 @@ class FrameSaver {
             throw new Error(`Bad length: got ${clamped.length}, expected ${w*h*4}`);
             }
         const imageData = new ImageData(clamped, this.#width, this.#height);
-        ctx.scale(1, -1);
-        ctx.putImageData(imageData, 0, 0);
+        tmpCtx.putImageData(imageData, 0, 0);
+        ctx.setTransform(1, 0, 0, -1, 0, h);
+        ctx.drawImage(tmp, 0, 0);
+        ctx?.setTransform(1, 0, 0, 1, 0, 0);
         // flip image y
 
         const dataUrl = canvas.toDataURL("image/png");

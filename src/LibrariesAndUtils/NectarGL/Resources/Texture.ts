@@ -155,6 +155,13 @@ export class DynamicTexture extends VariableResource {
     }
     updateTextureData(capture?: boolean) {
         //console.log(this.dirty, this.id)
+
+        // if (capture) {
+        //     console.log("Capturing texture", this.id, this.dirty);
+        // } else if (this.dirty && this.id === "___exportTexture") {
+        //     console.log("updating without capture", this.id, this.dirty)
+        // }
+
         if (!this.dirty) return;
         //console.log(this.dependsOn);
         for (const dep of this.dependsOn) {
@@ -194,7 +201,6 @@ export class DynamicTexture extends VariableResource {
         this.gl.disable(this.gl.DEPTH_TEST);
         this.gl.enable(this.gl.BLEND);
 
-        console.log("WORKINGON",this.data, this.id);
 
         for (const drawOp of this.data.drawOps) {
             if (drawOp.blend) {
@@ -226,10 +232,7 @@ export class DynamicTexture extends VariableResource {
             this.performDrawOp(drawOp);
         }
 
-        if (!this.data.screen) {
-            const last = this.textureProviders.pop();
-            this.textureProviders.unshift(last);
-        }
+
 
         this.gl.disable(this.gl.BLEND);
         if (capture) {
@@ -237,6 +240,13 @@ export class DynamicTexture extends VariableResource {
             const pixels = new Uint8Array(sig.size[0] * sig.size[1] * 4);
             this.gl.readPixels(0, 0, sig.size[0], sig.size[1], this.gl.RGBA, this.gl.UNSIGNED_BYTE, pixels);
             return pixels;
+        }
+    }
+
+    rotateTextures() {
+        if (!this.data.screen) {
+            const last = this.textureProviders.pop();
+            this.textureProviders.unshift(last);
         }
     }
 

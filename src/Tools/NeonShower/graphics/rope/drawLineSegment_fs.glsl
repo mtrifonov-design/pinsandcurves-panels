@@ -31,6 +31,10 @@ float uFeatherPx = 0.;         // edge blur in *pixels*
 
 void main() {
         //float fog = fbm(vec3(vec2(uv.x,pos), playheadPosition / 50.)) * 0.5 + 0.5;
+
+
+
+
         vec3 col = texture(colorTex, vec2(pos,0.)).rgb;
         vec3 COLOR_MID = col;
         vec3 COLOR_INNER   = vec3(0.,0.,0.);
@@ -53,4 +57,10 @@ void main() {
 
   vec3 base = mix(COLOR_INNER, COLOR_MID, t);
     outColor = vec4(base,a);
+
+    float highlights = smoothstep(0.3,.7,t) * smoothstep(1.,0.9,t);
+
+    float colorSampleVal = t * 0.75;
+    vec3 col2 = texture(colorTex, vec2(colorSampleVal,0.5)).rgb;
+    outColor = vec4(col2 * sqrt(t) + vec3(highlights) * 0.2, a) * showUI;
 }

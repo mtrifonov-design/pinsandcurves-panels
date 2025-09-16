@@ -4,13 +4,6 @@ type ControlsData = {
     centerX: number; 
     centerY: number; 
     centerZ: number;
-    centerXLast: number;
-    centerYLast: number;
-    tiltX: number;
-    tiltXLast: number;
-    tiltY: number;
-    tiltYLast: number;
-    lastTimestamp: number;
     temperature: number,
     pressure: number,
     showUI: number,

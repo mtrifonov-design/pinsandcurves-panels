@@ -5,13 +5,13 @@ float restLength = 0.01;     // ropeRestLength / (N - 1)
 float omega = 1.;          // 1.0 = plain Jacobi, 1.2–1.6 = over-relax
 float kLR = 0.2;            // 0..0.35 optional long-range nudge; 0 to disable
 in vec2 uv;
-vec3 endPos = vec3(5.0, -10.0, -10.0);
+vec3 endPos = vec3(5.0, -16.0, -30.0);
 void main() {
     vec3 o_point = origin.xyz;
   o_point.z = mix(-10.,-28.,origin.z);
   o_point.xy = origin.xy * 2. - vec2(1.);
   o_point.xy *= minRadius(o_point.z, 45.0, canvas.x/canvas.y);
-  o_point.y -= 3.4;
+  o_point.y -= 3.2;
 
   int W = textureSize(src, 0).x;
   float texel = 1.0 / float(W);

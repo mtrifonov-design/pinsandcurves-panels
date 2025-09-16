@@ -32,7 +32,7 @@ function colorTextureStream(state: ControlsData) {
                 const currentIdx = nextIdx - 1 < 0 ? 0 : nextIdx - 1;
                 const next = colorStops[nextIdx];
                 const current = colorStops[currentIdx];
-                const relativePos = (pos - current.position) / (next.position - current.position);
+                const relativePos = (pos - current.position) / ((next.position - current.position) === 0 ? 1 : (next.position - current.position));
                 //console.log(pos, current.pos, next.pos);
                 colorBuffer[i * 4] = current.color.r + relativePos * (next.color.r - current.color.r);
                 colorBuffer[i * 4 + 1] = current.color.g + relativePos * (next.color.g - current.color.g);
@@ -58,6 +58,7 @@ function colorTextureStream(state: ControlsData) {
         }]
     };
     //console.log(response);
+    //console.log(colorBuffer)
     cache = response;
     return response;
 }
