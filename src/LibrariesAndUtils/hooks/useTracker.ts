@@ -1,5 +1,8 @@
 import { useEffect, useCallback } from 'react';
 
+
+const isLocal = window.localStorage.getItem('isLocal') === 'true';
+
 /**
  * useGoatCounter - React hook for minimal goatcounter event tracking.
  *
@@ -18,7 +21,7 @@ export function useTracker(defaultEvent?: Record<string, any>) {
       && window.op 
       && typeof window.op === 'function'
     ) {
-      if (defaultEvent.path) {
+      if (defaultEvent.path && !isLocal) {
         window.op('track', defaultEvent.path);
       }
       
@@ -35,7 +38,7 @@ export function useTracker(defaultEvent?: Record<string, any>) {
       window.goatcounter.count(event);
     }
     if (typeof window !== 'undefined' && window.op && typeof window.op === 'function') {
-      if (event.path) {
+      if (event.path && !isLocal) {
         window.op('track', event.path);
       }
     }
