@@ -26,7 +26,7 @@ function globalStream(state: ControlsData) {
                 origin: [state.centerX, state.centerY, state.centerZ, 0],
                 temperature: [state.temperature],
                 pressure: [state.pressure],
-                showUI: [1],
+                showUI: [state.showUI],
             }]
         }, {
             resource: "cyberspag_blur",
