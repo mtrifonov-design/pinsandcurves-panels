@@ -41,6 +41,7 @@ class NectarRenderer {
 
     private state: RenderStateObject = {};
     setState(sourceId: string, state: RenderStateObject) {
+        console.log("setState", sourceId, state);
         if (!this.gfx) return;
         //console.log(sourceId,state);
         if (sourceId !== this.sourceId) return;

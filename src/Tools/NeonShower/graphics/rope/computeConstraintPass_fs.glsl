@@ -46,20 +46,8 @@ void main() {
   if (m > maxStep) corr *= (maxStep / (m + 1e-6));
   p += omega * corr;
 
-  // Optional long-range nudge to tighten long ropes in 1 pass:
-  // if (kLR > 0.0) {
-  //   float t = float(i) / float(W - 1);
-  //   float nearStartFactor = t;
-  //   vec3 phat = mix(o_point, endPos, t);
-  //   p += kLR * (phat - p) * t;
-  // }
-  // float t = float(i) / float(W-1);
-  // t = smoothstep(0.2,1.0,1.-t);
-  // p = mix(p,mix(p, o_point, 0.2),t);
-
   if (i == 0)      p = o_point;
   if (i == W - 1)  p = endPos;
 
   outColor = vec4(p, 1.0);
-  //outColor = vec4(texture(src, vec2(u, 0.5)).xyz, 1.0);
 }
