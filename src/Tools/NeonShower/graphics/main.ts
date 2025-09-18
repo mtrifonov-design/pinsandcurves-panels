@@ -12,13 +12,14 @@ import { build,
     exportResources,
     external
  } from "../../../LibrariesAndUtils/NectarGL/Builder"
-import Blur from "./blur";
+import Blur from "../../../LibrariesAndUtils/StandardGraphics/blur/blur";
 import RayTunnel from "./raytunnel";
 import fog from './fog_fs.glsl';
 import showerhead_vs from './showerhead_vs.glsl';
 import showerhead_fs from './showerhead_fs.glsl'
 import Tilt from './tilt/tilt'
 import Rope from "./rope/rope";
+import putTexture from "../../../LibrariesAndUtils/StandardGraphics/putTexture";
 
 function Main() {
     return build((ref: any) => ({
@@ -98,7 +99,8 @@ function Main() {
             inputTexture: ref('raytunnel_tex'),
             canvasSig: external('canvasSig'),
             compositionGlobal: external("compositionGlobal"),
-            compositionGlobalSig: external("compositionGlobalSig")
+            compositionGlobalSig: external("compositionGlobalSig"),
+            blurExportName: "cyberspag_blur",            
         }),
         rope: Rope({
             compositionGlobal: external("compositionGlobal"),
@@ -142,6 +144,7 @@ function Main() {
             raytunnelGlobal: ref('raytunnel_global'),
             raytunnelGlobalSig: ref('raytunnel_global_sig')
         }),
+        putTex: putTexture(external('quadSig')),
         out: Texture({
                 signature: external("canvasSig"),
                 drawOps: [
@@ -154,11 +157,6 @@ function Main() {
                         },
                         textures: {
                             src: ref("raytunnel_colorTex"),
-                            //src: ref("rope_outPos"),
-                            // src: {
-                            //     id:ref("tilt_out"),
-                            //     latency: 0
-                            // }
                         },
                     },
                     {
@@ -188,7 +186,7 @@ function Main() {
                         },
                     },
                     {
-                        program: ref("blur_p_drawTex"),
+                        program: ref("putTex"),
                         vertex: external("quad"),
                         globals: {
                         },
@@ -198,7 +196,7 @@ function Main() {
                         blend: "add",
                     },
                     {
-                        program: ref("blur_p_drawTex"),
+                        program: ref("putTex"),
                         vertex: external("quad"),
                         globals: {
                         },
@@ -210,7 +208,6 @@ function Main() {
 
                 ],
             }),
-        // blur: Use(blurBuild),
     }));
 }
 

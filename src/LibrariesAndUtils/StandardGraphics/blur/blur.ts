@@ -1,4 +1,5 @@
-import { build, external, Global, GlobalSignature, Program, Texture } from "../../../LibrariesAndUtils/NectarGL/Builder";
+import { build, external, Global, GlobalSignature, Program, Texture } from "../../NectarGL/Builder";
+import putTexture from "../putTexture";
 import blurX from './blurX_fs.glsl';
 import blurY from './blurY_fs.glsl';
 
@@ -8,14 +9,16 @@ function Blur({
     canvasSig,
     compositionGlobal,
     compositionGlobalSig,
-    inputTexture
+    inputTexture,
+    blurExportName,
 }: {
     quad: string,
     quadSig: string,
     canvasSig: string,
     compositionGlobal: string,
     compositionGlobalSig: string,
-    inputTexture: string
+    inputTexture: string,
+    blurExportName: string
 }) {
     return build(ref => {
         return {
@@ -24,7 +27,7 @@ function Blur({
             }),
             global: Global({
                 signature: ref("global_sig"),
-                exportName: "cyberspag_blur"
+                exportName: blurExportName
             }),
             p_blurX : Program({
                 vertexSignature: quadSig,
@@ -68,30 +71,31 @@ function Blur({
                     }
                 },
             }),
-            p_drawTex : Program({
-                vertexSignature: quadSig,
-                globalSignatures: {
-                },
-                vertexShader: `
-                out vec2 uv;
-                void main() {
-                    uv = position / 2. + vec2(0.5);
-                    gl_Position = vec4(position.xy, 0.0, 1.0);
-                }
-                `,
-                fragmentShader: `
-                in vec2 uv;
-                void main() {
-                    outColor = texture(src, uv);
-                }
-                `,
-                textures: {
-                    src: {
-                        filter: "linear",
-                        wrap: "clamp",
-                    }
-                },
-            }),
+            // p_drawTex : Program({
+            //     vertexSignature: quadSig,
+            //     globalSignatures: {
+            //     },
+            //     vertexShader: `
+            //     out vec2 uv;
+            //     void main() {
+            //         uv = position / 2. + vec2(0.5);
+            //         gl_Position = vec4(position.xy, 0.0, 1.0);
+            //     }
+            //     `,
+            //     fragmentShader: `
+            //     in vec2 uv;
+            //     void main() {
+            //         outColor = texture(src, uv);
+            //     }
+            //     `,
+            //     textures: {
+            //         src: {
+            //             filter: "linear",
+            //             wrap: "clamp",
+            //         }
+            //     },
+            // }),
+            p_drawTex : putTexture(quadSig),
             pass1: Texture({
                 signature: canvasSig,
                 drawOps: [
