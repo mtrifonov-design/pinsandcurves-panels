@@ -17,9 +17,6 @@ type ControlsData = {
         id: string;        
     }[];
 }
-
-
-
 const defaultControls = {
     canvasWidth: 1920,
     canvasHeight: 1080,

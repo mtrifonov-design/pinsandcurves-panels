@@ -1,4 +1,4 @@
-import { ControlsData } from "../../CyberSpaghettiControls";
+import { ControlsData } from "../../controls";
 
 let colorStopsHash = "";
 let cache;

@@ -1,4 +1,4 @@
-import { ControlsData } from "./CyberSpaghettiControls";
+import { ControlsData } from "./controls";
 import colorTextureStream from "./graphics/streams/colorTextureStream";
 import globalStream from "./graphics/streams/globalStream";
 import rayInstanceStream from "./graphics/streams/rayInstanceStream";
