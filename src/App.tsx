@@ -6,7 +6,7 @@ import CyberSpaghettiControlConsole from './Tools/CyberSpaghetti/ControlConsole'
 import LiquidLissajous from './Tools/LiquidLissajous/LiquidLissajous';
 import LiquidLissajousControlConsole from './Tools/LiquidLissajous/ControlConsole';
 
-import NeonShower from './Tools/NeonShower';
+import NeonShower from './Tools/NewToolTemplate';
 import Viewer from './Tools/Viewer';
 
 import AssetTestPanel from './AssetManager/testPanel/AssetTestPanel';

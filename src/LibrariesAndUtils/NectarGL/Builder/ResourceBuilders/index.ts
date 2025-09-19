@@ -7,7 +7,8 @@ import { GlobalData,
     VertexData, 
     VertexSignatureData,
     StaticTextureData,
-    DynamicTextureData
+    DynamicTextureData,
+    DrawOperation
 } from "../../Resources/types";
 
 function VertexSignature(data: VertexSignatureData) { return {
@@ -47,6 +48,9 @@ function Program(data: ProgramData) { return {
     type: "Program",
     data,
 } };
+function DrawOp(data: DrawOperation) {
+    return data;
+};
 
 export {
     VertexSignature,
@@ -57,5 +61,6 @@ export {
     Instance,
     Global,
     Texture,
-    Program
+    Program,
+    DrawOp
 }
