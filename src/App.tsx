@@ -6,8 +6,10 @@ import CyberSpaghettiControlConsole from './Tools/CyberSpaghetti/ControlConsole'
 import LiquidLissajous from './Tools/LiquidLissajous/LiquidLissajous';
 import LiquidLissajousControlConsole from './Tools/LiquidLissajous/ControlConsole';
 
-import NeonShower from './Tools/NewToolTemplate';
+import NeonShower from './Tools/NeonShower';
 import Viewer from './Tools/Viewer';
+
+import Timeline from './Tools/Timeline'
 
 import AssetTestPanel from './AssetManager/testPanel/AssetTestPanel';
 import StarShapedDomainTool from './Tools/StarShapedDomainTool/StarShapedDomainTool';
@@ -40,6 +42,7 @@ function App(p: { renderedCallback: Function }) {
           <Route path="/liquidlissajous-controlconsole" element={<LiquidLissajousControlConsole />} />
           <Route path="/echoknight" element={<StarShapedDomainTool />} />
           <Route path="/echoknight-controlconsole" element={<StarShapedDomainControlConsole />} />
+          <Route path="/timeline" element={<Timeline />} />
         </Routes>
       </StyleProvider>
     </div>
