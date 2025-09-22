@@ -1,3 +1,4 @@
+
 const defaultTimelineData = {
     epoch: 0,
     data: {
@@ -15,7 +16,7 @@ const defaultTimelineData = {
             testSignal: {
                 name: "Test Signal",
             }
-        }, 
+        },
         signalKeyframes: {
             testSignal: ["testKeyframe"]
         },
@@ -40,6 +41,33 @@ const defaultCompositionData = {
         compositionName: "default",
         layers: [
             {
+                id: "layer1",
+                effects: [
+                    {
+                        instanceId: "someEffect",
+                        signals: ["testSignal","testSignal","testSignal","testSignal"]
+                    }
+                ]
+            },
+            {
+                id: "layer1",
+                effects: [
+                    {
+                        instanceId: "someEffect",
+                        signals: ["testSignal"]
+                    },
+                    {
+                        instanceId: "someEffect",
+                        signals: ["testSignal"]
+                    },
+                    {
+                        instanceId: "someEffect",
+                        signals: ["testSignal"]
+                    }
+                ]
+            },
+            {
+                id: "layer1",
                 effects: [
                     {
                         instanceId: "someEffect",

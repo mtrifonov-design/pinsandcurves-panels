@@ -3,14 +3,19 @@ import { AssetProvider } from "../../AssetManager/context/AssetProvider";
 import { defaultCompositionData, defaultTimelineData, defaultLocalData } from "./defaultData";
 import { useEffect, useState } from "react";
 import FullscreenLoader from "../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader";
+import TimelineLeftSide from "./Left";
+import TimelineRightSide from "./Right";
 
 
 function Interior({ state, updateState } : { state: any; updateState: (entry: any) => void }) {
-    return <div>
-        <button onClick={() => {
-            updateState({local: "ABC"})
-        }}>Test</button>
-        <div>{JSON.stringify(state)}</div>
+    return <div style={{
+        display: "grid",
+        gridTemplateColumns: "400px 1fr",
+        height: "100vh",
+        width: "100vw"
+    }}>
+        <TimelineLeftSide state={state} updateState={updateState} />
+        <TimelineRightSide state={state} updateState={updateState} />
     </div>
 }
 
