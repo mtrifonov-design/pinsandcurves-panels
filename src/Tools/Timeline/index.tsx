@@ -1,6 +1,6 @@
 import { JSONAssetCreator, useJSONAssets } from "../../LibrariesAndUtils/JSONAsset/Provider";
 import { AssetProvider } from "../../AssetManager/context/AssetProvider";
-import { defaultCompositionData, defaultTimelineData, defaultLocalData } from "./defaultData";
+import { defaultCompositionData, defaultTimelineData, defaultLocalData } from "./datastructures";
 import { useEffect, useState } from "react";
 import FullscreenLoader from "../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader";
 import TimelineLeftSide from "./Left";
@@ -30,9 +30,9 @@ function useAtomicState(state: { local: any; setLocal: any; timeline: any; compo
         const newLocal = entry.local || local.data;
         const newComposition = entry.composition || composition.data;
         const newTimeline = entry.timeline || timeline.data;
-        state.setLocal({ data: newLocal, epoch: stamp });
-        state.timeline.data.setData({ data: newTimeline, epoch: stamp });
-        state.composition.data.setData({ data: newComposition, epoch: stamp });
+        state.setLocal({ data: newLocal.data, epoch: stamp });
+        state.timeline.data.setData({ data: newTimeline.data, epoch: stamp });
+        state.composition.data.setData({ data: newComposition.data, epoch: stamp });
     }
 
     const [atomicState, setAtomicState] = useState({state: {local,timeline,composition},epoch:0});
