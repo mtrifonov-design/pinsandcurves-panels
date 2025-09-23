@@ -1,9 +1,10 @@
 import { useState } from "react";
-
 import { trackHeight } from "../Right/constants";
+import { MDndBox, MDndContainer, MDndTopProvider, useMDndDragHandle } from "./minimal-dnd";
+import { produce } from "immer";
+import EffectContainer from "./EffectContainer";
 
-
-function LittleHat({open,toggle}:{open:boolean,toggle:()=>void}) {
+function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
     return <span onClick={toggle} style={{
         display: "inline-block",
         width: "0",
@@ -18,36 +19,59 @@ function LittleHat({open,toggle}:{open:boolean,toggle:()=>void}) {
     }}></span>;
 }
 
-function Signal({signal,updateState}:{signal:any,updateState:(entry:any)=>void}) {
-    return <div style={{marginLeft:"24px",height: `${trackHeight}px`}}>
-        s: {signal}
-    </div>
-}
 
-function Effect({effect,updateState}:{effect:any,updateState:(entry:any)=>void}) {
-    const [open,setOpen] = useState(false);
-    return <div style={{marginLeft:"12px"}}>
-        <div style={{height: `${trackHeight}px`}}><LittleHat open={open} toggle={() => setOpen(!open)} /> fx: {effect.type} {effect.instanceId}</div>
-        <div>{open && effect.signals.map((signal: any) => <Signal key={signal} signal={signal} updateState={updateState} />)}</div>
-    </div>
-}
-
-function Layer({layer,updateState}:{layer:any,updateState:(entry:any)=>void}) {
-    const [open,setOpen] = useState(true);
+function Layer({ layer, state, updateState, idx }: { layer: any, state: any, updateState: (entry: any) => void, idx: number }) {
+    const open = !state.local.data.hiddenLayers.includes(layer.id);
+    const setOpen = (newOpen: boolean) => {
+        const nextState = produce(state, (draft: any) => {
+            if (newOpen) {
+                draft.local.data.hiddenLayers = draft.local.data.hiddenLayers.filter((x: string) => x !== layer.id);
+            } else {
+                draft.local.data.hiddenLayers.push(layer.id);
+            }
+        });
+        updateState(nextState);
+    };
+    const { onPointerDown } = useMDndDragHandle(idx);
     return <div>
-        <div style={{height: `${trackHeight}px`}}><LittleHat open={open} toggle={() => setOpen(!open)} /> {layer.id}</div>
+    
+        <div style={{ height: `${trackHeight}px`, cursor: "grab" }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
+            <span onPointerDown={onPointerDown}>
+                {layer.id}
+            </span>
+                
+        </div>
         <div>
-            {open && layer.effects.map((effect: any, effectIndex: number) => <Effect key={effect.instanceId} effect={effect} updateState={updateState} />)}
+            {open && <EffectContainer state={state} layerIdx={idx} layer={layer} updateState={updateState} />}
         </div>
     </div>;
 }
 
-function TimelineLeftSide({state,updateState}:{state:any,updateState:(entry:any)=>void}) {
-    return <div style={{
+function TimelineLeftSide({ state, updateState }: { state: any, updateState: (entry: any) => void }) {
+    return <MDndTopProvider><div style={{
         padding: "12px",
     }}>
-        {state.composition.data.layers.map((layer: any, layerIndex: number) => <Layer key={layer.id} layer={layer} updateState={updateState} />)}
-    </div>;
+        <MDndContainer containerId="layers" onCommit={(startIdx, idx, direction) => { 
+            const nextState = produce(state, (draft: any) => {
+                if (idx === null || direction === null) return;
+                const layers = draft.composition.data.layers.map((layer, i) => [layer, i]);
+                layers.push([draft.composition.data.layers[startIdx], idx -0.25 * direction]);
+                layers.sort((a, b) => a[1] - b[1]);
+                //console.log(layers);
+                draft.composition.data.layers = layers
+                .filter(([x,i]) => i !== startIdx)
+                .map(x => x[0]);
+            });
+            updateState(nextState);
+         }}>
+            {state.composition.data.layers.map((layer: any, layerIndex: number) => (
+                <MDndBox key={layer.id} idx={layerIndex}>
+                <Layer key={layer.id} state={state} layer={layer} idx={layerIndex} updateState={updateState} />
+                </MDndBox>
+            ))}
+        </MDndContainer>
+    </div>
+    </MDndTopProvider>;
 }
 
 export default TimelineLeftSide;

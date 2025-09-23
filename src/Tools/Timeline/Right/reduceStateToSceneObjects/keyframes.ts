@@ -5,6 +5,7 @@ function stateToKeyframes(state: State, signalToTrack: Map<string, number>) {
     const keyframes :  PreSceneObject[] = [];
     Object.values(state.timeline.data.signals).forEach(signal => {
         const track = signalToTrack.get(signal);
+        if (track === undefined) return;
         const signalKeyframes = state.timeline.data.signalKeyframes[signal];
         Object.values(signalKeyframes).forEach(kfId => {
             const kf = state.timeline.data.keyframeData[kfId];

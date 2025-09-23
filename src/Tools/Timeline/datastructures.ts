@@ -122,7 +122,7 @@ const defaultCompositionData = {
                 id: "layer2",
                 effects: [
                     {
-                        instanceId: "someEffect",
+                        instanceId: "someEffect2",
                         signals: ["testSignal3"]
                     },
                 ]
@@ -131,7 +131,7 @@ const defaultCompositionData = {
                 id: "layer3",
                 effects: [
                     {
-                        instanceId: "someEffect",
+                        instanceId: "someEffect3",
                         signals: []
                     }
                 ]
@@ -147,7 +147,10 @@ type LocalData = {
         y: number,
         w: number,
         h: number,
-    }
+    },
+    hiddenLayers: string[],
+    hiddenEffects: string[],
+
 }
 
 const defaultLocalData = {
@@ -162,7 +165,10 @@ const defaultLocalData = {
         screen: {
             width: 0,
             height: 0,
-        }
+        },
+        hiddenLayers: [] as string[],
+        hiddenEffects: [] as string[]
+
     }
 };
 
