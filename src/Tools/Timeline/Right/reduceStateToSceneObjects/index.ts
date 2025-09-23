@@ -2,6 +2,7 @@ import { CompositionData, LocalData, TimelineData } from "../../datastructures"
 import stateToTracks from "./tracks"
 import stateToKeyframes from "./keyframes"
 import preSceneToSceneObjects from "./preSceneToSceneObjects"
+import stateToPlayhead from "./playhead"
 
 type GeometryComponent = {
     x: number,
@@ -47,8 +48,8 @@ function reduceStateToSceneObjects(state: State) : SceneObject[] {
     preSceneObjects.push(...tracks);
 
     const { keyframes } = stateToKeyframes(state, signalToTrack);
-    console.log("keyframes", keyframes);
     preSceneObjects.push(...keyframes);
+    preSceneObjects.push(...stateToPlayhead(state));
     // Reduce the state to scene objects
     return preSceneToSceneObjects(preSceneObjects,state);
 };

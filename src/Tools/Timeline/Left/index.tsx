@@ -3,20 +3,10 @@ import { trackHeight } from "../Right/constants";
 import { MDndBox, MDndContainer, MDndTopProvider, useMDndDragHandle } from "./minimal-dnd";
 import { produce } from "immer";
 import EffectContainer from "./EffectContainer";
+import { Icon } from "@mtrifonov-design/pinsandcurves-design";
 
 function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
-    return <span onClick={toggle} style={{
-        display: "inline-block",
-        width: "0",
-        height: "0",
-        marginRight: "6px",
-        verticalAlign: "middle",
-        borderLeft: "6px solid transparent",
-        borderRight: "6px solid transparent",
-        borderTop: open ? "none" : "12px solid black",
-        borderBottom: open ? "12px solid black" : "none",
-        cursor: "pointer"
-    }}></span>;
+    return <Icon iconName={open ? "keyboard_arrow_down" : "keyboard_arrow_up"} onClick={toggle}></Icon>;
 }
 
 
@@ -33,9 +23,14 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
         updateState(nextState);
     };
     const { onPointerDown } = useMDndDragHandle(idx);
-    return <div>
+    return <div style={{
+    }}>
     
-        <div style={{ height: `${trackHeight}px`, cursor: "grab" }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
+        <div style={{ height: `${trackHeight}px`, cursor: "grab",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+        }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
             <span onPointerDown={onPointerDown}>
                 {layer.id}
             </span>
@@ -49,7 +44,10 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
 
 function TimelineLeftSide({ state, updateState }: { state: any, updateState: (entry: any) => void }) {
     return <MDndTopProvider><div style={{
-        padding: "12px",
+        paddingTop: "12px",
+        paddingBottom: "12px",
+        backgroundColor: "var(--gray1)",
+        color: "var(--gray6)"
     }}>
         <MDndContainer containerId="layers" onCommit={(startIdx, idx, direction) => { 
             const nextState = produce(state, (draft: any) => {

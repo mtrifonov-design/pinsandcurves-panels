@@ -3,27 +3,13 @@ import { useState } from "react";
 import { trackHeight } from "../Right/constants";
 import { MDndBox, MDndContainer, MDndTopProvider, useMDndDragHandle } from "./minimal-dnd";
 import { produce } from "immer";
+import Signal from "./Signal";
+import { Icon } from "@mtrifonov-design/pinsandcurves-design";
 
 function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
-    return <span onClick={toggle} style={{
-        display: "inline-block",
-        width: "0",
-        height: "0",
-        marginRight: "6px",
-        verticalAlign: "middle",
-        borderLeft: "6px solid transparent",
-        borderRight: "6px solid transparent",
-        borderTop: open ? "none" : "12px solid black",
-        borderBottom: open ? "12px solid black" : "none",
-        cursor: "pointer"
-    }}></span>;
+    return <Icon iconName={open ? "keyboard_arrow_down" : "keyboard_arrow_up"} onClick={toggle}></Icon>;
 }
 
-function Signal({ signal, updateState }: { signal: any, updateState: (entry: any) => void }) {
-    return <div style={{ marginLeft: "24px", height: `${trackHeight}px` }}>
-        s: {signal}
-    </div>
-}
 
 function Effect({ state, effect, updateState, idx }: { effect: any, updateState: (entry: any) => void, idx: number, state: any }) {
     const { onPointerDown } = useMDndDragHandle(idx);
@@ -38,13 +24,17 @@ function Effect({ state, effect, updateState, idx }: { effect: any, updateState:
         });
         updateState(nextState);
     };
-    return <div style={{ marginLeft: "12px" }}>
-        <div style={{ height: `${trackHeight}px` }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
+    return <div style={{ marginLeft: "20px" }}>
+        <div style={{ height: `${trackHeight}px`,
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+        }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
             <span onPointerDown={onPointerDown}>
             fx: {effect.type} {effect.instanceId}
             </span>
         </div>
-        <div>{open && effect.signals.map((signal: any) => <Signal key={signal} signal={signal} updateState={updateState} />)}</div>
+        <div>{open && effect.signals.map((signal: any) => <Signal key={signal} state={state} signal={signal} updateState={updateState} />)}</div>
     </div>
 }
 

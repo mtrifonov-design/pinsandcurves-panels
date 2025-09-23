@@ -41,7 +41,7 @@ const defaultTimelineData = {
             numberOfFrames: 300,
             focusRange: [0, 150],
             frameRate: 30,
-            playheadPosition: 0
+            playheadPosition: 12
         },
         signals: [
             "testSignal", "testSignal2", "testSignal3"
@@ -157,9 +157,9 @@ const defaultLocalData = {
     epoch: 0,
     data: {
         viewport: {
-            x: 0,
+            x: -1,
             y: 0,
-            w: 15,
+            w: 100,
             h: 10,
         },
         screen: {
