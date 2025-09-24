@@ -1,13 +1,21 @@
 import { Icon, NumberInput } from "@mtrifonov-design/pinsandcurves-design";
 import { trackHeight } from "../Right/constants";
 import { useState } from "react";
+import interpolateSignalValue from "../../../LibrariesAndUtils/InterpolateSignalValue";
+import { produce } from "immer";
 
-function Rhombus() {
-    return <Icon iconName="stat_0" />
+function Rhombus({ signal, state, updateState, value, setValue } : { state: any, updateState: (entry: any) => void, setValue: (value: number) => void }) {
+    const playheadPosition = state.timeline.data.general.playheadPosition;
+    const keyframes = state.timeline.data.signalKeyframes[signal].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
+    const existingKeyframe = keyframes.find((kf: any) => kf.frame === playheadPosition);
+    const isActive = existingKeyframe !== undefined;
+    const onClick = () => {
+        setValue(value);
+    }
+    return <Icon iconName="stat_0" color={isActive ? "red" : "gray"} onClick={onClick} />
 }
 
-function Value({ signal, state }: { signal: any, state: any }) {
-    const [value, setValue] = useState(0);
+function Value({ signal, state, value, updateState, setValue }: { signal: any, state: any, value: number, updateState: (entry: any) => void, setValue: (value: number) => void }) {
     return <div>
         <NumberInput
             initialValue={value}
@@ -17,6 +25,39 @@ function Value({ signal, state }: { signal: any, state: any }) {
 }
 
 function Signal({ signal, state, updateState }: { signal: any, updateState: (entry: any) => void }) {
+
+    const playheadPosition = state.timeline.data.general.playheadPosition;
+    const keyframes = state.timeline.data.signalKeyframes[signal].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
+    const value = interpolateSignalValue(keyframes, playheadPosition);
+    const setValue = (newValue: number) => {
+        // first we check whether a keyframe already exists at the current playhead position
+        const playheadPosition = state.timeline.data.general.playheadPosition;
+        const keyframeIds = state.timeline.data.signalKeyframes[signal];
+        //const keyframes = keyframeIds.map((kfId: string) => state.timeline.data.keyframeData[kfId]);
+        const existingKeyframeId = keyframeIds.find((kfId: string) => state.timeline.data.keyframeData[kfId].frame === playheadPosition);
+        //const existingKeyframe = existingKeyframeId ? state.timeline.data.keyframeData[existingKeyframeId] : null;
+        let newKeyframeId;
+        let newKeyframe = {
+                type: "number",
+                value: newValue,
+                frame: playheadPosition,
+                inControls: [0, 0],
+                outControls: [0, 0],
+        };
+        if (!existingKeyframeId) {
+            newKeyframeId = `kf_${crypto.randomUUID().substring(0, 8)}`;
+        } else {
+            newKeyframeId = existingKeyframeId;
+        }
+        const newState = produce(state, (draft: any) => {
+            draft.timeline.data.keyframeData[newKeyframeId] = newKeyframe;
+            if (!existingKeyframeId) {
+                draft.timeline.data.signalKeyframes[signal].push(newKeyframeId);
+            }
+        });
+        updateState(newState);
+    }
+
     return <div style={{
         height: `${trackHeight}px`, 
     }}>
@@ -40,8 +81,8 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
             alignItems: "center",
             gap: "6px",
         }}>
-        <Value signal={signal} state={state} />
-        <Rhombus />
+        <Value signal={signal} state={state} value={value} updateState={updateState} setValue={setValue} />
+        <Rhombus signal={signal} state={state} updateState={updateState} value={value} setValue={setValue} />
         </div>
     </div>
     </div>
