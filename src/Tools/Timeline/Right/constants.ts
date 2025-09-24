@@ -1,3 +1,3 @@
-const trackHeight = 50;
+const trackHeight = 40;
 
 export { trackHeight };

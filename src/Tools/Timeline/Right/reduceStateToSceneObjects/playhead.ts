@@ -24,6 +24,20 @@ function stateToPlayhead(state: State) {
             w: [30, "screen"],
             h: [30, "screen"],
         },
+        interaction: {
+            pointerDown: {
+                type: "hit",
+                manager: "playhead"
+            },
+            pointerMove: {
+                type: "all",
+                manager: "playhead"
+            },
+            pointerUp: {
+                type: "all",
+                manager: "playhead"
+            }
+        }
     }
     objs.push(playheadTriangle);
     objs.push(playheadLine);

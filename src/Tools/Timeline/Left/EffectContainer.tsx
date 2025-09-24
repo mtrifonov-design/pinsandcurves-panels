@@ -12,6 +12,14 @@ function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
 
 
 function Effect({ state, effect, updateState, idx }: { effect: any, updateState: (entry: any) => void, idx: number, state: any }) {
+    const currentSelection = state.local.data.selection.currentSelection;
+    const selected = currentSelection.type === "effect" && currentSelection.contents.includes(effect.instanceId);
+    const select = () => {
+        const nextState = produce(state, (draft: any) => {
+            draft.local.data.selection.currentSelection = { type: "effect", contents: [effect.instanceId] };
+        });
+        updateState(nextState);
+    }
     const { onPointerDown } = useMDndDragHandle(idx);
     const open = !state.local.data.hiddenEffects.includes(effect.instanceId);
     const setOpen = (newOpen: boolean) => {
@@ -29,8 +37,10 @@ function Effect({ state, effect, updateState, idx }: { effect: any, updateState:
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
-        }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
-            <span onPointerDown={onPointerDown}>
+            backgroundColor: selected ? "var(--gray2)" : "transparent",
+        }}><LittleHat open={open} toggle={() => setOpen(!open)} />
+            <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab",  paddingRight: "4px" }}>drag_indicator</span>
+            <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
             fx: {effect.type} {effect.instanceId}
             </span>
         </div>

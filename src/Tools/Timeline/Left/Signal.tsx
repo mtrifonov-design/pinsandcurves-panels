@@ -68,7 +68,6 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "var(--gray2)",
         paddingLeft: "12px",
         paddingRight: "12px",
         // borderTopLeftRadius: "var(--borderRadiusSmall)",

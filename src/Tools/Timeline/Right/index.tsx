@@ -5,6 +5,7 @@ import renderSceneObjects from "./renderSceneObjects";
 import { produce } from "immer";
 import { trackHeight } from "./constants";
 import useCamera from "./useCamera";
+import useInteraction from "./useInteraction";
 
 function TimelineRightSide({ state, updateState }: { state: any; updateState: any }) {
 
@@ -59,6 +60,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
         }, [canvasRef, containerRef])
 
         useCamera(canvasRef, state, updateState);
+        useInteraction(canvasRef, state, updateState, reducedSceneObjects);
 
     return <div  style={{paddingTop: "12px", paddingBottom: "12px", backgroundColor: "var(--gray1)"}}>
         <div ref={containerRef} style={{ width: "100%", height: "calc(100vh - 24px)", overflow: "hidden", position: "relative" }}>

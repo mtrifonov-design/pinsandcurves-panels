@@ -150,6 +150,30 @@ type LocalData = {
     },
     hiddenLayers: string[],
     hiddenEffects: string[],
+    selection: {
+        currentSelection: {
+            type: "keyframe" | "effect" | "layer" | null,
+            contents: string[];
+        },
+        dashboardSelection: {
+            type: "keyframe" | "effect" | "layer" | null,
+            contents: string[];
+        }
+    },
+    timelineUI: {
+        draggingPlayhead: boolean,
+        selectionBox: {
+            active: boolean,
+            start: {x: number, y: number},
+            end: {x: number, y: number},
+        }
+    },
+    screen: {
+        width: number,
+        height: number,
+    }
+
+
 
 }
 
@@ -167,8 +191,25 @@ const defaultLocalData = {
             height: 0,
         },
         hiddenLayers: [] as string[],
-        hiddenEffects: [] as string[]
-
+        hiddenEffects: [] as string[],
+        selection: {
+            currentSelection: {
+                type: null,
+                contents: [] as string[],
+            },
+            dashboardSelection: {
+                type: null,
+                contents: [] as string[],
+            }
+        },
+        timelineUI: {
+            draggingPlayhead: false,
+            selectionBox: {
+                active: false,
+                start: {x: 0, y: 0},
+                end: {x: 0, y: 0},
+            }
+        }
     }
 };
 

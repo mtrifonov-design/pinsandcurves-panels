@@ -11,6 +11,14 @@ function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
 
 
 function Layer({ layer, state, updateState, idx }: { layer: any, state: any, updateState: (entry: any) => void, idx: number }) {
+    const currentSelection = state.local.data.selection.currentSelection;
+    const selected = currentSelection.type === "layer" && currentSelection.contents.includes(layer.id);
+    const select = () => {
+        const nextState = produce(state, (draft: any) => {
+            draft.local.data.selection.currentSelection = { type: "layer", contents: [layer.id] };
+        });
+        updateState(nextState);
+    }
     const open = !state.local.data.hiddenLayers.includes(layer.id);
     const setOpen = (newOpen: boolean) => {
         const nextState = produce(state, (draft: any) => {
@@ -26,12 +34,14 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
     return <div style={{
     }}>
     
-        <div style={{ height: `${trackHeight}px`, cursor: "grab",
+        <div style={{ height: `${trackHeight}px`,
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
+            backgroundColor: selected ? "var(--gray2)" : "transparent",
         }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
-            <span onPointerDown={onPointerDown}>
+            <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab", paddingRight: "4px"}}>drag_indicator</span>
+            <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
                 {layer.id}
             </span>
                 
