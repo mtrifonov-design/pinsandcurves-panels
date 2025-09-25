@@ -4,6 +4,7 @@ import { MDndBox, MDndContainer, MDndTopProvider, useMDndDragHandle } from "./mi
 import { produce } from "immer";
 import EffectContainer from "./EffectContainer";
 import { Icon } from "@mtrifonov-design/pinsandcurves-design";
+import styles from "./styles.module.css";
 
 function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
     return <Icon iconName={open ? "keyboard_arrow_down" : "keyboard_arrow_up"} onClick={toggle}></Icon>;
@@ -39,7 +40,9 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: selected ? "var(--gray2)" : "transparent",
-        }}><LittleHat open={open} toggle={() => setOpen(!open)} /> 
+        }}
+        className={styles.rowStyle}
+        ><LittleHat open={open} toggle={() => setOpen(!open)} /> 
             <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab", paddingRight: "4px"}}>drag_indicator</span>
             <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
                 {layer.id}
@@ -54,8 +57,6 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
 
 function TimelineLeftSide({ state, updateState }: { state: any, updateState: (entry: any) => void }) {
     return <MDndTopProvider><div style={{
-        paddingTop: "12px",
-        paddingBottom: "12px",
         backgroundColor: "var(--gray1)",
         color: "var(--gray6)"
     }}>

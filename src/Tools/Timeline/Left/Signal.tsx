@@ -3,6 +3,7 @@ import { trackHeight } from "../Right/constants";
 import { useState } from "react";
 import interpolateSignalValue from "../../../LibrariesAndUtils/InterpolateSignalValue";
 import { produce } from "immer";
+import styles from "./styles.module.css";
 
 function Rhombus({ signal, state, updateState, value, setValue } : { state: any, updateState: (entry: any) => void, setValue: (value: number) => void }) {
     const playheadPosition = state.timeline.data.general.playheadPosition;
@@ -20,6 +21,7 @@ function Value({ signal, state, value, updateState, setValue }: { signal: any, s
         <NumberInput
             initialValue={value}
             onChange={(newValue) => setValue(newValue)}
+            step={0.01}
         />
     </div>
 }
@@ -60,16 +62,18 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
 
     return <div style={{
         height: `${trackHeight}px`, 
-    }}>
+        //borderLeft: "2px solid var(--gray2)",
+        marginLeft: "25px", 
+    }} className={styles.rowStyle}>
         <div style={{ 
-        marginLeft: "60px", 
+
         height: `${trackHeight}px`,
         
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
         paddingLeft: "12px",
-        paddingRight: "12px",
+        paddingRight: "8px",
         // borderTopLeftRadius: "var(--borderRadiusSmall)",
         // borderBottomLeftRadius: "var(--borderRadiusSmall)"
     }}>
@@ -79,9 +83,11 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
             flexDirection: "row",
             alignItems: "center",
             gap: "6px",
+            
         }}>
-        <Value signal={signal} state={state} value={value} updateState={updateState} setValue={setValue} />
         <Rhombus signal={signal} state={state} updateState={updateState} value={value} setValue={setValue} />
+        <Value signal={signal} state={state} value={value} updateState={updateState} setValue={setValue} />
+
         </div>
     </div>
     </div>

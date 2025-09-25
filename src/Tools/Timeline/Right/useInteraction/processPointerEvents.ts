@@ -36,6 +36,9 @@ function processPointerDown(position: {x: number, y: number}, state: any, update
         if (manager && manager.pointerDown) {
             manager.pointerDown(position, state, updateState, reducedSceneObjects, obj);
         }
+        if (obj.interaction.pointerDown.cancelEventPropagation) {
+            break;
+        }
     }
 }
 
@@ -52,6 +55,9 @@ function processPointerMove(position: {x: number, y: number}, state: any, update
         if (manager && manager.pointerMove) {
             manager.pointerMove(position, state, updateState, reducedSceneObjects, obj);
         }
+        if (obj.interaction.pointerMove.cancelEventPropagation) {
+            break;
+        }
     }   
 }
 
@@ -67,6 +73,9 @@ function processPointerUp(position: {x: number, y: number}, state: any, updateSt
         const manager = Managers[obj.interaction.pointerUp.manager];
         if (manager && manager.pointerUp) {
             manager.pointerUp(position, state, updateState, reducedSceneObjects, obj);
+        }
+        if (obj.interaction.pointerUp.cancelEventPropagation) {
+            break;
         }
     }       
 }

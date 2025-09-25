@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import FullscreenLoader from "../../LibrariesAndUtils/FullscreenLoader/FullscreenLoader";
 import TimelineLeftSide from "./Left";
 import TimelineRightSide from "./Right";
+import Layout from "./Layout";
 
 
 function Interior({ state, updateState } : { state: any; updateState: (entry: any) => void }) {
@@ -12,8 +13,12 @@ function Interior({ state, updateState } : { state: any; updateState: (entry: an
         display: "grid",
         gridTemplateColumns: "400px 1fr",
         height: "100vh",
-        width: "100vw"
+        width: "100vw",
+        position: "relative",
+        paddingTop: "12px",
+        paddingBottom: "12px",
     }}>
+        <Layout />
         <TimelineLeftSide state={state} updateState={updateState} />
         <TimelineRightSide state={state} updateState={updateState} />
     </div>

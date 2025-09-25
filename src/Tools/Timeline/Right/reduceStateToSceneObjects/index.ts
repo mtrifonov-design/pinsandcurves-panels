@@ -4,6 +4,8 @@ import stateToKeyframes from "./keyframes"
 import preSceneToSceneObjects from "./preSceneToSceneObjects"
 import stateToPlayhead from "./playhead"
 import stateToSelectionBox from "./selectionBox"
+import stateToSelectionContainer from "./selectionContainer"
+import stateToTransformBox from "./transformBox"
 
 type GeometryComponent = {
     x: number,
@@ -43,7 +45,7 @@ type State = {
 
 
 function reduceStateToSceneObjects(state: State) : SceneObject[] {
-    const preSceneObjects: PreSceneObject[] = [];
+    let preSceneObjects: (PreSceneObject | undefined)[] = [];
 
     const { tracks, signalToTrack } = stateToTracks(state);
     preSceneObjects.push(...tracks);
@@ -52,8 +54,12 @@ function reduceStateToSceneObjects(state: State) : SceneObject[] {
     preSceneObjects.push(...keyframes);
     preSceneObjects.push(...stateToPlayhead(state));
     preSceneObjects.push(stateToSelectionBox(state));
+    preSceneObjects.push(stateToSelectionContainer(state));
+    preSceneObjects.push(stateToTransformBox(state, signalToTrack));
     // Reduce the state to scene objects
-    return preSceneToSceneObjects(preSceneObjects,state);
+    preSceneObjects = preSceneObjects.filter(obj => obj !== undefined);
+
+    return preSceneToSceneObjects(preSceneObjects as PreSceneObject[],state);
 };
 
 export type { SceneObject, __PreGeometryComponent, State, PreSceneObject };

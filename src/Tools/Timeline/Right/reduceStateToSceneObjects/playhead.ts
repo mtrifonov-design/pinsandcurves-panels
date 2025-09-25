@@ -27,7 +27,8 @@ function stateToPlayhead(state: State) {
         interaction: {
             pointerDown: {
                 type: "hit",
-                manager: "playhead"
+                manager: "playhead",
+                cancelEventPropagation: true,
             },
             pointerMove: {
                 type: "all",
@@ -37,7 +38,8 @@ function stateToPlayhead(state: State) {
                 type: "all",
                 manager: "playhead"
             }
-        }
+        },
+        zIndex: 2,
     }
     objs.push(playheadTriangle);
     objs.push(playheadLine);

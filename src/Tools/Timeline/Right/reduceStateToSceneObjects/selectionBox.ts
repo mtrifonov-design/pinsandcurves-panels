@@ -2,17 +2,27 @@ import type { PreSceneObject, SceneObject, State } from ".";
 
 function stateToSelectionBox(state: any) {
 
-    const selectionBox : PreSceneObject = {
+    const selectionBox = state.local.data.timelineUI.selectionMachineState.selectionBox;
+    const active = state.local.data.timelineUI.selectionMachineState.type === "d_make_selection";
+    if (!active) return;
+
+    const selectionBoxObj : PreSceneObject = {
         id: "selectionBox",
         __pre_geometry: {
-            x: [0, "screen"],
-            y: [0, "screen"],
+            x: [selectionBox ? selectionBox.x : 0, "screen"],
+            y: [selectionBox ? selectionBox.y : 0, "screen"],
             anchor: "top-left",
-            w: [100, "screen"],
-            h: [100, "screen"],
+            w: [selectionBox ? selectionBox.w : 0, "screen"],
+            h: [selectionBox ? selectionBox.h : 0, "screen"],
+        },
+        interaction: {
+            pointerMove: {
+                type: "all",
+                manager: "selectionBox"
+            }
         }
     }
-    return selectionBox;
+    return selectionBoxObj;
 
 }
 

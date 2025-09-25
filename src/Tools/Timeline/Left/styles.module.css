@@ -1,0 +1,8 @@
+
+.rowStyle {
+    border-top-left-radius: var(--borderRadiusSmall);
+    border-bottom-left-radius: var(--borderRadiusSmall);
+}
+.rowStyle:hover {
+  box-shadow: inset 2px 0 6px 0px var(--gray2), 2px 0 4px 0px var(--gray2);
+}

@@ -197,10 +197,9 @@ const defaultLocalData = {
             }
         },
         timelineUI: {
-            draggingPlayhead: false,
             selectionMachineState: {
-                type: "start_no_pins_selected",
-            }
+                type: "s_start_no_pins_selected",
+            },
         }
     }
 };

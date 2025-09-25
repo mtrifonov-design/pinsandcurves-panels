@@ -10,6 +10,8 @@ function useInteraction(canvasRef: React.RefObject<HTMLCanvasElement>, state: an
         if (!canvas) return;
 
         const handlePointerDown = (e: PointerEvent) => {
+            // if middle mouse button pressed, return
+            if (e.button === 1) return;
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
