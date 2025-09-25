@@ -3,6 +3,7 @@ import stateToTracks from "./tracks"
 import stateToKeyframes from "./keyframes"
 import preSceneToSceneObjects from "./preSceneToSceneObjects"
 import stateToPlayhead from "./playhead"
+import stateToSelectionBox from "./selectionBox"
 
 type GeometryComponent = {
     x: number,
@@ -50,6 +51,7 @@ function reduceStateToSceneObjects(state: State) : SceneObject[] {
     const { keyframes } = stateToKeyframes(state, signalToTrack);
     preSceneObjects.push(...keyframes);
     preSceneObjects.push(...stateToPlayhead(state));
+    preSceneObjects.push(stateToSelectionBox(state));
     // Reduce the state to scene objects
     return preSceneToSceneObjects(preSceneObjects,state);
 };

@@ -1,7 +1,7 @@
-import { SceneObject } from "../reduceStateToSceneObjects";
+import { SceneObject } from "../../reduceStateToSceneObjects";
 import { produce } from "immer";
 
-class PlayheadManager {
+class Manager {
 
     pointerDown(position: {x: number, y: number}, state: any, updateState: (newState: any) => void, reducedSceneObjects: SceneObject[], self: SceneObject) {
         const nextState = produce(state, (draft: any) => {
@@ -31,4 +31,4 @@ class PlayheadManager {
     }
 }
 
-export default PlayheadManager;
+export default Manager;

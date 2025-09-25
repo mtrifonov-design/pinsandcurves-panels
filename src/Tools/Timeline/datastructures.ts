@@ -1,3 +1,4 @@
+import { SelectionMachineState } from "./Right/useInteraction/selectionStateMachine";
 
 type TimelineData = {
     general: {
@@ -29,9 +30,6 @@ type TimelineData = {
         }
     }
 };
-
-
-
 
 const defaultTimelineData = {
     epoch: 0,
@@ -162,11 +160,7 @@ type LocalData = {
     },
     timelineUI: {
         draggingPlayhead: boolean,
-        selectionBox: {
-            active: boolean,
-            start: {x: number, y: number},
-            end: {x: number, y: number},
-        }
+        selectionMachineState: SelectionMachineState,
     },
     screen: {
         width: number,
@@ -204,10 +198,8 @@ const defaultLocalData = {
         },
         timelineUI: {
             draggingPlayhead: false,
-            selectionBox: {
-                active: false,
-                start: {x: 0, y: 0},
-                end: {x: 0, y: 0},
+            selectionMachineState: {
+                type: "start_no_pins_selected",
             }
         }
     }
