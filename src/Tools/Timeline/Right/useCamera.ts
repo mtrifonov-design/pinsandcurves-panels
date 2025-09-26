@@ -32,7 +32,7 @@ const updateViewport = ({
             });
             updateState(newState);
         }
-        if (mode === "zooming") {
+        if (mode === "none") {
             const newW = anchorViewport.w / zoom;
             const newX = anchorXWorld - (anchorX / anchorScreen.width) * newW;
             const newState = produce(state, (draft: any) => {
@@ -60,7 +60,7 @@ function useCamera(canvasRef: React.RefObject<HTMLCanvasElement>, state: any, up
         if (!canvas) return;
         // register if mouse wheel button is pressed, if so, we enter panning mode
         const handleMouseDown = (e: MouseEvent) => {
-            if (e.button === 1) {
+            if (e.button === 1 || e.metaKey) {
                 setMode("panning");
                 setAnchorX(e.clientX);
                 setAnchorViewport(viewport);
@@ -70,44 +70,60 @@ function useCamera(canvasRef: React.RefObject<HTMLCanvasElement>, state: any, up
         const handleMouseUp = (e: MouseEvent) => {
             setMode("none");
         }
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Control") {
-                setMode("zooming");
-                setAnchorX(mouseTrackRef.current);
-                setAnchorViewport(viewport);
-                setAnchorScreen(screen);
-                zoomRef.current = 1;
-            }
-        }
+        // const handleKeyDown = (e: KeyboardEvent) => {
+        //     if (e.key === "Control") {
+        //         setMode("zooming");
+        //         setAnchorX(mouseTrackRef.current);
+        //         setAnchorViewport(viewport);
+        //         setAnchorScreen(screen);
+        //         zoomRef.current = 1;
+        //     }
+        // }
+        // const handleWheel = (e: WheelEvent) => {
+        //     if (e.ctrlKey) {
+        //         e.preventDefault();
+        //         setMode("zooming");
+        //         setAnchorX(mouseTrackRef.current);
+        //         setAnchorViewport(viewport);
+        //         setAnchorScreen(screen);
+        //         zoomRef.current = 1;
+        //         console.log("zooming begins")
+        //     } else if (e.altKey) {
+        //         setMode("panning");
+        //         setAnchorX(e.clientX);
+        //         setAnchorViewport(viewport);
+        //         setAnchorScreen(screen);
+        //     }
+        // }
         const handleMouseMove = (e: MouseEvent) => {
             mouseTrackRef.current = e.clientX;
         }
-        const handleKeyUp = (e: KeyboardEvent) => {
-            if (e.key === "Control") {
-                setMode("none");
-            }
-        }
+        // const handleKeyUp = (e: KeyboardEvent) => {
+        //     if (e.key === "Alt") {
+        //         setMode("none");
+        //     }
+        // }
 
         switch (mode) {
             case "none":
                 canvas.addEventListener("mousedown", handleMouseDown);
-                window.addEventListener("keydown", handleKeyDown);
+                //window.addEventListener("wheel", handleWheel, { passive: false });
                 canvas.addEventListener("mousemove", handleMouseMove);
                 return () => {
                     canvas.removeEventListener("mousemove", handleMouseMove);
                     canvas.removeEventListener("mousedown", handleMouseDown);
-                    window.removeEventListener("keydown", handleKeyDown);
+                    //window.removeEventListener("wheel", handleWheel);
                 };
             case "panning":
                 window.addEventListener("mouseup", handleMouseUp);
                 return () => {
                     window.removeEventListener("mouseup", handleMouseUp);
                 };
-            case "zooming":
-                window.addEventListener("keyup", handleKeyUp);
-                return () => {
-                    window.removeEventListener("keyup", handleKeyUp);
-                };
+            // case "zooming":
+            //     window.addEventListener("keyup", handleKeyUp);
+            //     return () => {
+            //         window.removeEventListener("keyup", handleKeyUp);
+            //     };
         }
 
     }, [canvasRef, mode, viewport, screen]);
@@ -133,20 +149,23 @@ function useCamera(canvasRef: React.RefObject<HTMLCanvasElement>, state: any, up
                 window.removeEventListener("mousemove", handleMouseMove);
             }
         }
-        if (mode === "zooming") {
+        if (mode === "none") {
             const handleWheel = (e: WheelEvent) => {
+                console.log("me", e.ctrlKey, e.deltaY)
+                if (!e.ctrlKey) return;
                 e.preventDefault();
                 const zoomSensitivity = 0.001;
                 const newZoom = (zoom: number) => Math.min(Math.max(0.1, zoom + e.deltaY * zoomSensitivity), 10);
                 zoomRef.current = newZoom(zoomRef.current);
+                console.log("zoom", zoomRef.current)
                 updateViewport({
                     canvasRef,
                     mode,
                     anchorX,
                     currentX: 0,
-                    zoom: zoomRef.current,
-                    anchorViewport,
-                    anchorScreen,
+                    zoom: Math.min(Math.max(0.1, 1 + e.deltaY * zoomSensitivity), 10),
+                    anchorViewport : viewport,
+                    anchorScreen: screen,
                     updateState,
                     state,
                 })

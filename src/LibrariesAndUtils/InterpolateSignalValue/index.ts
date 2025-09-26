@@ -9,6 +9,7 @@ type Keyframe = {
 
 
 function interpolateSignalValue(keyframes : Keyframe[], playheadPosition: number) : number {
+    console.log(keyframes)
     const sortedKeyframes = keyframes.sort((a, b) => a.frame - b.frame);
     if (sortedKeyframes.length === 0) {
         return 0; 

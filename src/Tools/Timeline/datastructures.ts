@@ -1,4 +1,4 @@
-import { SelectionMachineState } from "./Right/useInteraction/selectionStateMachine";
+import { SelectionMachineState } from "./StateMachine";
 
 type TimelineData = {
     general: {

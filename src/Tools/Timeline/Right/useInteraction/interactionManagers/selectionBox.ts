@@ -1,6 +1,6 @@
 import { SceneObject } from "../../reduceStateToSceneObjects";
 import { produce } from "immer";
-import { selectionMachine } from "../selectionStateMachine";
+import { selectionMachine } from "../../../StateMachine";
 
 const boxesIntersect = (boxA: {x: number, y: number, w: number, h: number}, boxB: {x: number, y: number, w: number, h: number}) => {
     return (boxA.x < boxB.x + boxB.w &&

@@ -1,6 +1,6 @@
 import { SceneObject } from "../../reduceStateToSceneObjects";
 import { produce } from "immer";
-import { selectionMachine } from "../selectionStateMachine";
+import { selectionMachine } from "../../../StateMachine";
 
 function invokeSelectionStateMachine(conditionalState: (mState:any) => boolean, event: (mState: any) => any, { state, updateState }: { state: any, updateState: (newState: any) => void }) {
     const machineState = state.local.data.timelineUI.selectionMachineState;

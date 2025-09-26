@@ -6,9 +6,19 @@ import FullscreenLoader from "../../LibrariesAndUtils/FullscreenLoader/Fullscree
 import TimelineLeftSide from "./Left";
 import TimelineRightSide from "./Right";
 import Layout from "./Layout";
+import keyHandler from "./keyHandler";
 
 
 function Interior({ state, updateState } : { state: any; updateState: (entry: any) => void }) {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            keyHandler(e, state, updateState);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    },[state,updateState]);
     return <div style={{
         display: "grid",
         gridTemplateColumns: "400px 1fr",
