@@ -1,7 +1,8 @@
 import { Button } from "@mtrifonov-design/pinsandcurves-design";
 import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
 import React, { useRef, useSyncExternalStore } from "react";
-import {Timeline} from "../Timeline";
+import {Timeline} from "../../LibrariesAndUtils/Timeline";
+
 
 function PlayButton({ togglePlaying, playing }: { togglePlaying: () => void, playing?: boolean }) {
     return (
@@ -20,7 +21,7 @@ function TimelineBar({ timeline }: {timeline:TimelineController.TimelineControll
 
     const timelineProjectRef = useRef(new Timeline(timeline));
     const timelineProject = timelineProjectRef.current;
-    timelineProject.receiveUpdate(timeline);
+    timelineProject.update(timeline);
 
     
     const togglePlaying = () => {
@@ -28,9 +29,9 @@ function TimelineBar({ timeline }: {timeline:TimelineController.TimelineControll
         const isPlaying = project.general.playing;
         const currentFrame = timelineProject.playheadPosition;
         if (isPlaying) {
-            timeline.projectTools.updatePlayheadPosition(currentFrame, true);
+            timelineProject.projectTools.updatePlayheadPosition(currentFrame, true);
         } else {
-            timeline.projectTools.startPlayback();
+            timelineProject.projectTools.startPlayback();
         }
     }
 

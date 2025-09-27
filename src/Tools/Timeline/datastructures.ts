@@ -18,9 +18,6 @@ type TimelineData = {
     signalKeyframes: {
         [signalId: string]: string[]
     },
-    signalRanges: {
-        [signalId: string]: [number, number]
-    },
     keyframeData: {
         [keyframeId: string]: {
             type: string,
@@ -44,10 +41,10 @@ const defaultTimelineData = {
             playheadPosition: 12
         },
         signals: [
-            "testSignal", "testSignal2", "testSignal3"
+            "exampleSignal", "testSignal2", "testSignal3"
         ],
         signalMetadata: {
-            testSignal: {
+            exampleSignal: {
                 name: "Test Signal",
             },
             testSignal2: {
@@ -58,12 +55,9 @@ const defaultTimelineData = {
             }
         },
         signalKeyframes: {
-            testSignal: ["testKeyframe"],
+            exampleSignal: ["testKeyframe"],
             testSignal2: ["testKeyframe2"],
             testSignal3: ["testKeyframe3"]
-        },
-        signalRanges: {
-            testSignal: [0, 100]
         },
         keyframeData: {
             testKeyframe: {
@@ -113,8 +107,8 @@ const defaultCompositionData = {
                 id: "layer1",
                 effects: [
                     {
-                        instanceId: "someEffect",
-                        signals: ["testSignal","testSignal2"]
+                        instanceId: "exampleCircle",
+                        signals: ["exampleSignal","testSignal2"]
                     }
                 ]
             },

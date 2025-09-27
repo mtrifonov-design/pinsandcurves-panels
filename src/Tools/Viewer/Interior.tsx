@@ -11,7 +11,8 @@ import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBu
 import Viewport from './graphics/main.js';
 const defaultEvent = { path: "viewer-loaded", event: true }
 import useRaf from './useRaf.js';
-import Timeline from '../Timeline/index.js';
+import { Timeline } from '../../LibrariesAndUtils/Timeline';
+import interpolateSignalValue from '../../LibrariesAndUtils/InterpolateSignalValue/index.js';
 
 export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,10 +23,10 @@ export default function Interior({ timeline, controls, graphics, composition, im
     const graphicsSnapshot = graphics.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
     const controlsSnapshot = controls.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
     const imagesSnapshot = images.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
-    const compositionSnapshot = composition.getSnapshot();
+    const compositionSnapshot = composition.getSnapshot().data;
     const timelineProjectRef = useRef(new Timeline(timeline));
     const timelineProject = timelineProjectRef.current;
-    timelineProject.receiveUpdate(timeline);
+    timelineProject.update(timeline);
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
 
@@ -90,8 +91,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        //console.log(graphicsSnapshot)
-        // console.log(gfx(""))
+        console.log("GFX",gfx(""))
         frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
         frameSaver.setName(compositionSnapshot.compositionName);
         renderer.setSource(registry.currentSourceId, gfx(""));
@@ -99,6 +99,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot || !compositionSnapshot || !imagesSnapshot) return;
+        const keyframes = timelineProject.data.signalKeyframes["exampleSignal"].map(kfId => timelineProject.data.keyframeData[kfId]);
         const compositionGlobalStream = {
             versionId: crypto.randomUUID(),
             commands: [
@@ -106,10 +107,11 @@ export default function Interior({ timeline, controls, graphics, composition, im
                     resource: "compositionGlobal",
                     type: "setGlobals",
                     payload: [{
-                        playheadPosition: [timelineProject.data.general.playheadPosition],
+                        playheadPosition: [timelineProject.playheadPosition],
                         numberOfFrames: [timelineProject.data.general.numberOfFrames],
                         screen: [dimensions[0], dimensions[1]],
                         canvas: [compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]],
+                        exampleSignal: [interpolateSignalValue(keyframes, timelineProject.playheadPosition)],
                         TOTAL_FRAME: [totalFrame]
                     }]
                 }

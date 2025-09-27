@@ -23,6 +23,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             playheadPosition: 'float',
             numberOfFrames: 'float',
             TOTAL_FRAME: 'int',
+            exampleSignal: 'float',
         });
         const __compositionGlobal = Global({
             signature: ref("__compositionGlobalSig"),
@@ -60,7 +61,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             if (foundAssetEntry) {
                 if (!foundAssetEntry[0].endsWith(".graphics")) continue;
                 const processedId = foundAssetEntry[0].replace(".graphics", "");
-                resources[processedId] = Use(foundAssetEntry[1].source,externalBundle);
+                resources[processedId] = Use(foundAssetEntry[1].source,{...externalBundle});
                 inputName = processedId + "_out";
                 externalBundle.inputTexture = ref(inputName);
             }

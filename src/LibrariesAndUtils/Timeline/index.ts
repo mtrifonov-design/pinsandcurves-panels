@@ -6,7 +6,7 @@ class Timeline {
     constructor(asset: any) {
         this.asset = asset;
     }
-    receiveUpdate(asset: any) {
+    update(asset: any) {
         this.asset = asset;
     }
 
@@ -14,20 +14,16 @@ class Timeline {
         return this.asset.getSnapshot().data;
     }
 
-    update(newData : any) {
-        this.asset.setData(newData);
-    }
-    
     get projectTools() {
         const tools = {
             updatePlayheadPosition: (frame: number, commit: boolean) => {
-                this.asset.setData(produce(this.asset.getSnapshot(), draft => {
+                this.asset.data.setData(produce(this.asset.getSnapshot(), draft => {
                     draft.data.general.playheadPosition = frame;
                     draft.data.general.playing = false;
                 }));
             },
             startPlayback: () => {
-                this.asset.setData(produce(this.asset.getSnapshot(), draft => {
+                this.asset.data.setData(produce(this.asset.getSnapshot(), draft => {
                     draft.data.general.playing = true;
                     draft.data.general.playingTimestamp = Date.now();
                 }));

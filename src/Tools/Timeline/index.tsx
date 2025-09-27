@@ -7,9 +7,10 @@ import TimelineLeftSide from "./Left";
 import TimelineRightSide from "./Right";
 import Layout from "./Layout";
 import keyHandler from "./keyHandler";
+import { exampleCircleGraphics } from "./exampleCircle";
 
 
-function Interior({ state, updateState } : { state: any; updateState: (entry: any) => void }) {
+function Interior({ state, updateState }: { state: any; updateState: (entry: any) => void }) {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             keyHandler(e, state, updateState);
@@ -18,7 +19,7 @@ function Interior({ state, updateState } : { state: any; updateState: (entry: an
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
         };
-    },[state,updateState]);
+    }, [state, updateState]);
     return <div style={{
         display: "grid",
         gridTemplateColumns: "400px 1fr",
@@ -50,7 +51,7 @@ function useAtomicState(state: { local: any; setLocal: any; timeline: any; compo
         state.composition.data.setData({ data: newComposition.data, epoch: stamp });
     }
 
-    const [atomicState, setAtomicState] = useState({state: {local,timeline,composition},epoch:0});
+    const [atomicState, setAtomicState] = useState({ state: { local, timeline, composition }, epoch: 0 });
 
     useEffect(() => {
         if (
@@ -59,7 +60,7 @@ function useAtomicState(state: { local: any; setLocal: any; timeline: any; compo
             && local.epoch >= atomicState.epoch
         ) {
             setAtomicState({
-                state: {local,timeline,composition},
+                state: { local, timeline, composition },
                 epoch: timeline.epoch
             });
         }
@@ -70,44 +71,44 @@ function useAtomicState(state: { local: any; setLocal: any; timeline: any; compo
     return [atomicState.state, updateAtomicState];
 };
 
-function AtomicStateWrapper({local, setLocal, timeline, composition} : { local: any; setLocal: any; timeline: any; composition: any }) {
-  const [atomicState,updateAtomicState] = useAtomicState({
-    local: local,
-    setLocal: setLocal,
-    timeline: timeline,
-    composition: composition
-  })
-    return <Interior 
-    state={atomicState}
-    updateState={updateAtomicState}
-  />
+function AtomicStateWrapper({ local, setLocal, timeline, composition }: { local: any; setLocal: any; timeline: any; composition: any }) {
+    const [atomicState, updateAtomicState] = useAtomicState({
+        local: local,
+        setLocal: setLocal,
+        timeline: timeline,
+        composition: composition
+    })
+    return <Interior
+        state={atomicState}
+        updateState={updateAtomicState}
+    />
 }
 
 
-function Exterior({ local, setLocal, children } : { local: any; setLocal: any; children: React.ReactNode }) {
-  const { initialized, index, assets: jsonAssets} = useJSONAssets((id: string, metadata: any) => {
-    if (id === `default.timeline` && metadata.type === "timeline") {
-      return true;
-    }
-    if (id === `default.composition` && metadata.type === "composition") {
-      return true;
-    }
-    return false;
-  });
+function Exterior({ local, setLocal, children }: { local: any; setLocal: any; children: React.ReactNode }) {
+    const { initialized, index, assets: jsonAssets } = useJSONAssets((id: string, metadata: any) => {
+        if (id === `default.timeline` && metadata.type === "timeline") {
+            return true;
+        }
+        if (id === `default.composition` && metadata.type === "composition") {
+            return true;
+        }
+        return false;
+    });
 
-  const ready = initialized 
-  && jsonAssets[`default.timeline`]
-  && jsonAssets[`default.composition`]
+    const ready = initialized
+        && jsonAssets[`default.timeline`]
+        && jsonAssets[`default.composition`]
 
-  if (!ready) {
-    return <FullscreenLoader />
-  }
-  return <AtomicStateWrapper 
-    local={local}
-    setLocal={setLocal}
-    timeline={jsonAssets[`default.timeline`]}
-    composition={jsonAssets[`default.composition`]}
-  />
+    if (!ready) {
+        return <FullscreenLoader />
+    }
+    return <AtomicStateWrapper
+        local={local}
+        setLocal={setLocal}
+        timeline={jsonAssets[`default.timeline`]}
+        composition={jsonAssets[`default.composition`]}
+    />
 }
 
 function Timeline() {
@@ -125,7 +126,22 @@ function Timeline() {
                 defaultData={defaultTimelineData}
                 defaultType="timeline"
             >
-                <Exterior local={localState} setLocal={setLocalState} />
+                <JSONAssetCreator
+                    defaultName={`exampleCircle.controls`}
+                    defaultData={{}}
+                    defaultType="controls"
+                >
+                    <JSONAssetCreator
+                        defaultName={`exampleCircle.graphics`}
+                        defaultData={{
+                            sourceId: "start",
+                            source:exampleCircleGraphics()
+                        }}
+                        defaultType="graphics"
+                    >
+                        <Exterior local={localState} setLocal={setLocalState} />
+                    </JSONAssetCreator>
+                </JSONAssetCreator>
             </JSONAssetCreator>
         </JSONAssetCreator>
     </AssetProvider>;
