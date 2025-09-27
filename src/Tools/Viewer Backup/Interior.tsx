@@ -4,15 +4,17 @@ import FrameSaver from './FrameSaver/FrameSaver.js';
 import FrameSaverScreen from './FrameSaver/FrameSaverScreen.js';
 import useTracker from '../../LibrariesAndUtils/hooks/useTracker.js';
 import TimelineBar from './TimelineBar.js';
+
 import NectarRenderer from '../../LibrariesAndUtils/NectarGL/Renderer.js';
 import { TimelineController } from '@mtrifonov-design/pinsandcurves-external';
 import buildGraphics from '../../LibrariesAndUtils/CompositionBuilder/graphicsBuilder.js';
 import buildControls from '../../LibrariesAndUtils/CompositionBuilder/controlsBuilder.js';
 import Viewport from './graphics/main.js';
 const defaultEvent = { path: "viewer-loaded", event: true }
-import useRaf from './useRaf.js';
-import Timeline from '../Timeline/index.js';
 
+import useRaf from './useRaf.js';
+
+let TOTAL_FRAME = 0;
 export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -23,9 +25,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
     const controlsSnapshot = controls.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
     const imagesSnapshot = images.map(([id, asset]) => [id, asset.getSnapshot()] as [string, any]);
     const compositionSnapshot = composition.getSnapshot();
-    const timelineProjectRef = useRef(new Timeline(timeline));
-    const timelineProject = timelineProjectRef.current;
-    timelineProject.receiveUpdate(timeline);
+    const timelineProject : TimelineController.Project = useSyncExternalStore(timeline.onTimelineUpdate.bind(timeline), timeline.getProject.bind(timeline));
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
 
@@ -63,6 +63,8 @@ export default function Interior({ timeline, controls, graphics, composition, im
     }));
     const frameSaver = frameSaverRef.current;
 
+
+    const renderLoopInitRef = useRef(false);
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -73,6 +75,18 @@ export default function Interior({ timeline, controls, graphics, composition, im
         const r = new NectarRenderer(gl);
         setRenderer(r);
         frameSaver.attachCaptureFrame(() => r.captureTexture("exportTexture")); 
+        // const draw = () => {
+        //     r.frame();
+        //     frameSaver.frame();
+        //     console.log("frame")
+        //     setTotalFrame(tf => tf + 1);
+        //     window.requestAnimationFrame(draw);
+        // };
+        // if (renderLoopInitRef.current !== true) {
+        //     draw()
+        //     renderLoopInitRef.current = true;
+        // };
+        // return () => { };
     }, [frameSaver]);
 
     useRaf(() => {
@@ -106,8 +120,8 @@ export default function Interior({ timeline, controls, graphics, composition, im
                     resource: "compositionGlobal",
                     type: "setGlobals",
                     payload: [{
-                        playheadPosition: [timelineProject.data.general.playheadPosition],
-                        numberOfFrames: [timelineProject.data.general.numberOfFrames],
+                        playheadPosition: [timelineProject.timelineData.playheadPosition],
+                        numberOfFrames: [timelineProject.timelineData.numberOfFrames],
                         screen: [dimensions[0], dimensions[1]],
                         canvas: [compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]],
                         TOTAL_FRAME: [totalFrame]
@@ -147,6 +161,10 @@ export default function Interior({ timeline, controls, graphics, composition, im
         renderer.attachAssets(imagesSnapshot);
         renderer.setState(registry.currentSourceId, renderState);
     }, [renderer, controls, timelineProject, frameSaver, registry, dimensions, composition, images,totalFrame]);
+
+    if (!timeline) {
+        return <div>No timeline found</div>
+    }
 
     return <div
 

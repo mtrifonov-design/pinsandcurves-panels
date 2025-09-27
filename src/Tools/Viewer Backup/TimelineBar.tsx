@@ -1,7 +1,7 @@
 import { Button } from "@mtrifonov-design/pinsandcurves-design";
 import { TimelineController } from "@mtrifonov-design/pinsandcurves-external";
-import React, { useRef, useSyncExternalStore } from "react";
-import {Timeline} from "../Timeline";
+import React, { useSyncExternalStore } from "react";
+
 
 function PlayButton({ togglePlaying, playing }: { togglePlaying: () => void, playing?: boolean }) {
     return (
@@ -18,15 +18,16 @@ function PlayButton({ togglePlaying, playing }: { togglePlaying: () => void, pla
 
 function TimelineBar({ timeline }: {timeline:TimelineController.TimelineController}) {
 
-    const timelineProjectRef = useRef(new Timeline(timeline));
-    const timelineProject = timelineProjectRef.current;
-    timelineProject.receiveUpdate(timeline);
+    const project = useSyncExternalStore(
+        timeline.onTimelineUpdate.bind(timeline),
+        timeline.getProject.bind(timeline)
+    );
 
     
     const togglePlaying = () => {
-        const project = timelineProject.data;
-        const isPlaying = project.general.playing;
-        const currentFrame = timelineProject.playheadPosition;
+        const project = timeline.getProject();
+        const isPlaying = project.timelineData.playing;
+        const currentFrame = project.timelineData.playheadPosition;
         if (isPlaying) {
             timeline.projectTools.updatePlayheadPosition(currentFrame, true);
         } else {
@@ -43,12 +44,12 @@ function TimelineBar({ timeline }: {timeline:TimelineController.TimelineControll
             height: "100%",
             gap: "20px",
         }}>
-            <PlayButton togglePlaying={togglePlaying} playing={timelineProject.data.general.playing} />
+            <PlayButton togglePlaying={togglePlaying} playing={timeline.getProject().timelineData.playing} />
             <div style={{
                 color: "var(--gray7)",
                 width: "100px",
             }}>
-                {`${timelineProject.playheadPosition} / ${timelineProject.data.general.focusRange[1]}`}
+                {`${project.timelineData.playheadPosition} / ${project.timelineData.focusRange[1]}`}
             </div>
 
         </div>

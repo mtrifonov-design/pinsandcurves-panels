@@ -3,6 +3,7 @@ import { SelectionMachineState } from "./StateMachine";
 type TimelineData = {
     general: {
         playing: boolean,
+        playingTimestamp: number,
         numberOfFrames: number,
         focusRange: [number, number],
         frameRate: number,
@@ -36,6 +37,7 @@ const defaultTimelineData = {
     data: {
         general: {
             playing: false,
+            playingTimestamp: 0,
             numberOfFrames: 300,
             focusRange: [0, 150],
             frameRate: 30,
