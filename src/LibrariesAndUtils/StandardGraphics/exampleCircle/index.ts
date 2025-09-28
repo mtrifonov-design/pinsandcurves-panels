@@ -35,6 +35,8 @@ function ExampleCircle({
                 vertexShader: `
                 out vec2 uv;
                 void main() {
+
+                    // correct uv for aspect ratio
                     uv = position / 2. + vec2(0.5);
                     gl_Position = vec4(position.xy, 0.0, 1.0);
                 }
@@ -42,17 +44,23 @@ function ExampleCircle({
                 fragmentShader: `
                 in vec2 uv;
                 void main() {
-                    float r = length(uv - vec2(0.5));
+                    float w = canvas.x;
+                    float h = canvas.y;
+                    float aspect = w / h;
+                    float x = (posX / 100.) + 0.5;
+                    float y = (posY / 100.);
+                    float r = length(uv * vec2(aspect, 1.0) - vec2(x, y));
                     float tR = radius / 100.;
                     float alpha = smoothstep(tR, tR - 0.02, r);
-                    outColor = vec4(1.0, 1.0, 1.0, alpha);
+                    vec4 srcPx = texture(src, uv);
+                    outColor = srcPx + vec4(1.0, 1.0, 1.0, alpha);
                 }
                 `,
                 textures: {
-                    // src: {
-                    //     filter: "linear",
-                    //     wrap: "clamp",
-                    // }
+                    src: {
+                        filter: "linear",
+                        wrap: "clamp",
+                    }
                 },
             }),
             out: Texture({
@@ -66,7 +74,7 @@ function ExampleCircle({
                             s: signals,
                         },
                         textures: {
-                            //src: inputTexture
+                            src: inputTexture
                         }
                     },
                 ],

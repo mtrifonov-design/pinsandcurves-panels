@@ -26,12 +26,14 @@ function createEffect(instanceId: string) {
                 source: exampleCircleGraphics()
             }
         }],
-        signalsToCreate: [`${instanceId}_signal1`],
+        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
         effectSignature: {
             instanceId,
             effectName: "exampleCircle",
             signals: {
-                radius: `${instanceId}_signal1`
+                radius: `${instanceId}_signal1`,
+                posX: `${instanceId}_signal2`,
+                posY: `${instanceId}_signal3`,
             }
         }
     }
@@ -40,7 +42,7 @@ function createEffect(instanceId: string) {
 function deleteEffect(instanceId: string) {
     return {
         assetsToDelete: ["exampleCircle"],
-        signalsToDelete: [`${instanceId}_signal1`]
+        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
     }
 }
 
