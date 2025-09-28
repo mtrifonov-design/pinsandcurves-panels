@@ -14,6 +14,8 @@ import useRaf from './useRaf.js';
 import { Timeline } from '../../LibrariesAndUtils/Timeline';
 import interpolateSignalValue from '../../LibrariesAndUtils/InterpolateSignalValue/index.js';
 
+
+
 export default function Interior({ timeline, controls, graphics, composition, images }: any) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -28,7 +30,6 @@ export default function Interior({ timeline, controls, graphics, composition, im
     const timelineProject = timelineProjectRef.current;
     timelineProject.update(timeline);
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
-
 
     const { recordEvent } = useTracker(defaultEvent);
 
@@ -91,7 +92,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        console.log("GFX",gfx(""))
+        console.log("GFX", gfx())
         frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
         frameSaver.setName(compositionSnapshot.compositionName);
         renderer.setSource(registry.currentSourceId, gfx(""));
@@ -99,7 +100,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
 
     useEffect(() => {
         if (!renderer || !controlsSnapshot || !compositionSnapshot || !imagesSnapshot) return;
-        const keyframes = timelineProject.data.signalKeyframes["exampleSignal"].map(kfId => timelineProject.data.keyframeData[kfId]);
+        const keyframes = timelineProject.data.signalKeyframes["exampleCircle_signal1"].map(kfId => timelineProject.data.keyframeData[kfId]);
         const compositionGlobalStream = {
             versionId: crypto.randomUUID(),
             commands: [
@@ -116,6 +117,25 @@ export default function Interior({ timeline, controls, graphics, composition, im
                     }]
                 }
             ],
+        }
+        const signalStreamsPre = compositionSnapshot.layers.flatMap(layer => layer.effects)
+            .map(effect => [effect.instanceId, effect.signals])
+            .map(([instanceId, signals]) => {
+                const obj = Object.entries(signals)
+                .map(([signalName, signalId]) => ({
+                        [signalName]: [interpolateSignalValue(timelineProject.data.signalKeyframes[signalId].map(kfId => timelineProject.data.keyframeData[kfId]), timelineProject.playheadPosition)]
+                }))
+                .reduce((acc, curr) => ({...acc, ...curr}), {});
+                return {
+                resource: `${instanceId}_signals`,
+                type: "setGlobals",
+                payload: [{
+                    ...obj
+                }]
+            }});
+        const signalStream = {
+            versionId: crypto.randomUUID(),
+            commands: signalStreamsPre,
         }
         const quadStream = {
             versionId: "default",
@@ -145,7 +165,9 @@ export default function Interior({ timeline, controls, graphics, composition, im
             ...buildControls(controlsSnapshot, registry),
             compositionGlobal: compositionGlobalStream,
             quadStream,
+            signals: signalStream,
         };
+        //console.log("RENDER STATE", renderState)
         renderer.attachAssets(imagesSnapshot);
         renderer.setState(registry.currentSourceId, renderState);
     }, [renderer, controls, timelineProject, frameSaver, registry, dimensions, composition, images,totalFrame]);

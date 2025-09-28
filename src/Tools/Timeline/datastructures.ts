@@ -41,43 +41,21 @@ const defaultTimelineData = {
             playheadPosition: 12
         },
         signals: [
-            "exampleSignal", "testSignal2", "testSignal3"
+            "exampleCircle_signal1"
         ],
         signalMetadata: {
-            exampleSignal: {
+            exampleCircle_signal1: {
                 name: "Test Signal",
             },
-            testSignal2: {
-                name: "Test Signal 2",
-            },
-            testSignal3: {
-                name: "Test Signal 3",
-            }
         },
         signalKeyframes: {
-            exampleSignal: ["testKeyframe"],
-            testSignal2: ["testKeyframe2"],
-            testSignal3: ["testKeyframe3"]
+            exampleCircle_signal1: ["testKeyframe"]
         },
         keyframeData: {
             testKeyframe: {
                 type: "number",
                 value: 0,
                 frame: 0,
-                inControls: [0, 0],
-                outControls: [0, 0]
-            },
-            testKeyframe2: {
-                type: "number",
-                value: 0,
-                frame: 15,
-                inControls: [0, 0],
-                outControls: [0, 0]
-            },
-            testKeyframe3: {
-                type: "number",
-                value: 0,
-                frame: 7,
                 inControls: [0, 0],
                 outControls: [0, 0]
             }
@@ -92,7 +70,9 @@ type CompositionData = {
         id: string,
         effects: {
             instanceId: string,
-            signals: string[]
+            signals: {
+                [signalName: string]: string
+            }
         }[]
     }[]
 }
@@ -106,30 +86,8 @@ const defaultCompositionData = {
             {
                 id: "layer1",
                 effects: [
-                    {
-                        instanceId: "exampleCircle",
-                        signals: ["exampleSignal","testSignal2"]
-                    }
                 ]
             },
-            {
-                id: "layer2",
-                effects: [
-                    {
-                        instanceId: "someEffect2",
-                        signals: ["testSignal3"]
-                    },
-                ]
-            },
-            {
-                id: "layer3",
-                effects: [
-                    {
-                        instanceId: "someEffect3",
-                        signals: []
-                    }
-                ]
-            }
         ]
 
     }

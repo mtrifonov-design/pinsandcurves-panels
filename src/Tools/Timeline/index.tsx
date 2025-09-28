@@ -11,6 +11,7 @@ import { exampleCircleGraphics } from "./exampleCircle";
 
 
 function Interior({ state, updateState }: { state: any; updateState: (entry: any) => void }) {
+    console.log(state)
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             keyHandler(e, state, updateState);

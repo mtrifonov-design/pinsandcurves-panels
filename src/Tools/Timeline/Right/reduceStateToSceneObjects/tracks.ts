@@ -19,10 +19,10 @@ function stateToTracks(state: State) {
                 return;
             }
 
-            effect.signals.forEach(signal => {
-                signalToTrack.set(signal, currentTrack);
+            Object.entries(effect.signals).forEach(([signalName, signalId]) => {
+                signalToTrack.set(signalId, currentTrack);
                 tracks.push({
-                    id: signal,
+                    id: signalId,
                     __pre_geometry: {
                         x: [0, "screen"],
                         y: [currentTrack,"world"],

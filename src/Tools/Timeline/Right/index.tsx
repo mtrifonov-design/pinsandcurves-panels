@@ -29,6 +29,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
         }
     }, true);
 
+    const firstResizeRef = useRef(true);
     useEffect(() => {
             const canvas = canvasRef.current;
             if (!canvas) return;
@@ -53,11 +54,14 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
                 }
             }
             window.addEventListener('resize', handleResize);
-            handleResize();
+            if (firstResizeRef.current) {
+                handleResize();
+                firstResizeRef.current = false;
+            }
             return () => {
                 window.removeEventListener('resize', handleResize);
             }
-        }, [canvasRef, containerRef])
+        }, [canvasRef, containerRef,state])
 
         useCamera(canvasRef, state, updateState);
         useInteraction(canvasRef, state, updateState, reducedSceneObjects);

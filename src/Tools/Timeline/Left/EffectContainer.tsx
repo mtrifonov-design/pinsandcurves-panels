@@ -6,6 +6,7 @@ import { produce } from "immer";
 import Signal from "./Signal";
 import { Icon } from "@mtrifonov-design/pinsandcurves-design";
 import styles from "./styles.module.css";
+import { DropdownMenu } from 'radix-ui'
 
 function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
     return <Icon iconName={open ? "keyboard_arrow_down" : "keyboard_arrow_up"} onClick={toggle}></Icon>;
@@ -39,16 +40,46 @@ function Effect({ state, effect, updateState, idx }: { effect: any, updateState:
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: selected ? "var(--gray2)" : "transparent",
+            justifyContent: "space-between",
             //borderLeft: "2px solid var(--gray2)",
         }}
         className={styles.rowStyle}
-        ><LittleHat open={open} toggle={() => setOpen(!open)} />
-            <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab",  paddingRight: "4px" }}>drag_indicator</span>
-            <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
-            fx: {effect.type} {effect.instanceId}
-            </span>
+        >
+            <div style={{
+                display: "flex",
+                flexDirection: "row",
+                alignItems: "center",
+                gap: "4px",
+            }}>
+                <LittleHat open={open} toggle={() => setOpen(!open)} />
+                <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab",  paddingRight: "4px" }}>drag_indicator</span>
+                <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
+                fx: {effect.type} {effect.instanceId}
+                </span>
+            </div>
+            <div>
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger asChild>
+                        <span className="materialSymbols" style={{ cursor: "pointer", paddingRight: "4px" }}>more_vert</span>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Portal>
+                        <DropdownMenu.Content side="top" align="end" className={styles.dropdownContent} sideOffset={5}>
+                            <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
+                                const nextState = produce(state, (draft: any) => {
+                                    draft.composition.data.layers.forEach((layer: any) => {
+                                        layer.effects = layer.effects.filter((e: any) => e.instanceId !== effect.instanceId);
+                                    });
+                                    draft.local.data.selection.currentSelection = { type: "none", contents: [] };
+                                });
+                                updateState(nextState);
+                            }}>Delete Effect</DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                    </DropdownMenu.Portal>
+                </DropdownMenu.Root>
+            </div>
+
         </div>
-        <div>{open && effect.signals.map((signal: any) => <Signal key={signal} state={state} signal={signal} updateState={updateState} />)}</div>
+        <div>{open && Object.entries(effect.signals).map(([signalName, signalId]) => <Signal key={signalId} state={state} signalId={signalId} signalName={signalName} updateState={updateState} />)}</div>
     </div>
 }
 

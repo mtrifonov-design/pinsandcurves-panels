@@ -26,15 +26,16 @@ function Value({ signal, state, value, updateState, setValue }: { signal: any, s
     </div>
 }
 
-function Signal({ signal, state, updateState }: { signal: any, updateState: (entry: any) => void }) {
+function Signal({ signalId, signalName, state, updateState }: { signalId: string, signalName: string, state: any, updateState: (entry: any) => void }) {
 
     const playheadPosition = state.timeline.data.general.playheadPosition;
-    const keyframes = state.timeline.data.signalKeyframes[signal].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
+    console.log(signalId)
+    const keyframes = state.timeline.data.signalKeyframes[signalId].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
     const value = interpolateSignalValue(keyframes, playheadPosition);
     const setValue = (newValue: number) => {
         // first we check whether a keyframe already exists at the current playhead position
         const playheadPosition = state.timeline.data.general.playheadPosition;
-        const keyframeIds = state.timeline.data.signalKeyframes[signal];
+        const keyframeIds = state.timeline.data.signalKeyframes[signalId];
         //const keyframes = keyframeIds.map((kfId: string) => state.timeline.data.keyframeData[kfId]);
         const existingKeyframeId = keyframeIds.find((kfId: string) => state.timeline.data.keyframeData[kfId].frame === playheadPosition);
         //const existingKeyframe = existingKeyframeId ? state.timeline.data.keyframeData[existingKeyframeId] : null;
@@ -54,7 +55,7 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
         const newState = produce(state, (draft: any) => {
             draft.timeline.data.keyframeData[newKeyframeId] = newKeyframe;
             if (!existingKeyframeId) {
-                draft.timeline.data.signalKeyframes[signal].push(newKeyframeId);
+                draft.timeline.data.signalKeyframes[signalId].push(newKeyframeId);
             }
         });
         updateState(newState);
@@ -77,7 +78,7 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
         // borderTopLeftRadius: "var(--borderRadiusSmall)",
         // borderBottomLeftRadius: "var(--borderRadiusSmall)"
     }}>
-        {signal}
+        {signalName}
         <div style={{
             display: "flex",
             flexDirection: "row",
@@ -85,8 +86,8 @@ function Signal({ signal, state, updateState }: { signal: any, updateState: (ent
             gap: "6px",
             
         }}>
-        <Rhombus signal={signal} state={state} updateState={updateState} value={value} setValue={setValue} />
-        <Value signal={signal} state={state} value={value} updateState={updateState} setValue={setValue} />
+        <Rhombus signal={signalId} state={state} updateState={updateState} value={value} setValue={setValue} />
+        <Value signal={signalId} state={state} value={value} updateState={updateState} setValue={setValue} />
 
         </div>
     </div>

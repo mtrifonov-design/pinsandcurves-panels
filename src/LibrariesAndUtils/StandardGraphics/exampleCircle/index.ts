@@ -11,6 +11,8 @@ function ExampleCircle({
     compositionGlobalSig,
     inputTexture,
     exportName,
+    signals,
+    signalsSig
 }: {
     quad: string,
     quadSig: string,
@@ -18,7 +20,9 @@ function ExampleCircle({
     compositionGlobal: string,
     compositionGlobalSig: string,
     inputTexture: string,
-    exportName: string
+    exportName: string,
+    signals: string,
+    signalsSig: string,
 }) {
     return build(ref => {
         return {
@@ -26,6 +30,7 @@ function ExampleCircle({
                 vertexSignature: quadSig,
                 globalSignatures: {
                     c: compositionGlobalSig,
+                    s: signalsSig,
                 },
                 vertexShader: `
                 out vec2 uv;
@@ -38,8 +43,8 @@ function ExampleCircle({
                 in vec2 uv;
                 void main() {
                     float r = length(uv - vec2(0.5));
-                    float radius = exampleSignal / 100.;
-                    float alpha = smoothstep(radius, radius - 0.02, r);
+                    float tR = radius / 100.;
+                    float alpha = smoothstep(tR, tR - 0.02, r);
                     outColor = vec4(1.0, 1.0, 1.0, alpha);
                 }
                 `,
@@ -57,7 +62,8 @@ function ExampleCircle({
                         program: ref("p_circle"),
                         vertex: quad,
                         globals: {
-                            c: compositionGlobal
+                            c: compositionGlobal,
+                            s: signals,
                         },
                         textures: {
                             //src: inputTexture

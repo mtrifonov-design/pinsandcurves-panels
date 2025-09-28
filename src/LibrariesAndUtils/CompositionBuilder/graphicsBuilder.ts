@@ -60,6 +60,20 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             });
             if (foundAssetEntry) {
                 if (!foundAssetEntry[0].endsWith(".graphics")) continue;
+                const effect = compDesc.layers.flatMap(l => l.effects).find(e => e.instanceId === instanceId);
+                if (!effect) continue;
+                const sig = {};
+                for (const signalName in effect.signals) {
+                    sig[signalName] = "float";
+                }
+                resources[instanceId +"_signalSig"] = GlobalSignature(sig);
+                const signals = Global({
+                    signature: ref(instanceId +"_signalSig"),
+                    exportName: instanceId +"_signals"
+                })
+                resources[instanceId +"_signals"] = signals;
+                externalBundle["signals"] = ref(instanceId +"_signals");
+                externalBundle["signalsSig"] = ref(instanceId +"_signalSig");
                 const processedId = foundAssetEntry[0].replace(".graphics", "");
                 resources[processedId] = Use(foundAssetEntry[1].source,{...externalBundle});
                 inputName = processedId + "_out";
