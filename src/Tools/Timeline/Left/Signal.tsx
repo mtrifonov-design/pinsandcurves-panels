@@ -64,12 +64,11 @@ function Signal({ signalId, signalName, state, updateState }: { signalId: string
     return <div style={{
         height: `${trackHeight}px`, 
         //borderLeft: "2px solid var(--gray2)",
-        marginLeft: "25px", 
+        marginLeft: "55px", 
     }} className={styles.rowStyle}>
         <div style={{ 
 
         height: `${trackHeight}px`,
-        
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
@@ -78,7 +77,14 @@ function Signal({ signalId, signalName, state, updateState }: { signalId: string
         // borderTopLeftRadius: "var(--borderRadiusSmall)",
         // borderBottomLeftRadius: "var(--borderRadiusSmall)"
     }}>
-        {signalName}
+        <span style={{
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
+        }}>
+            <span className="materialSymbols">vital_signs</span>
+            <span style={{paddingLeft: "8px"}}>{signalName}</span>
+        </span>
         <div style={{
             display: "flex",
             flexDirection: "row",

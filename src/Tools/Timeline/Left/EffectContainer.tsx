@@ -7,6 +7,7 @@ import Signal from "./Signal";
 import { Icon } from "@mtrifonov-design/pinsandcurves-design";
 import styles from "./styles.module.css";
 import { DropdownMenu } from 'radix-ui'
+import { ToggleExpand } from "./UIComponents";
 
 function LittleHat({ open, toggle }: { open: boolean, toggle: () => void }) {
     return <Icon iconName={open ? "keyboard_arrow_down" : "keyboard_arrow_up"} onClick={toggle}></Icon>;
@@ -34,16 +35,19 @@ function Effect({ state, effect, updateState, idx }: { effect: any, updateState:
         });
         updateState(nextState);
     };
-    return <div style={{ marginLeft: "20px" }}>
+    return <div style={{ 
+        backgroundColor: "#00000050"
+    }}>
         <div style={{ height: `${trackHeight}px`,
             display: "flex",
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: selected ? "var(--gray2)" : "transparent",
             justifyContent: "space-between",
+            marginLeft: "20px"
             //borderLeft: "2px solid var(--gray2)",
         }}
-        className={styles.rowStyle}
+        className={styles.rowStyle+" "+styles.showOnHover}
         >
             <div style={{
                 display: "flex",
@@ -51,16 +55,16 @@ function Effect({ state, effect, updateState, idx }: { effect: any, updateState:
                 alignItems: "center",
                 gap: "4px",
             }}>
-                <LittleHat open={open} toggle={() => setOpen(!open)} />
-                <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab",  paddingRight: "4px" }}>drag_indicator</span>
-                <span onClick={select} style={{ cursor: "pointer", userSelect: "none" }}>
-                fx: {effect.type} {effect.instanceId}
+                <span className="materialSymbols" onPointerDown={onPointerDown} style={{cursor: "grab",  paddingRight: "4px",paddingLeft: "4px", opacity: "var(--hoverOpacity)" }}>drag_indicator</span>
+                <ToggleExpand open={open} toggle={() => setOpen(!open)} />
+                <span onClick={select} style={{ cursor: "pointer", userSelect: "none", color: "var(--gray7)" }}>
+                {effect.effectName}
                 </span>
             </div>
             <div>
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
-                        <span className="materialSymbols" style={{ cursor: "pointer", paddingRight: "4px" }}>more_vert</span>
+                        <span className="materialSymbols" style={{ cursor: "pointer", paddingRight: "4px",  }}>more_vert</span>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Portal>
                         <DropdownMenu.Content side="top" align="end" className={styles.dropdownContent} sideOffset={5}>

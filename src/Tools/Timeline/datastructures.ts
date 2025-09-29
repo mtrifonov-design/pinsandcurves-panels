@@ -85,6 +85,7 @@ const defaultCompositionData = {
         layers: [
             {
                 id: "layer1",
+                name: "Layer 1",
                 effects: [
                 ]
             },
