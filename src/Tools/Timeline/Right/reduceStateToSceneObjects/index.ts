@@ -51,11 +51,12 @@ function reduceStateToSceneObjects(state: State) : SceneObject[] {
     preSceneObjects.push(...tracks);
 
     const { keyframes } = stateToKeyframes(state, signalToTrack);
+    preSceneObjects.push(stateToTransformBox(state, signalToTrack));
     preSceneObjects.push(...keyframes);
     preSceneObjects.push(...stateToPlayhead(state));
     preSceneObjects.push(stateToSelectionBox(state));
     preSceneObjects.push(stateToSelectionContainer(state));
-    preSceneObjects.push(stateToTransformBox(state, signalToTrack));
+    
     // Reduce the state to scene objects
     preSceneObjects = preSceneObjects.filter(obj => obj !== undefined);
 

@@ -69,7 +69,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
 
     return <div  style={{backgroundColor: "var(--gray1)"}}>
         <div ref={containerRef} style={{ width: "100%", height: "calc(100vh - 24px)", overflow: "hidden", position: "relative" }}>
-        <canvas ref={canvasRef} style={{width:"100%",height:"100%",backgroundColor:"#222"}}></canvas>
+        <canvas ref={canvasRef} style={{width:"100%",height:"100%",backgroundColor:"#00000080", borderRadius: "var(--borderRadiusSmall)"}}></canvas>
         </div>
     </div>;
 }

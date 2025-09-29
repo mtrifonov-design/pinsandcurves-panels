@@ -38,6 +38,7 @@ function stateToTransformBox(state: any, signalToTrack: Map<string, number>) {
 
     const transformBoxObj : PreSceneObject = {
         id: "transformBox",
+        renderer: "transformBox",
         __pre_geometry: {
             x: [topLeft.x, "world"],
             y: [topLeft.y, "world"],

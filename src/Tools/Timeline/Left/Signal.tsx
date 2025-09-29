@@ -13,13 +13,13 @@ function Rhombus({ signal, state, updateState, value, setValue } : { state: any,
     const onClick = () => {
         setValue(value);
     }
-    return <Icon iconName="stat_0" color={isActive ? "red" : "gray"} onClick={onClick} />
+    return <Icon iconName="stat_0" color={isActive ? "var(--yellow3)" : "gray"} onClick={onClick} />
 }
 
 function Value({ signal, state, value, updateState, setValue }: { signal: any, state: any, value: number, updateState: (entry: any) => void, setValue: (value: number) => void }) {
     return <div>
         <NumberInput
-            initialValue={value}
+            initialValue={Number(value.toFixed(2))}
             onChange={(newValue) => setValue(newValue)}
             step={0.01}
         />

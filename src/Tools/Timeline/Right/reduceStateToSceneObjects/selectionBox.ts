@@ -8,6 +8,7 @@ function stateToSelectionBox(state: any) {
 
     const selectionBoxObj : PreSceneObject = {
         id: "selectionBox",
+        renderer: "selectionBox",
         __pre_geometry: {
             x: [selectionBox ? selectionBox.x : 0, "screen"],
             y: [selectionBox ? selectionBox.y : 0, "screen"],

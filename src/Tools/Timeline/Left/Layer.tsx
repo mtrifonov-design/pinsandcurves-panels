@@ -127,14 +127,14 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
             <div>
                 <DropdownMenu.Root>
                     <DropdownMenu.Trigger asChild>
-                        <span className="materialSymbols" style={{ cursor: "pointer", paddingRight: "4px", opacity: "var(--hoverOpacity)" }}>more_vert</span>
+                        <span className="materialSymbols" style={{ cursor: "pointer", paddingRight: "4px" }}>more_vert</span>
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Portal>
-                        <DropdownMenu.Content>
-                            <DropdownMenu.Item onSelect={() => {
+                        <DropdownMenu.Content className={styles.dropdownContent}>
+                            <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
                                 addCircle(state, updateState, FreeWorkload);
-                            }} className={styles.dropdownItem}>Add Circle</DropdownMenu.Item>
-                            <DropdownMenu.Item onSelect={() => {
+                            }}>Add Circle</DropdownMenu.Item>
+                            <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
                                 const nextState = produce(state, (draft: any) => {
                                     draft.composition.data.layers = draft.composition.data.layers.filter((l: any) => l.id !== layer.id);
                                     draft.local.data.selection.currentSelection = { type: "none", contents: [] };

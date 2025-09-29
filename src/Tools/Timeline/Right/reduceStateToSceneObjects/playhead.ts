@@ -7,6 +7,7 @@ function stateToPlayhead(state: State) {
 
     const playheadLine = {
         id: "playheadLine",
+        renderer: "wireframe",
         __pre_geometry: {
             x: [state.timeline.data.general.playheadPosition, "world"],
             y: [0, "screen"],
@@ -24,6 +25,7 @@ function stateToPlayhead(state: State) {
             w: [30, "screen"],
             h: [30, "screen"],
         },
+        renderer: "wireframe",
         interaction: {
             pointerDown: {
                 type: "hit",

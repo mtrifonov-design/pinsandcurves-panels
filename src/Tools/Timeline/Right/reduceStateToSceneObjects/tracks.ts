@@ -23,6 +23,7 @@ function stateToTracks(state: State) {
                 signalToTrack.set(signalId, currentTrack);
                 tracks.push({
                     id: signalId,
+                    renderer: "track",
                     __pre_geometry: {
                         x: [0, "screen"],
                         y: [currentTrack,"world"],
