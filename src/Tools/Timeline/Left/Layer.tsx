@@ -11,11 +11,11 @@ import CONFIG from "../../../Config";
 import { ToggleExpand } from "./UIComponents";
 
 
-function addCircle(state: any, updateState: (entry: any) => void, FreeWorkload: any) {
+function addCircle(layerIdx: number, state: any, updateState: (entry: any) => void, FreeWorkload: any) {
     const instanceId = 'circle_'+crypto.randomUUID();
     const { assetsToCreate, signalsToCreate, effectSignature } = createEffect("exampleCircle", instanceId);
     const nextState = produce(state, (draft: any) => {
-        draft.composition.data.layers[0].effects.push(effectSignature);
+        draft.composition.data.layers[layerIdx].effects.push(effectSignature);
         draft.timeline.data.signals.push(...signalsToCreate);
         signalsToCreate.forEach((signal: string) => {
             draft.timeline.data.signalKeyframes[signal] = [];
@@ -132,7 +132,7 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
                     <DropdownMenu.Portal>
                         <DropdownMenu.Content className={styles.dropdownContent}>
                             <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
-                                addCircle(state, updateState, FreeWorkload);
+                                addCircle(idx, state, updateState, FreeWorkload);
                             }}>Add Circle</DropdownMenu.Item>
                             <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
                                 const nextState = produce(state, (draft: any) => {
