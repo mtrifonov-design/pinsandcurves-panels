@@ -1,5 +1,7 @@
 import { SceneObject } from "../reduceStateToSceneObjects";
 import renderKeyframe from "./keyframe";
+import renderPlayhead from "./playhead";
+import renderRuler from "./ruler";
 import renderSelectionBox from "./selectionBox";
 import renderTrack from "./track";
 import renderTransformBox from "./transformBox";
@@ -16,12 +18,16 @@ const Renderers = {
     keyframe: renderKeyframe,
     selectionBox: renderSelectionBox,
     transformBox: renderTransformBox,
+    ruler: renderRuler,
+    playhead: renderPlayhead,
 }
 
 function renderSceneObjects(ctx: CanvasRenderingContext2D, sceneObjects: SceneObject[]) {
     sceneObjects.forEach(obj => {
         if (obj.renderer && Renderers[obj.renderer]) {
+            ctx.save();
             Renderers[obj.renderer](ctx, obj);
+            ctx.restore();
             return;
         }
     });

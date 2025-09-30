@@ -7,7 +7,8 @@ function stateToPlayhead(state: State) {
 
     const playheadLine = {
         id: "playheadLine",
-        renderer: "wireframe",
+        renderer: "playhead",
+        playhead_type: "line",
         __pre_geometry: {
             x: [state.timeline.data.general.playheadPosition, "world"],
             y: [0, "screen"],
@@ -25,7 +26,8 @@ function stateToPlayhead(state: State) {
             w: [30, "screen"],
             h: [30, "screen"],
         },
-        renderer: "wireframe",
+        renderer: "playhead",
+        playhead_type: "triangle",
         interaction: {
             pointerDown: {
                 type: "hit",
@@ -43,8 +45,9 @@ function stateToPlayhead(state: State) {
         },
         zIndex: 2,
     }
-    objs.push(playheadTriangle);
     objs.push(playheadLine);
+    objs.push(playheadTriangle);
+
 
     return objs;
 }
