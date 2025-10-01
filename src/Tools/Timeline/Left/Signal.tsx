@@ -29,7 +29,7 @@ function Value({ signal, state, value, updateState, setValue }: { signal: any, s
 function Signal({ signalId, signalName, state, updateState }: { signalId: string, signalName: string, state: any, updateState: (entry: any) => void }) {
 
     const playheadPosition = state.timeline.data.general.playheadPosition;
-    console.log(signalId)
+    //console.log(signalId)
     const keyframes = state.timeline.data.signalKeyframes[signalId].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
     const value = interpolateSignalValue(keyframes, playheadPosition);
     const setValue = (newValue: number) => {

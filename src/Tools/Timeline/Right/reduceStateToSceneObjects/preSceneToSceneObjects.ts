@@ -77,7 +77,7 @@ function preSceneToSceneObjects(preSceneObjects: PreSceneObject[], state: State)
             }
         };
     });
-    console.log(finalSceneObjects);
+    //console.log(finalSceneObjects);
     return finalSceneObjects;
 
 }

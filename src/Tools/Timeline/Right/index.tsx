@@ -65,7 +65,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
 
         useCamera(canvasRef, state, updateState);
         useInteraction(canvasRef, state, updateState, reducedSceneObjects);
-        console.log(state.local.data.timelineUI.selectionMachineState);
+        //console.log(state.local.data.timelineUI.selectionMachineState);
 
     return <div  style={{backgroundColor: "var(--gray1)"}}>
         <div ref={containerRef} style={{ width: "100%", height: "calc(100vh - 24px)", overflow: "hidden", position: "relative" }}>

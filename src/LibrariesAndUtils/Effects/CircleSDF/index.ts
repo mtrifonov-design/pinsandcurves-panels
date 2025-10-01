@@ -1,9 +1,9 @@
 import { exportResources, external } from "../../NectarGL/Builder";
-import ExampleCircle from "../../StandardGraphics/exampleCircle";
+import Main from "./graphics";
 
 
-function exampleCircleGraphics() {
-    return exportResources(ExampleCircle({
+function MainGraphics() {
+    return exportResources(Main({
         quad: external("quad"),
         quadSig: external("quadSig"),
         canvasSig: external("canvasSig"),
@@ -23,13 +23,13 @@ function createEffect(instanceId: string) {
             metadata: { type: "graphics" },
             data: {
                 sourceId: "start", 
-                source: exampleCircleGraphics()
+                source: MainGraphics()
             }
         }],
         signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
         effectSignature: {
             instanceId,
-            effectName: "exampleCircle",
+            effectName: "circleSDF",
             signals: {
                 radius: `${instanceId}_signal1`,
                 posX: `${instanceId}_signal2`,

@@ -5,15 +5,15 @@ import EffectContainer from "./EffectContainer";
 import { Icon, SimpleCommittedTextInput } from "@mtrifonov-design/pinsandcurves-design";
 import styles from "./styles.module.css";
 import { DropdownMenu } from "radix-ui";
-import { createEffect } from "../../../LibrariesAndUtils/Effects";
+import { createEffect, effectsList } from "../../../LibrariesAndUtils/Effects";
 import { useCK } from "../../../CK_Adapter/CK_Provider";
 import CONFIG from "../../../Config";
 import { ToggleExpand } from "./UIComponents";
 
 
-function addCircle(layerIdx: number, state: any, updateState: (entry: any) => void, FreeWorkload: any) {
-    const instanceId = 'circle_'+crypto.randomUUID();
-    const { assetsToCreate, signalsToCreate, effectSignature } = createEffect("exampleCircle", instanceId);
+function addEffect(layerIdx: number, effectName: string, state: any, updateState: (entry: any) => void, FreeWorkload: any) {
+    const instanceId = 'fx_'+crypto.randomUUID();
+    const { assetsToCreate, signalsToCreate, effectSignature } = createEffect(effectName, instanceId);
     const nextState = produce(state, (draft: any) => {
         draft.composition.data.layers[layerIdx].effects.push(effectSignature);
         draft.timeline.data.signals.push(...signalsToCreate);
@@ -131,9 +131,12 @@ function Layer({ layer, state, updateState, idx }: { layer: any, state: any, upd
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Portal>
                         <DropdownMenu.Content className={styles.dropdownContent}>
-                            <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
-                                addCircle(idx, state, updateState, FreeWorkload);
-                            }}>Add Circle</DropdownMenu.Item>
+                            {effectsList.map((effectName, effectIdx) => (<DropdownMenu.Item key={effectIdx} className={styles.dropdownItem} onSelect={() => {
+                                addEffect(idx, effectName, state, updateState, FreeWorkload);
+                            }}>Add {effectName}</DropdownMenu.Item>))}
+                            {/* <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
+                                addEffect(idx, "exampleCircle", state, updateState, FreeWorkload);
+                            }}>Add Circle</DropdownMenu.Item> */}
                             <DropdownMenu.Item className={styles.dropdownItem} onSelect={() => {
                                 const nextState = produce(state, (draft: any) => {
                                     draft.composition.data.layers = draft.composition.data.layers.filter((l: any) => l.id !== layer.id);

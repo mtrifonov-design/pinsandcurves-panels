@@ -92,7 +92,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
         if (newRegistry.currentSourceId !== registry.currentSourceId) {
             setRegistry(newRegistry);
         }
-        console.log("GFX", gfx())
+        //console.log("GFX", gfx())
         frameSaver.setSize(compositionSnapshot.canvasDimensions[0], compositionSnapshot.canvasDimensions[1]);
         frameSaver.setName(compositionSnapshot.compositionName);
         renderer.setSource(registry.currentSourceId, gfx(""));
