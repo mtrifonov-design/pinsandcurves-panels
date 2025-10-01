@@ -2,8 +2,8 @@
 import * as exampleCircleEffect from "./ExampleCircle";
 import * as circleSDFEffect from "./CircleSDF";
 import * as bandsSDFEffect from "./BandsShadeSDF";
-import * as baseSDFEffect from "./BaseSDF";
-
+import * as patternSDFEffect from "./PatternShadeSDF";
+import * as defaultBGEffect from "./DefaultBG";
 // return a list of assets to be created, and a list of signals to be created, as well as an effect signature object
 function createEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "exampleCircle") {
@@ -15,8 +15,11 @@ function createEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "BandsShadeSDF") {
         return bandsSDFEffect.createEffect(effectInstanceId);
     }
-    if (effectName === "BaseSDF") {
-        return baseSDFEffect.createEffect(effectInstanceId);
+    if (effectName === "patternShadeSDF") {
+        return patternSDFEffect.createEffect(effectInstanceId);
+    }
+    if (effectName === "defaultBG") {
+        return defaultBGEffect.createEffect(effectInstanceId);
     }
     throw new Error(`Effect ${effectName} not found`);
 
@@ -33,8 +36,11 @@ function deleteEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "BandsShadeSDF") {
         return bandsSDFEffect.deleteEffect(effectInstanceId);
     }
-    if (effectName === "BaseSDF") {
-        return baseSDFEffect.deleteEffect(effectInstanceId);
+    if (effectName === "patternShadeSDF") {
+        return patternSDFEffect.deleteEffect(effectInstanceId);
+    }
+    if (effectName === "defaultBG") {
+        return defaultBGEffect.deleteEffect(effectInstanceId);
     }
     throw new Error(`Effect ${effectName} not found`);
 }
@@ -43,7 +49,8 @@ const effectsList = [
     "exampleCircle",
     "CircleSDF",
     "BandsShadeSDF",
-    "BaseSDF",
+    "patternShadeSDF",
+    "defaultBG",
 ];
 
 export { createEffect, deleteEffect, effectsList };

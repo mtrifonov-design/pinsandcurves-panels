@@ -89,7 +89,9 @@ class ProgramProvider {
         if (!this.gl.getShaderParameter(vertexShader, this.gl.COMPILE_STATUS)) {
             const error = this.gl.getShaderInfoLog(vertexShader);
             this.gl.deleteShader(vertexShader);
+            console.log(vertexShaderSource)
             throw new Error(`Vertex shader compilation failed: ${error}`);
+
         }
         const fragmentShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
         if (!fragmentShader) {

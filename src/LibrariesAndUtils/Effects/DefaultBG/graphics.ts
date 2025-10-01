@@ -6,7 +6,6 @@ function Main({
     quad,
     quadSig,
     canvasSig,
-    sdfSig,
     compositionGlobal,
     compositionGlobalSig,
     inputTexture,
@@ -18,7 +17,6 @@ function Main({
     quad: string,
     quadSig: string,
     canvasSig: string,
-    sdfSig: string,
     compositionGlobal: string,
     compositionGlobalSig: string,
     inputTexture: string,
@@ -33,64 +31,36 @@ function Main({
                 vertexSignature: quadSig,
                 globalSignatures: {
                     c: compositionGlobalSig,
-                    s: signalsSig,
                 },
                 vertexShader: `
                 out vec2 uv;
                 void main() {
+
+                    // correct uv for aspect ratio
                     uv = position / 2. + vec2(0.5);
                     gl_Position = vec4(position.xy, 0.0, 1.0);
                 }
                 `,
                 fragmentShader: `
                 in vec2 uv;
-
-                float smin( float a, float b, float k)
-                {
-                    k *= 4.0;
-                    float h = max( k-abs(a-b), 0.0 )/k;
-                    return min(a,b) - h*h*k*(1.0/4.0);
-                }
-
                 void main() {
-                    float aspect = canvas.x / canvas.y;
-                    vec4 prevPx = texture(src, uv);
-                    float d_prev = prevPx.r;
-                    vec2 C = vec2((posX / 100.0), (posY / 100.0));
-                    float R = radius / 100.0;
-                    // adjust C so that the circle can leave the screen (extend by radius in all directions)
-                    C = vec2(C.x * (1. + R * aspect), C.y * (1. + R));
-                    vec2 P  = vec2(uv.x * aspect, uv.y);
-                    vec2 Pc = vec2(C.x * aspect,  C.y);
 
-                    vec2 v = P - Pc;
-                    float lenv = length(v);
-                    float d_new = (lenv - R) - 100.;
-                    float d_out;
-                    d_out = smin(d_new, d_prev, 0.1);
-                    //d_out = min(d_new, d_prev);
-                    outColor = vec4(d_out, d_out, d_out, 1.0);
+                outColor = vec4(0.1, 0.0, 0.0, 1.0);
                 }
                 `,
                 textures: {
-                    src: {
-                        filter: "nearest",
-                        wrap: "clamp",
-                    }
                 },
             }),
-            sdfOut: Texture({
-                signature: sdfSig,
+            out: Texture({
+                signature: canvasSig,
                 drawOps: [
                     {
                         program: ref("p_circle"),
                         vertex: quad,
                         globals: {
                             c: compositionGlobal,
-                            s: signals,
                         },
                         textures: {
-                            src: inputSDFTexture
                         }
                     },
                 ],

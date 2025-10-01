@@ -13,6 +13,7 @@ function MainGraphics() {
         exportName: "exampleCircle",
         signals: external("signals"),
         signalsSig: external("signalsSig"),
+        inputSDFTexture: external("inputSDFTexture"),
     }));
 }
 
@@ -26,14 +27,16 @@ function createEffect(instanceId: string) {
                 source: MainGraphics()
             }
         }],
-        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`],
         effectSignature: {
             instanceId,
-            effectName: "circleSDF",
+            effectName: "patternShadeSDF",
+            exportChannels: {
+                color: true,
+            },
             signals: {
-                radius: `${instanceId}_signal1`,
-                posX: `${instanceId}_signal2`,
-                posY: `${instanceId}_signal3`,
+                dist: `${instanceId}_signal1`,
+                freq: `${instanceId}_signal2`,
             }
         }
     }
@@ -42,7 +45,7 @@ function createEffect(instanceId: string) {
 function deleteEffect(instanceId: string) {
     return {
         assetsToDelete: [instanceId+".graphics"],
-        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`],
     }
 }
 

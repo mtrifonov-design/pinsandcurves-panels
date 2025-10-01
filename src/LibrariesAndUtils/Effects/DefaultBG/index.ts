@@ -27,16 +27,14 @@ function createEffect(instanceId: string) {
                 source: MainGraphics()
             }
         }],
-        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, ],
+        signalsToCreate: [],
         effectSignature: {
             instanceId,
-            effectName: "bandsShadeSDF",
+            effectName: "defaultBG",
             exportChannels: {
                 color: true,
             },
             signals: {
-                dist: `${instanceId}_signal1`,
-                width: `${instanceId}_signal2`,
             }
         }
     }
@@ -45,7 +43,7 @@ function createEffect(instanceId: string) {
 function deleteEffect(instanceId: string) {
     return {
         assetsToDelete: [instanceId+".graphics"],
-        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`],
+        signalsToDelete: [],
     }
 }
 

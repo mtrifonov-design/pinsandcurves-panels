@@ -7,9 +7,11 @@ function MainGraphics() {
         quad: external("quad"),
         quadSig: external("quadSig"),
         canvasSig: external("canvasSig"),
+        sdfSig: external("sdfSig"),
         compositionGlobal: external("compositionGlobal"),
         compositionGlobalSig: external("compositionGlobalSig"),
         inputTexture: external("inputTexture"),
+        inputSDFTexture: external("inputSDFTexture"),
         exportName: "exampleCircle",
         signals: external("signals"),
         signalsSig: external("signalsSig"),
@@ -30,6 +32,9 @@ function createEffect(instanceId: string) {
         effectSignature: {
             instanceId,
             effectName: "circleSDF",
+            exportChannels: {
+                sdf: true,
+            },
             signals: {
                 radius: `${instanceId}_signal1`,
                 posX: `${instanceId}_signal2`,

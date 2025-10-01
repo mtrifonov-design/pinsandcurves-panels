@@ -199,7 +199,13 @@ export class DynamicTexture extends VariableResource {
         this.gl.clearColor(0, 0, 0, 0);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.disable(this.gl.DEPTH_TEST);
-        this.gl.enable(this.gl.BLEND);
+
+        // if buffer is for float, don't use blending
+        if (sig.type === "R32F" || sig.type === "RGBA32F") {
+            this.gl.disable(this.gl.BLEND);
+        } else {
+            this.gl.enable(this.gl.BLEND);
+        }
 
 
         for (const drawOp of this.data.drawOps) {
