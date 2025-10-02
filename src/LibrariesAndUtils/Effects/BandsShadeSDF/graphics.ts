@@ -56,9 +56,9 @@ function Main({
                 float dist_d = dist / 100.;
                 float width_d = width / 100.;
                 width_d = width_d < 0.01 ? 0.01 : width_d;
-                float alph = smoothstep(0. + dist_d,0.01 + dist_d, sdfVal) * smoothstep(width_d + dist_d, width_d - 0.01 + dist_d, sdfVal);
+                float alph = smoothstep(0. + dist_d - width_d / 2.,0.01 + dist_d - width_d / 2.0, sdfVal) * smoothstep(width_d / 2. + dist_d, width_d / 2. - 0.01 + dist_d, sdfVal);
                 // map value to dist - dist+width to 0 1
-                float rel = (sdfVal - dist_d) / width_d;
+                float rel = (sdfVal - dist_d + width_d / 2.) / width_d;
                 //rel = pow((rel - 0.5) * 2., 2.0);
                 vec3 color1 = vec3(1.0, 0.2, 0.4);
                 vec3 color2 = vec3(0.0, 0.0, 1.0);
@@ -68,6 +68,7 @@ function Main({
                 vec3 finalCol = mix(srcPx.rgb * srcPx.a, mixed, alph);
                 float finalAlph = max(srcPx.a, alph);
                 outColor = vec4(finalCol, finalAlph);
+                //outColor = vec4(prev.rgb +vec3(0.5), 1.0); // TEMPORARY FIX - REMOVE LATER
 }
                 `,
                 textures: {

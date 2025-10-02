@@ -45,12 +45,32 @@ function Main({
                 fragmentShader: `
                 in vec2 uv;
 
-                // float smin( float a, float b, float k)
-                // {
-                //     k *= 4.0;
-                //     float h = max( k-abs(a-b), 0.0 )/k;
-                //     return min(a,b) - h*h*k*(1.0/4.0);
-                // }
+                vec3 sdgHeart( in vec2 p )
+                {
+                    float sx = (p.x<0.0)?-1.0:1.0;
+                    p.x = abs(p.x);
+                
+                    if( p.y+p.x>1.0 )
+                    {
+                        const float r = sqrt(2.0)/4.0;
+                        vec2 q0 = p - vec2(0.25,0.75);
+                        float l = length(q0);
+                        vec3 d = vec3(l-r, q0/l);
+                        d.y *= sx;
+                        return d;
+                    }
+                    else
+                    {
+                        vec2 q1 = p - vec2(0.0,1.0);      vec3 d1 = vec3(dot(q1,q1),q1);
+                        vec2 q2 = p - 0.5*max(p.x+p.y,0.0); vec3 d2 = vec3(dot(q2,q2),q2);
+                        vec3 d = (d1.x<d2.x) ? d1: d2;
+                        d.x = sqrt(d.x);
+                        d.yz /= d.x;
+                        d *= (p.x>p.y)?1.0:-1.0;
+                        d.y *= sx;
+                        return d;
+                    }
+                }
                 vec3 smin( in vec3 a, in vec3 b, in float k )
                 {
                     k *= 4.0;
@@ -71,10 +91,10 @@ function Main({
                     vec2 Pc = vec2(C.x * aspect,  C.y);
 
                     vec2 v = P - Pc;
-                    float lenv = length(v);
-                    float d_new = (lenv - R) - 100.;
-                    vec2 g = v / lenv;
-                    vec3 o = smin(vec3(d_new,g.x,g.y), prevPx.rgb, 0.1);
+                    R = R < 1e-5 ? 1e-5 : R;
+                    vec3 newHeart = sdgHeart(v / R); 
+                    newHeart.x -= 100.;
+                    vec3 o = smin(newHeart, prevPx.rgb, 0.1);
                     outColor = vec4(o, 1.0);
                 }
                 `,

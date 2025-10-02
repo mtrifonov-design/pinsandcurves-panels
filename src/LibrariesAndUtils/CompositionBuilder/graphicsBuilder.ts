@@ -18,7 +18,7 @@ function buildGraphics(graphicsAssetsEntries: [string, GraphicAsset][], compDesc
             size: [compDesc.canvasDimensions[0], compDesc.canvasDimensions[1]],
         });
         const __sdfSig = TextureSignature({
-            type: "R32F",
+            type: "RGBA32F",
             size: [compDesc.canvasDimensions[0], compDesc.canvasDimensions[1]],
         });
         const __compositionGlobalSig = GlobalSignature({
