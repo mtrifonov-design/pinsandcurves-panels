@@ -66,7 +66,7 @@ function Main({
                     vec2 C = vec2((posX / 100.0), (posY / 100.0));
                     float R = radius / 100.0;
                     // adjust C so that the circle can leave the screen (extend by radius in all directions)
-                    C = vec2(C.x * (1. + aspect), C.y * (1.));
+                    C = vec2(C.x, C.y);
                     vec2 P  = vec2(uv.x * aspect, uv.y);
                     vec2 Pc = vec2(C.x * aspect,  C.y);
 
