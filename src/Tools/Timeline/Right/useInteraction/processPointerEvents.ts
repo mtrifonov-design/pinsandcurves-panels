@@ -4,6 +4,8 @@ import KeyframeManager from "./interactionManagers/keyframe";
 import SelectionBoxManager from "./interactionManagers/selectionBox";
 import SelectionContainerManager from "./interactionManagers/selectionContainer";
 import TransformBoxManager from "./interactionManagers/transformBox";
+import FocusRangeManager from "./interactionManagers/focusRange";
+
 
 function isPointInRect(point: {x: number, y: number}, rect: {x: number, y: number, w: number, h: number}) {
     return point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h;
@@ -15,6 +17,7 @@ const Managers = {
     selectionBox: new SelectionBoxManager(),
     selectionContainer: new SelectionContainerManager(),
     transformBox: new TransformBoxManager(),
+    focusRange: new FocusRangeManager()
 }
 
 function sortByZIndex(a: SceneObject, b: SceneObject) {

@@ -7,6 +7,11 @@ type SelectionMachineState =
 }
 | {
     type: 
+    | 'd_drag_focusRange'
+    handleType: "handle_left" | "handle_right";
+}
+| {
+    type: 
     | 'd_make_selection' 
     selectedPinIds: string[];
     selectionBox: {
@@ -42,10 +47,16 @@ type SelectionMachineEvent =
 | { 
     type: 
     | 'mousedown_resizebar'
+    | 'mouseup_focusRange'
     | 'mouseup_resizebar'
     | 'delete_selected_pins'
     | 'mousedown_playhead'
     | 'mouseup_playhead'
+}
+| { 
+    type: 
+    | 'mousedown_focusRange'
+    handleType: "handle_left" | "handle_right";
 }
 | { 
     type: 
@@ -114,7 +125,9 @@ const selectionMachine: SelectionMachine = (state, event) => {
                     return { type: 'd_transform_pins', selectedPinIds: [event.pinId], 
                         initial: event.initial, offsetX: 0, scaleX: 1};
                 case 'mousedown_playhead':
-                    return { type: 'd_drag_playhead'}
+                    return { type: 'd_drag_playhead'};
+                case 'mousedown_focusRange':
+                    return { type: 'd_drag_focusRange', handleType: event.handleType };
             }
             break;
         case 'd_make_selection':
@@ -130,6 +143,12 @@ const selectionMachine: SelectionMachine = (state, event) => {
         case 'd_resize_track':
             switch (event.type) {
                 case 'mouseup_resizebar':
+                    return { type: 's_start_no_pins_selected' };
+            }
+            break;
+        case 'd_drag_focusRange':
+            switch (event.type) {
+                case 'mouseup_focusRange':
                     return { type: 's_start_no_pins_selected' };
             }
             break;
@@ -160,6 +179,8 @@ const selectionMachine: SelectionMachine = (state, event) => {
 
                 case 'mousedown_playhead':
                     return { type: 'd_drag_playhead' };
+                case 'mousedown_focusRange':
+                    return { type: 'd_drag_focusRange'};
             }
             break;
         case 'd_transform_pins':

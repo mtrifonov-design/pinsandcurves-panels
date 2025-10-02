@@ -7,6 +7,7 @@ import stateToSelectionBox from "./selectionBox"
 import stateToSelectionContainer from "./selectionContainer"
 import stateToTransformBox from "./transformBox"
 import stateToRuler from "./ruler"
+import stateToFocusRange from "./focusRange"
 
 type GeometryComponent = {
     x: number,
@@ -57,6 +58,7 @@ function reduceStateToSceneObjects(state: State) : SceneObject[] {
     preSceneObjects.push(stateToSelectionBox(state));
     preSceneObjects.push(stateToSelectionContainer(state));
     preSceneObjects.push(...stateToRuler(state));
+    preSceneObjects.push(...stateToFocusRange(state));
     preSceneObjects.push(...stateToPlayhead(state));
     
     // Reduce the state to scene objects
