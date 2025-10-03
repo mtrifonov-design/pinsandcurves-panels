@@ -33,6 +33,7 @@ class Manager {
         const frame = Math.round(xWorld);
         const nextState = produce(state, (draft: any) => {
             draft.timeline.data.general.playheadPosition = frame;
+            draft.timeline.data.general.playing = false;
         });
         updateState(nextState);
     }

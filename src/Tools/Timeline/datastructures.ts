@@ -114,8 +114,8 @@ type LocalData = {
         }
     },
     timelineUI: {
-        draggingPlayhead: boolean,
         selectionMachineState: SelectionMachineState,
+        playheadPosition: number,
     },
     screen: {
         width: number,
@@ -155,6 +155,7 @@ const defaultLocalData = {
             selectionMachineState: {
                 type: "s_start_no_pins_selected",
             },
+            playheadPosition: 0,
         }
     }
 };

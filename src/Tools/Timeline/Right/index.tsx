@@ -6,6 +6,7 @@ import { produce } from "immer";
 import { trackHeight } from "./constants";
 import useCamera from "./useCamera";
 import useInteraction from "./useInteraction";
+import usePlayhead from "./usePlayhead";
 
 function TimelineRightSide({ state, updateState }: { state: any; updateState: any }) {
 
@@ -15,6 +16,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
         setReducedSceneObjects(objs);
     }, [state]);
 
+    //console.log(state.local.data.timelineUI.playheadPosition);
     
 
     const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -65,6 +67,7 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
 
         useCamera(canvasRef, state, updateState);
         useInteraction(canvasRef, state, updateState, reducedSceneObjects);
+        usePlayhead(state, updateState);
         //console.log(state.local.data.timelineUI.selectionMachineState);
 
     return <div  style={{backgroundColor: "var(--gray1)"}}>

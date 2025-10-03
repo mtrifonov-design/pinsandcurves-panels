@@ -55,10 +55,13 @@ function useAtomicState(state: { local: any; setLocal: any; timeline: any; compo
     const [atomicState, setAtomicState] = useState({ state: { local, timeline, composition }, epoch: 0 });
 
     useEffect(() => {
-        if (
+        const timelineAuthoredAtomicUpdate = (
             composition.epoch === timeline.epoch
             && local.epoch === timeline.epoch
             && local.epoch >= atomicState.epoch
+        )
+        if (
+            (timelineAuthoredAtomicUpdate)
         ) {
             setAtomicState({
                 state: { local, timeline, composition },

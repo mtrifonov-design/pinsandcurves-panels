@@ -2,6 +2,7 @@ import { SceneObject } from "../reduceStateToSceneObjects";
 
 function renderRuler(ctx: CanvasRenderingContext2D, obj: SceneObject) {
     if (obj.ruler_type === "background") {
+        
         const gradient = ctx.createLinearGradient(0, obj.geometry.y, 0, obj.geometry.y + obj.geometry.h);
         gradient.addColorStop(0.1, "#161e3620");
         gradient.addColorStop(0.7, "#161e36ff");

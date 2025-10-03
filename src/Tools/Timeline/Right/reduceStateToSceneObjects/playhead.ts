@@ -10,7 +10,7 @@ function stateToPlayhead(state: State) {
         renderer: "playhead",
         playhead_type: "line",
         __pre_geometry: {
-            x: [state.timeline.data.general.playheadPosition, "world"],
+            x: [state.local.data.timelineUI.playheadPosition, "world"],
             y: [0, "screen"],
             anchor: "center",
             w: [2, "screen"],
@@ -20,7 +20,7 @@ function stateToPlayhead(state: State) {
     const playheadTriangle = {
         id: "playheadTriangle",
         __pre_geometry: {
-            x: [state.timeline.data.general.playheadPosition, "world"],
+            x: [state.local.data.timelineUI.playheadPosition, "world"],
             y: [15, "screen"],
             anchor: "center",
             w: [30, "screen"],
