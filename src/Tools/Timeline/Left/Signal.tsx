@@ -6,7 +6,7 @@ import { produce } from "immer";
 import styles from "./styles.module.css";
 
 function Rhombus({ signal, state, updateState, value, setValue } : { state: any, updateState: (entry: any) => void, setValue: (value: number) => void }) {
-    const playheadPosition = state.timeline.data.general.playheadPosition;
+    const playheadPosition = state.local.data.timelineUI.playheadPosition;
     const keyframes = state.timeline.data.signalKeyframes[signal].map((kfId: string) => state.timeline.data.keyframeData[kfId]);
     const existingKeyframe = keyframes.find((kf: any) => kf.frame === playheadPosition);
     const isActive = existingKeyframe !== undefined;

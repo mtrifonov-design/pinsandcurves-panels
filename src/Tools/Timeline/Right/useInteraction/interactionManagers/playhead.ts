@@ -35,6 +35,7 @@ class Manager {
             // draft.timeline.data.general.playheadPosition = frame;
             // draft.timeline.data.general.playing = false;
             draft.local.data.timelineUI.playheadPosition = frame;
+            draft.timeline.data.general.playheadPosition = frame;
             draft.timeline.data.general.playing = false;
             draft.timeline.data.general.playingTimestamp = Date.now();
         });

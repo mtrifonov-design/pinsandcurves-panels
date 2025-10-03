@@ -6,6 +6,7 @@ import * as patternSDFEffect from "./PatternShadeSDF";
 import * as defaultBGEffect from "./DefaultBG";
 import * as sinDistortSDFEffect from "./SinDistortSDF";
 import * as heartSDFEffect from "./HeartSDF";
+import * as lineSDFEffect from "./LineSDF";
 // return a list of assets to be created, and a list of signals to be created, as well as an effect signature object
 function createEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "exampleCircle") {
@@ -28,6 +29,9 @@ function createEffect(effectName: string, effectInstanceId: string) {
     }
     if (effectName === "heartSDF") {
         return heartSDFEffect.createEffect(effectInstanceId);
+    }
+    if (effectName === "lineSDF") {
+        return lineSDFEffect.createEffect(effectInstanceId);
     }
     throw new Error(`Effect ${effectName} not found`);
 
@@ -56,6 +60,9 @@ function deleteEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "heartSDF") {
         return heartSDFEffect.deleteEffect(effectInstanceId);
     }
+    if (effectName === "lineSDF") {
+        return lineSDFEffect.deleteEffect(effectInstanceId);
+    }
     throw new Error(`Effect ${effectName} not found`);
 }
 
@@ -67,6 +74,7 @@ const effectsList = [
     "defaultBG",
     "sinDistortSDF",
     "heartSDF",
+    "lineSDF",
 ];
 
 export { createEffect, deleteEffect, effectsList };

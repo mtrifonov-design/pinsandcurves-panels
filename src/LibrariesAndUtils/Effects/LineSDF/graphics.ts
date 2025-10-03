@@ -120,23 +120,33 @@ function Main({
                     return vec3(min(a.x,b.x)-h*h*k,
                                 mix(a.yz,b.yz,(a.x<b.x)?h:1.0-h));
                 }
+                vec3 sdgSegment( in vec2 p, in vec2 a, in vec2 b, in float r )
+                {
+                    vec2 ba = b-a, pa = p-a;
+                    float h = clamp( dot(pa,ba)/dot(ba,ba), 0.0, 1.0 );
+                    vec2  q = pa-h*ba;
+                    float d = length(q);
+                    return vec3(d-r,q/d);
+                }
 
                 void main() {
                     float aspect = canvas.x / canvas.y;
                     vec4 prevPx = texture(src, uv);
                     float d_prev = prevPx.r;
-                    vec2 C = vec2((posX / 100.0), (posY / 100.0));
-                    float R = radius / 100.0;
-                    // adjust C so that the circle can leave the screen (extend by radius in all directions)
-                    C = vec2(C.x, C.y);
-                    vec2 P  = vec2(uv.x * aspect, uv.y);
-                    vec2 Pc = vec2(C.x * aspect,  C.y);
+                    vec2 PA = vec2((AposX / 100.0), (AposY / 100.0));
+                    
+                    vec2 PB = vec2((BposX / 100.0), (BposY / 100.0));
 
-                    vec2 v = P - Pc;
-                    float lenv = length(v);
-                    float d_new = (lenv - R) - 100.;
-                    vec2 g = v / lenv;
-                    vec3 o = smin(vec3(d_new,g.x,g.y), prevPx.rgb, 0.1);
+                    PA *= vec2(aspect, 1.0);
+                    PB *= vec2(aspect, 1.0);
+
+
+                    float R = radius / 100.0;
+                    vec2 P  = vec2(uv.x * aspect, uv.y);
+                    //vec2 Pc = vec2(C.x * aspect,  C.y);
+                    vec3 dgNew = sdgSegment(P, PA, PB, R);
+                    dgNew.x -= 100.;
+                    vec3 o = smin(dgNew, prevPx.rgb, 0.1);
                     outColor = vec4(o, 1.0);
                 }
                 `,

@@ -38,7 +38,7 @@ const defaultTimelineData = {
             numberOfFrames: 300,
             focusRange: [0, 150],
             frameRate: 30,
-            playheadPosition: 12
+            playheadPosition: 0
         },
         signals: [
             "exampleCircle_signal1"
