@@ -28,6 +28,7 @@ function stateToPlayhead(state: State) {
         },
         renderer: "playhead",
         playhead_type: "triangle",
+        cursor: "grabbing",
         interaction: {
             pointerDown: {
                 type: "hit",

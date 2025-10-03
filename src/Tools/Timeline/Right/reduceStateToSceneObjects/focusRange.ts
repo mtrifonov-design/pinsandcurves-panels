@@ -17,6 +17,7 @@ function stateToFocusRange(state: State) {
         id: "focusRangeLeftHandle",
         renderer: "focusRange",
         handle_type: "handle_left",
+        cursor: "ew-resize",
         __pre_geometry: {
             x: [state.timeline.data.general.focusRange[0], "world"],
             y: [30, "screen"],
@@ -45,6 +46,7 @@ function stateToFocusRange(state: State) {
         id: "focusRangeRightHandle",
         renderer: "focusRange",
         handle_type: "handle_right",
+        cursor: "ew-resize",
         __pre_geometry: {
             x: [state.timeline.data.general.focusRange[1], "world"],
             y: [30, "screen"],

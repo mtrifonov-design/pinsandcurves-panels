@@ -32,8 +32,11 @@ class Manager {
         const xWorld = (position.x / screen.width) * viewport.w + viewport.x;
         const frame = Math.round(xWorld);
         const nextState = produce(state, (draft: any) => {
-            draft.timeline.data.general.playheadPosition = frame;
+            // draft.timeline.data.general.playheadPosition = frame;
+            // draft.timeline.data.general.playing = false;
+            draft.local.data.timelineUI.playheadPosition = frame;
             draft.timeline.data.general.playing = false;
+            draft.timeline.data.general.playingTimestamp = Date.now();
         });
         updateState(nextState);
     }

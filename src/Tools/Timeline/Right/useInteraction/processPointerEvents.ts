@@ -83,4 +83,4 @@ function processPointerUp(position: {x: number, y: number}, state: any, updateSt
     }       
 }
 
-export { processPointerDown, processPointerMove, processPointerUp };
+export { processPointerDown, processPointerMove, processPointerUp, isPointInRect };

@@ -22,6 +22,7 @@ function stateToKeyframes(state: State, signalToTrack: Map<string, number>) {
                     },
                     keyframe: kf,
                     renderer: "keyframe",
+                    cursor: "pointer",
                     interaction: {
                         pointerDown: {
                             type: "hit",

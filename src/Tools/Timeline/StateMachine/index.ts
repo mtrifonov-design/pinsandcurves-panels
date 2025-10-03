@@ -1,9 +1,13 @@
 type SelectionMachineState = 
 | {
     type: 
-    | 's_start_no_pins_selected' 
     | 'd_resize_track' 
     | 'd_drag_playhead'
+}
+| {
+    type: 
+    | 's_start_no_pins_selected' 
+    cursor: "default";
 }
 | {
     type: 
@@ -44,6 +48,13 @@ type SelectionMachineState =
 
 
 type SelectionMachineEvent =
+| {
+    type: 
+    | "hover_focusRangeHandle"
+    | "hover_playhead"
+    | "hover_singlePin"
+    cursor: string;
+}
 | { 
     type: 
     | 'mousedown_resizebar'
@@ -128,6 +139,11 @@ const selectionMachine: SelectionMachine = (state, event) => {
                     return { type: 'd_drag_playhead'};
                 case 'mousedown_focusRange':
                     return { type: 'd_drag_focusRange', handleType: event.handleType };
+                case 'hover_focusRangeHandle':
+                case 'hover_playhead':
+                case 'hover_singlePin':
+                    console.log("hover event in state machine", event)
+                    return { type: 's_start_no_pins_selected', cursor: event.cursor };
             }
             break;
         case 'd_make_selection':

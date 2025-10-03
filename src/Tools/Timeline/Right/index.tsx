@@ -68,6 +68,8 @@ function TimelineRightSide({ state, updateState }: { state: any; updateState: an
         useCamera(canvasRef, state, updateState);
         useInteraction(canvasRef, state, updateState, reducedSceneObjects);
         usePlayhead(state, updateState);
+
+
         //console.log(state.local.data.timelineUI.selectionMachineState);
 
     return <div  style={{backgroundColor: "var(--gray1)"}}>
