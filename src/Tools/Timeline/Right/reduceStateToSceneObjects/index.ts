@@ -19,7 +19,7 @@ type GeometryComponent = {
 
 
 type __PreGeometryComponent = {
-    anchor: "center" | "top-left",
+    anchor: "center" | "top-left" | "top-center" | "top-right" | "center-right" | "bottom-right" | "bottom-center" | "bottom-left" | "center-left",
     x: [number, "world" | "screen"],
     y: [number, "world" | "screen"],
     w: [number, "world" | "screen"],

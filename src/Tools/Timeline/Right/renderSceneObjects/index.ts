@@ -1,4 +1,5 @@
 import { SceneObject } from "../reduceStateToSceneObjects";
+import renderFocusRange from "./focusRange";
 import renderKeyframe from "./keyframe";
 import renderPlayhead from "./playhead";
 import renderRuler from "./ruler";
@@ -20,6 +21,7 @@ const Renderers = {
     transformBox: renderTransformBox,
     ruler: renderRuler,
     playhead: renderPlayhead,
+    focusRange: renderFocusRange,
 }
 
 function renderSceneObjects(ctx: CanvasRenderingContext2D, sceneObjects: SceneObject[]) {

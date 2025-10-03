@@ -34,6 +34,7 @@ function createEffect(instanceId: string) {
             effectName: "circleSDF",
             exportChannels: {
                 sdf: true,
+                color: true,
             },
             signals: {
                 radius: `${instanceId}_signal1`,

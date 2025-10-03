@@ -13,7 +13,9 @@ export default function SetupUniforms(gl: WebGL2RenderingContext,resources: Map<
 
         // check if signature associated to this global matches signature stored in program
         const programGlobalId = program.data.globalSignatures[key];
+
         if (programGlobalId !== global.data.signature) {
+            //console.log("programGlobalId", programGlobalId, "global.data.signature", global.data.signature, "key", key, program.data);
             throw new Error("Global signature does not match program signature.");
         }
 

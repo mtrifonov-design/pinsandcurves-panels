@@ -41,6 +41,30 @@ function preSceneToSceneObjects(preSceneObjects: PreSceneObject[], state: State)
             x -= w / 2;
             y -= h / 2;
         }
+        else if (geo.anchor === "top-center") {
+            x -= w / 2;
+        }
+        else if (geo.anchor === "top-right") {
+            x -= w;
+        }
+        else if (geo.anchor === "center-right") {
+            x -= w;
+            y -= h / 2;
+        }
+        else if (geo.anchor === "bottom-right") {
+            x -= w;
+            y -= h;
+        }
+        else if (geo.anchor === "bottom-center") {
+            x -= w / 2;
+            y -= h;
+        }
+        else if (geo.anchor === "bottom-left") {
+            y -= h;
+        }
+        else if (geo.anchor === "center-left") {
+            y -= h / 2;
+        }
 
         sceneObjects.push({
             ...pso,

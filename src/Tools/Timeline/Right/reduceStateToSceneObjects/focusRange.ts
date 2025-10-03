@@ -4,25 +4,25 @@ import type { PreSceneObject, SceneObject, State } from ".";
 function stateToFocusRange(state: State) {
     const focusRangeBg : PreSceneObject = {
         id: "focusRangeBackground",
-        renderer: "wireframe",
+        renderer: "focusRange",
         __pre_geometry: {
             x: [state.timeline.data.general.focusRange[0], "world"],
-            y: [0, "screen"],
+            y: [30, "screen"],
             anchor: "top-left",
             w: [state.timeline.data.general.focusRange[1] - state.timeline.data.general.focusRange[0], "world"],
-            h: [1, "world"],
+            h: [0.5, "world"],
         },
     };
     const focusRangeLeftHandle : PreSceneObject = {
         id: "focusRangeLeftHandle",
-        renderer: "wireframe",
+        renderer: "focusRange",
         handle_type: "handle_left",
         __pre_geometry: {
             x: [state.timeline.data.general.focusRange[0], "world"],
-            y: [0.5, "world"],
-            anchor: "center",
+            y: [30, "screen"],
+            anchor: "top-center",
             w: [15, "screen"],
-            h: [1, "world"],
+            h: [0.5, "world"],
         },
         interaction: {
             pointerDown: {
@@ -43,14 +43,14 @@ function stateToFocusRange(state: State) {
     };
     const focusRangeRightHandle : PreSceneObject = {
         id: "focusRangeRightHandle",
-        renderer: "wireframe",
+        renderer: "focusRange",
         handle_type: "handle_right",
         __pre_geometry: {
             x: [state.timeline.data.general.focusRange[1], "world"],
-            y: [0.5, "world"],
-            anchor: "center",
+            y: [30, "screen"],
+            anchor: "top-center",
             w: [15, "screen"],
-            h: [1, "world"],
+            h: [0.5, "world"],
         },
         interaction: {
             pointerDown: {

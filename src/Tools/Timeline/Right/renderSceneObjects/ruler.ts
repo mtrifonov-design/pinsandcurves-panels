@@ -6,6 +6,7 @@ function renderRuler(ctx: CanvasRenderingContext2D, obj: SceneObject) {
         gradient.addColorStop(0.1, "#161e3620");
         gradient.addColorStop(0.7, "#161e36ff");
         ctx.fillStyle = gradient;
+        ctx.beginPath();
         ctx.roundRect(obj.geometry.x + 6, obj.geometry.y + 4, obj.geometry.w - 12, obj.geometry.h - 8, 5);
         ctx.fill();
     }
