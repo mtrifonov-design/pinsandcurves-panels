@@ -53,9 +53,12 @@ function Signal({ signalId, signalName, state, updateState }: { signalId: string
             newKeyframeId = existingKeyframeId;
         }
         const newState = produce(state, (draft: any) => {
-            draft.timeline.data.keyframeData[newKeyframeId] = newKeyframe;
+            if (existingKeyframeId) {
+                draft.timeline.data.keyframeData[existingKeyframeId].value = newValue;
+            }
             if (!existingKeyframeId) {
                 draft.timeline.data.signalKeyframes[signalId].push(newKeyframeId);
+                draft.timeline.data.keyframeData[newKeyframeId] = newKeyframe;
             }
         });
         updateState(newState);

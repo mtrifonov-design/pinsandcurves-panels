@@ -22,6 +22,10 @@ function stateToKeyframes(state: State, signalToTrack: Map<string, number>) {
                     },
                     keyframe: kf,
                     renderer: "keyframe",
+                    easingShape: {
+                        in: kf.inControls[0] === 0 && kf.inControls[1] === 0 ? "diamond" : "circle",
+                        out: kf.outControls[0] === 0 && kf.outControls[1] === 0 ? "diamond" : "circle",
+                    },
                     cursor: "pointer",
                     interaction: {
                         pointerDown: {

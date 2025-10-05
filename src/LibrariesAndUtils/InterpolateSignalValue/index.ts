@@ -1,3 +1,4 @@
+import interpolateBezier from "./interpolateBezier";
 
 type Keyframe = {
     type: number,
@@ -28,7 +29,8 @@ function interpolateSignalValue(keyframes : Keyframe[], playheadPosition: number
         const kf2 = sortedKeyframes[i + 1];
 
         if (playheadPosition >= kf1.frame && playheadPosition <= kf2.frame) {
-            const t = (playheadPosition - kf1.frame) / (kf2.frame - kf1.frame);
+            let t = (playheadPosition - kf1.frame) / (kf2.frame - kf1.frame);
+            t = interpolateBezier(kf1.outControls[0], kf1.outControls[1], kf2.inControls[0], kf2.inControls[1], t);
             return kf1.value * (1 - t) + kf2.value * t;
         }
     }
