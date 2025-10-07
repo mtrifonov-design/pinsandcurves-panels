@@ -27,17 +27,19 @@ function createEffect(instanceId: string) {
                 source: MainGraphics()
             }
         }],
-        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToCreate: [`${instanceId}_signal1`,`${instanceId}_signal2`,`${instanceId}_signal3`,`${instanceId}_signal4`,`${instanceId}_signal5`],
         effectSignature: {
             instanceId,
-            effectName: "caleidoShadeSDF",
+            effectName: "transform",
             exportChannels: {
                 color: true,
             },
             signals: {
-                posX: `${instanceId}_signal1`,
-                posY: `${instanceId}_signal2`,
-                numAxes: `${instanceId}_signal3`,
+                x: `${instanceId}_signal1`,
+                y: `${instanceId}_signal2`,
+                r: `${instanceId}_signal3`,
+                scale_x: `${instanceId}_signal4`,
+                scale_y: `${instanceId}_signal5`,
             }
         }
     }
@@ -46,7 +48,7 @@ function createEffect(instanceId: string) {
 function deleteEffect(instanceId: string) {
     return {
         assetsToDelete: [instanceId+".graphics"],
-        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToDelete: [`${instanceId}_signal1`,`${instanceId}_signal2`,`${instanceId}_signal3`,`${instanceId}_signal4`,`${instanceId}_signal5`],
     }
 }
 

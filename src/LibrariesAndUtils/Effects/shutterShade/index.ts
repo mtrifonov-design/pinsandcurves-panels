@@ -27,16 +27,14 @@ function createEffect(instanceId: string) {
                 source: MainGraphics()
             }
         }],
-        signalsToCreate: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToCreate: [`${instanceId}_signal3`],
         effectSignature: {
             instanceId,
-            effectName: "caleidoShadeSDF",
+            effectName: "shutterShade",
             exportChannels: {
                 color: true,
             },
             signals: {
-                posX: `${instanceId}_signal1`,
-                posY: `${instanceId}_signal2`,
                 numAxes: `${instanceId}_signal3`,
             }
         }
@@ -46,7 +44,7 @@ function createEffect(instanceId: string) {
 function deleteEffect(instanceId: string) {
     return {
         assetsToDelete: [instanceId+".graphics"],
-        signalsToDelete: [`${instanceId}_signal1`, `${instanceId}_signal2`, `${instanceId}_signal3`],
+        signalsToDelete: [`${instanceId}_signal3`],
     }
 }
 
