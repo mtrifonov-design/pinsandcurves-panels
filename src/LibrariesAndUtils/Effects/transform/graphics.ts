@@ -41,7 +41,7 @@ function Main({
                     vec2 prePos = position.xy * vec2(aspect, 1.0);
                     float angle = r / 100. * 3.14159 * 2.0;
                     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-                    mat2 scale = mat2(scale_x / 50., 0.0, 0.0, scale_y / 50.);
+                    mat2 scale = mat2(scale_x / 25., 0.0, 0.0, scale_y / 25.);
                     vec2 pos = rot * scale * prePos + vec2(tx, ty);
                     pos /= vec2(aspect, 1.0);
                     // correct uv for aspect ratio

@@ -1,11 +1,11 @@
 import CachedStream from "./CachedStream";
 
 const assetsStream = new CachedStream();
-function assetsStreamReducer() {
+function assetsStreamReducer(instanceId: string) {
     assetsStream.updateStream([{
-        resource: "cyberspag_showerhead",
+        resource: "externalInputTexture",
         type: "setTextureData",
-        payload: ["asset://showerhead.png"]
+        payload: ["asset://"+instanceId+".png"]
     }], "assetsLoaded");
     return assetsStream.getStream();
 }

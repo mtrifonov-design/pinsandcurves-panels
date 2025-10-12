@@ -31,6 +31,8 @@ export default function Interior({ timeline, controls, graphics, composition, im
     timelineProject.update(timeline);
     const [registry, setRegistry] = useState({currentSourceId: "not_initialized", instances: {}})
 
+    //console.log("controls", controlsSnapshot);
+
     const { recordEvent } = useTracker(defaultEvent);
 
     const [dimensions, setDimensions] = useState([1920,1080]);
@@ -161,6 +163,7 @@ export default function Interior({ timeline, controls, graphics, composition, im
                 }
             ]
         }
+        //console.log("buildControls",buildControls(controlsSnapshot, registry));
         const renderState = {
             ...buildControls(controlsSnapshot, registry),
             compositionGlobal: compositionGlobalStream,

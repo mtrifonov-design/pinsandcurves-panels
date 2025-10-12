@@ -58,6 +58,7 @@ class NectarRenderer {
                 const textureAssets = textureDataWrites.map(c => c.payload[0].replace("asset://", ""));
                 // check if all assets are available
                 const allAssetsAvailable = textureAssets.every(asset => this.assets.has(asset));
+                //console.log("all assets are available", textureDataWrites);
                 if (!allAssetsAvailable) {
                     skippedKeys.push(key);
                     continue;

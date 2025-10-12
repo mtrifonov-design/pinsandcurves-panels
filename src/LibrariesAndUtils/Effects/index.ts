@@ -11,6 +11,7 @@ import * as shinyShadeSDFEffect from "./shinyShadeSDF";
 import * as caleidoShadeSDFEffect from "./caleidoShadeSDF";
 import * as shutterShadeEffect from "./shutterShade";
 import * as transformEffect from "./transform";
+import * as textSDFEffect from "./TextSDF";
 // return a list of assets to be created, and a list of signals to be created, as well as an effect signature object
 function createEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "exampleCircle") {
@@ -48,6 +49,9 @@ function createEffect(effectName: string, effectInstanceId: string) {
     }
     if (effectName === "transform") {
         return transformEffect.createEffect(effectInstanceId);
+    }
+    if (effectName === "textSDF") {
+        return textSDFEffect.createEffect(effectInstanceId);
     }
     throw new Error(`Effect ${effectName} not found`);
 
@@ -91,6 +95,9 @@ function deleteEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "transform") {
         return transformEffect.deleteEffect(effectInstanceId);
     }
+    if (effectName === "textSDF") {
+        return textSDFEffect.deleteEffect(effectInstanceId);
+    }
     throw new Error(`Effect ${effectName} not found`);
 }
 
@@ -107,6 +114,7 @@ const effectsList = [
     "caleidoShadeSDF",
     "shutterShade",
     "transform",
+    "textSDF",
 ];
 
 export { createEffect, deleteEffect, effectsList };

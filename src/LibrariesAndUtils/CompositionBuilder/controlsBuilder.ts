@@ -10,9 +10,11 @@ function buildControls(controlsAssetsEntries: [string,ControlsAsset][], sourceRe
         const generatedSourceId = getSourceId(processedId, asset.sourceId, sourceRegistry);
         //console.log(generatedSourceId, processedId, asset, sourceRegistry)
         if (generatedSourceId === sourceRegistry.currentSourceId) {
+            //console.log("Merging controls", id, asset);
             controls = { ...controls, ...asset.renderState };
         }
     }
+    //console.log("returning controls", controls);
     return controls;
 }
 
