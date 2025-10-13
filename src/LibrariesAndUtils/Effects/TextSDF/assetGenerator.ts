@@ -7,10 +7,10 @@ function assetGenerator() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
     ctx.fillStyle = "white";
-    ctx.font = "bold 100px Arial";
+    ctx.font = "bold 400px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Hello World!", canvasSize / 2, canvasSize / 2);
+    ctx.fillText("ABC", canvasSize / 2, canvasSize / 2);
     return canvas.toDataURL("image/png");
 }
 

@@ -29,7 +29,7 @@ function passProgram(quadSig: string, passNum: number) {
     })
 }
 
-function performPass(ref, passNum: number, quad: string, quadSig: string) {
+function performPass(ref, passNum: number, quad: string, quadSig: string, invert = false) {
     return Texture({
         signature: ref("algoTexSig"),
         drawOps: [
@@ -38,7 +38,7 @@ function performPass(ref, passNum: number, quad: string, quadSig: string) {
                 vertex: quad,
                 globals: {},
                 textures: {
-                    src: passNum === 1 ? ref("startTexture") : ref(`pass${passNum - 1}`)
+                    src: passNum === 1 ? ref(invert ? "startTextureInverse" : "startTexture") : ref(`${invert ? "i_" : ""}pass${passNum - 1}`)
                 }
             }
         ],
@@ -67,7 +67,30 @@ function processSDF(ref,{
                     gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
                 }
                 `,
-            fragmentShader: convertToStartTexture,
+            fragmentShader: `
+            bool invert = false;
+            ${convertToStartTexture}`,
+            textures: {
+                src: {
+                    filter: "nearest",
+                    wrap: "clamp",
+                }
+            },
+        }),
+        p_convertToStartTextureInv: Program({
+            vertexSignature: quadSig,
+            globalSignatures: {},
+            vertexShader: `
+                out vec2 uv;
+                void main() {
+                    uv = position / 2. + vec2(0.5);
+                    //uv.y = 1.0 - uv.y;
+                    gl_Position = vec4(position.x, -position.y, 0.0, 1.0);
+                }
+                `,
+            fragmentShader: `
+            bool invert = true;
+            ${convertToStartTexture}`,
             textures: {
                 src: {
                     filter: "nearest",
@@ -80,6 +103,19 @@ function processSDF(ref,{
             drawOps: [
               {
                     program: ref("p_convertToStartTexture"),
+                    vertex: quad,
+                    globals: {},
+                    textures: {
+                        src:  inputStartTexture,
+                    }
+              }  
+            ],
+        }),
+        startTextureInverse: Texture({
+            signature: ref("algoTexSig"),
+            drawOps: [
+              {
+                    program: ref("p_convertToStartTextureInv"),
                     vertex: quad,
                     globals: {},
                     textures: {
@@ -108,6 +144,16 @@ function processSDF(ref,{
         p_pass8: passProgram(quadSig, 8),
         p_pass9: passProgram(quadSig, 9),
         p_pass10: passProgram(quadSig, 10),
+        i_pass1: performPass(ref, 1, quad, quadSig, true),
+        i_pass2: performPass(ref, 2, quad, quadSig, true),
+        i_pass3: performPass(ref, 3, quad, quadSig, true),
+        i_pass4: performPass(ref, 4, quad, quadSig, true),
+        i_pass5: performPass(ref, 5, quad, quadSig, true),
+        i_pass6: performPass(ref, 6, quad, quadSig, true),
+        i_pass7: performPass(ref, 7, quad, quadSig, true),
+        i_pass8: performPass(ref, 8, quad, quadSig, true),
+        i_pass9: performPass(ref, 9, quad, quadSig, true),
+        i_pass10: performPass(ref, 10, quad, quadSig, true),
         p_toFinalSDF: Program({
             vertexSignature: quadSig,
             globalSignatures: {},
@@ -124,6 +170,10 @@ function processSDF(ref,{
                 src: {
                     filter: "nearest",
                     wrap: "clamp",
+                },
+                srcInv: {
+                    filter: "nearest",
+                    wrap: "clamp",
                 }
             },
         }),
@@ -135,7 +185,8 @@ function processSDF(ref,{
                     vertex: quad,
                     globals: {},
                     textures: {
-                        src: ref("pass10")
+                        src: ref("pass10"),
+                        srcInv: ref("i_pass10"),
                     }
                 }
             ],
