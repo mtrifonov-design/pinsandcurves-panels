@@ -10,7 +10,7 @@ function assetGenerator() {
     ctx.font = "bold 400px Arial";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("ABC", canvasSize / 2, canvasSize / 2);
+    ctx.fillText("@", canvasSize / 2, canvasSize / 2);
     return canvas.toDataURL("image/png");
 }
 
