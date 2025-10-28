@@ -7,10 +7,10 @@ function assetGenerator() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
     ctx.fillStyle = "white";
-    ctx.font = "bold 400px Arial";
+    ctx.font = "bold 400px Comic Sans MS";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("@", canvasSize / 2, canvasSize / 2);
+    ctx.fillText("A", canvasSize / 2, canvasSize / 2);
     return canvas.toDataURL("image/png");
 }
 

@@ -2,6 +2,7 @@
 import * as exampleCircleEffect from "./ExampleCircle";
 import * as circleSDFEffect from "./CircleSDF";
 import * as bandsSDFEffect from "./BandsShadeSDF";
+import * as bands2SDFEffect from "./BandsShade2SDF";
 import * as patternSDFEffect from "./PatternShadeSDF";
 import * as defaultBGEffect from "./DefaultBG";
 import * as sinDistortSDFEffect from "./SinDistortSDF";
@@ -53,6 +54,9 @@ function createEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "textSDF") {
         return textSDFEffect.createEffect(effectInstanceId);
     }
+    if (effectName === "BandsShade2SDF") {
+        return bands2SDFEffect.createEffect(effectInstanceId);
+    }
     throw new Error(`Effect ${effectName} not found`);
 
 }
@@ -98,6 +102,9 @@ function deleteEffect(effectName: string, effectInstanceId: string) {
     if (effectName === "textSDF") {
         return textSDFEffect.deleteEffect(effectInstanceId);
     }
+    if (effectName === "BandsShade2SDF") {
+        return bands2SDFEffect.deleteEffect(effectInstanceId);
+    }
     throw new Error(`Effect ${effectName} not found`);
 }
 
@@ -115,6 +122,7 @@ const effectsList = [
     "shutterShade",
     "transform",
     "textSDF",
+    "BandsShade2SDF",
 ];
 
 export { createEffect, deleteEffect, effectsList };

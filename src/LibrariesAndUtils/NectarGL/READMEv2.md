@@ -1,3 +1,5 @@
+
+
 - **Logical Layer**\
 Describes a GPU workload as a pure function of inputs, producing an immutable graph of resources and operations.
 
