@@ -1,5 +1,14 @@
 import { SceneObject } from "../reduceStateToSceneObjects";
 
+const halloweenImage = new Image();
+halloweenImage.src = "/pinsandcurves-panels/emojis/jack_o_lantern.png";
+let loaded = false;
+halloweenImage.onload = () => {
+    loaded = true;
+    //console.log("Halloween playhead image loaded");
+}
+
+
 function renderDiamond(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number) {
     ctx.beginPath();
     ctx.moveTo(x + w / 2, y);
@@ -68,6 +77,19 @@ function renderKeyframe(ctx: CanvasRenderingContext2D, obj: SceneObject) {
         ctx.restore();
         return;
     }
+
+    // if (loaded) {
+    //     // draw a blurred yellow circle
+    //     ctx.filter = "blur(4px)";
+    //     ctx.fillStyle = "rgba(230, 197, 34, 0.6)";
+    //     ctx.beginPath();
+    //     ctx.ellipse(oX + oW / 2, oY + oH / 2, oW, oH, 0, 0, Math.PI * 2);
+    //     ctx.closePath();
+    //     ctx.fill();
+    //     ctx.filter = "none";
+    //     ctx.drawImage(halloweenImage, oX - 8, oY - 10, 32, 32);
+    // }
+
 }
 
 export default renderKeyframe;
