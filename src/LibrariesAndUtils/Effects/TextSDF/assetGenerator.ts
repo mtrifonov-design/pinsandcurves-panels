@@ -7,10 +7,10 @@ function assetGenerator() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasSize, canvasSize);
     ctx.fillStyle = "white";
-    ctx.font = "bold 100px Creepster";
+    ctx.font = "bold 100px Nudica";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("Trick or Treat", canvasSize / 2, canvasSize / 2);
+    ctx.fillText("Dev Log #1", canvasSize / 2, canvasSize / 2);
     return canvas.toDataURL("image/png");
 }
 
